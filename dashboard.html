@@ -277,6 +277,11 @@
     var host = document.getElementById('pipeline');
     document.getElementById('pipe-date').textContent = "Today is " + today + " — fresh checklist.";
     function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+    // always re-read the saved state before changing it — ticks made on Today/Weekly/an exercise must never be lost
+    function fresh(){ var s={}; try{s=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
+      if(s.date!==today||!Array.isArray(s.checks)||s.checks.length!==PIPE.length){s={date:today,checks:PIPE.map(function(){return false;})};}
+      return s; }
+    var CBS=[], NAMES=[];
     function bar(){
       var done = state.checks.filter(Boolean).length;
       document.getElementById('pipe-bar').style.width = (done/PIPE.length*100) + '%';
@@ -303,8 +308,9 @@
       btn.className='ask'; btn.textContent='💬 Ask my tutor about this step'; btn.style.marginTop='8px';
       btn.setAttribute('data-q', item.ask);
       panel.appendChild(btn);
+      CBS[i]=cb; NAMES[i]=name;
       cb.addEventListener('change', function(){
-        state.checks[i]=cb.checked; save();
+        state=fresh(); state.checks[i]=cb.checked; save();
         name.style.textDecoration=cb.checked?'line-through':'none';
         name.style.color=cb.checked?'#5C6B7A':'';
         bar();
@@ -318,6 +324,17 @@
     }
     function render(){ host.innerHTML=''; PIPE.forEach(function(item,i){ host.appendChild(makeItem(item,i)); }); }
     render(); bar();
+    // live cross-tab sync: a tick saved on Today / Weekly Pipeline / an exercise shows up here instantly
+    window.addEventListener('storage', function(e){
+      if(e.key!==KEY)return;
+      state=fresh();
+      for(var i=0;i<CBS.length;i++){
+        CBS[i].checked=!!state.checks[i];
+        NAMES[i].style.textDecoration=state.checks[i]?'line-through':'none';
+        NAMES[i].style.color=state.checks[i]?'#5C6B7A':'';
+      }
+      bar();
+    });
   })();
   </script>
 

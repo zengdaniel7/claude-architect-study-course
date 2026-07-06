@@ -258,6 +258,8 @@ var KEY="ccaf-curriculum";
 var state={done:{}};
 try{var s=JSON.parse(localStorage.getItem(KEY)||"{}");if(s&&s.done)state=s;}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+// always re-read the latest saved state before changing it — a tick made in another tab must never be lost
+function freshState(){try{var s=JSON.parse(localStorage.getItem(KEY)||"{}");if(s&&typeof s==="object"){s.done=s.done||{};s.opened=s.opened||{};return s;}}catch(e){}return {done:{},opened:{}};}
 
 function esc(s){return (s||"").replace(/"/g,"&quot;");}
 function rowVids(v){if(!v||!v.length)return "<span class='hint'>Use the linked diagram + your tutor.</span>";return v.map(function(x){return '<a class="vid" target="_blank" rel="noopener" href="'+x[0]+'">🎥 '+x[1]+'</a>';}).join("");}
@@ -325,7 +327,7 @@ host.addEventListener("toggle",function(e){
       var uid=e.target.id.slice(2), unit=null;
       UNITS.forEach(function(u){if(u.id===uid)unit=u;});
       // remember it as "in progress" (amber dot) + as the resume point for Today/Home
-      state.opened=state.opened||{}; state.opened[uid]=true; save();
+      state=freshState(); state.opened[uid]=true; save();
       var dot=document.querySelector('[data-dot="'+uid+'"]');
       if(dot && !state.done[uid]){dot.style.background="#E0A106";dot.style.borderColor="#E0A106";dot.title="in progress";}
       try{localStorage.setItem("ccaf-last",JSON.stringify({href:"curriculum.html#u-"+uid,label:"Unit: "+(unit?unit.title:uid),ts:Date.now()}));}catch(err){}
@@ -358,7 +360,7 @@ document.addEventListener("click",function(e){
   var a=e.target.closest(".ask");
   if(a){var t=a.getAttribute("data-q")||"";if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash();}).catch(function(){fb(t);});}else{fb(t);}return;}
   var d=e.target.closest(".donebtn");
-  if(d){var id=d.getAttribute("data-done");state.done[id]=!state.done[id];save();
+  if(d){var id=d.getAttribute("data-done");state=freshState();state.done[id]=!state.done[id];save();
     d.classList.toggle("is-done",state.done[id]);d.textContent=state.done[id]?"✓ Done":"Mark done";
     var dot=document.querySelector('[data-dot="'+id+'"]');if(dot)dot.classList.toggle("done",state.done[id]);
     progress();flash(state.done[id]?"Nice — marked done ✓":"Unmarked");}

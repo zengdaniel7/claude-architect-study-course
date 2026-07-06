@@ -211,7 +211,7 @@ function buildRound(){
   document.getElementById("lquiz").style.display="block";
   Lqueue=active.slice();
   for(var j=Lqueue.length-1;j>0;j--){var r=(j*7+3)%(j+1);var tmp=Lqueue[j];Lqueue[j]=Lqueue[r];Lqueue[r]=tmp;}
-  Lpos=0; LroundCorrect=[]; LroundWrong=[];
+  Lpos=0; LroundCorrect=[]; LroundWrong=[]; LjustMastered=0;
   askQuestion();
 }
 function askQuestion(){
@@ -249,6 +249,14 @@ function chooseOption(chosenIdx,correctIdx,btn,host){
     });
   }
   if(ok){ LroundCorrect.push(correctIdx); } else { LroundWrong.push(correctIdx); }
+  // save progress IMMEDIATELY — closing the tab mid-round must never lose a graded answer
+  if(ok){
+    Lstate.streak[correctIdx]=(Lstate.streak[correctIdx]||0)+1;
+    if(Lstate.streak[correctIdx]>=2 && Lstate.mastered.indexOf(correctIdx)===-1){ Lstate.mastered.push(correctIdx); LjustMastered++; }
+  }else{
+    Lstate.streak[correctIdx]=0;
+  }
+  saveLearn(LK,Lstate);
 
   var rv=document.getElementById("lreveal");
   rv.style.display="block";
@@ -260,13 +268,8 @@ function chooseOption(chosenIdx,correctIdx,btn,host){
   };
 }
 function finishRound(){
-  // apply streak changes: correct -> +1 (2 in a row = mastered); wrong -> reset to 0
-  var justMastered=0;
-  LroundWrong.forEach(function(idx){ Lstate.streak[idx]=0; });
-  LroundCorrect.forEach(function(idx){
-    Lstate.streak[idx]=(Lstate.streak[idx]||0)+1;
-    if(Lstate.streak[idx]>=2 && Lstate.mastered.indexOf(idx)===-1){ Lstate.mastered.push(idx); justMastered++; }
-  });
+  // streaks were already applied and saved per answer (nothing can be lost mid-round)
+  var justMastered=LjustMastered;
   saveLearn(LK,Lstate);
   lProgress();
   document.getElementById("lquiz").style.display="none";

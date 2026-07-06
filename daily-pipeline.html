@@ -96,12 +96,24 @@ wlog[todayStr]=ds.checks.slice();
 function wsave(){try{localStorage.setItem(WKEY,JSON.stringify(wlog));}catch(e){}}
 function dsave(){try{localStorage.setItem(DKEY,JSON.stringify(ds));}catch(e){}}
 wsave();
+function refreshFromStorage(){
+  // always re-read saved state before using it — ticks made on Today/Home/an exercise must never be lost
+  try{wlog=JSON.parse(localStorage.getItem(WKEY)||"{}");}catch(e){wlog={};}
+  var p={};try{p=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
+  if(p.date===todayStr&&Array.isArray(p.checks)&&p.checks.length===5){wlog[todayStr]=p.checks.slice();}
+}
 function setStep(dateStr,i,val){
+  refreshFromStorage();
   wlog[dateStr]=wlog[dateStr]||[false,false,false,false,false];
   wlog[dateStr][i]=val; wsave();
   if(dateStr===todayStr){ds={date:todayStr,checks:wlog[todayStr].slice()};dsave();}
   renderWeek(); dbarSync();
 }
+// live cross-tab sync
+window.addEventListener("storage",function(e){
+  if(e.key!==DKEY&&e.key!==WKEY)return;
+  refreshFromStorage(); wsave(); renderWeek(); dbarSync();
+});
 
 /* ---- week view with last/this/next navigation ---- */
 var offset=0; // 0 = this week, -1 = last week, +1 = next week…

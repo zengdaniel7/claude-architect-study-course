@@ -228,6 +228,10 @@ try{pst=JSON.parse(localStorage.getItem(PKEY)||"{}");}catch(e){}
 if(pst.date!==today||!Array.isArray(pst.checks)||pst.checks.length!==PIPE.length){pst={date:today,checks:PIPE.map(function(){return false;})};}
 document.getElementById("datesub").textContent="Today is "+today+" · here's where you are and what to do.";
 function psave(){try{localStorage.setItem(PKEY,JSON.stringify(pst));}catch(e){}}
+// always re-read the saved state before changing it — ticks made on Home/Weekly/an exercise must never be lost
+function freshPipe(){var p={};try{p=JSON.parse(localStorage.getItem(PKEY)||"{}");}catch(e){}
+ if(p.date!==today||!Array.isArray(p.checks)||p.checks.length!==PIPE.length){p={date:today,checks:PIPE.map(function(){return false;})};}
+ return p;}
 function pbar(){
   var n=pst.checks.filter(Boolean).length;
   document.getElementById("pipeprog").textContent="Today: "+n+" / "+PIPE.length+" done"+(n===PIPE.length?"  🎉":"");
@@ -250,10 +254,18 @@ PIPE.forEach(function(it,i){
   }
   var ab=document.createElement("button");ab.className="mini";ab.textContent="💬 Ask my tutor";ab.setAttribute("data-q",it.ask);
   body.appendChild(ab);
-  cb.addEventListener("change",function(){pst.checks[i]=cb.checked;psave();pbar();});
+  cb.addEventListener("change",function(){pst=freshPipe();pst.checks[i]=cb.checked;psave();pbar();});
   w.appendChild(cb);w.appendChild(body);sh.appendChild(w);
 });
 pbar();
+// live cross-tab sync: a tick saved on Home / Weekly Pipeline / an exercise shows up here instantly
+window.addEventListener("storage",function(e){
+  if(e.key!==PKEY)return;
+  pst=freshPipe();
+  var cbs=document.querySelectorAll("#steps input[type=checkbox]");
+  for(var i=0;i<cbs.length;i++){cbs[i].checked=!!pst.checks[i];}
+  pbar();
+});
 
 // ---- copy-to-tutor ----
 var toast=document.getElementById("toast");

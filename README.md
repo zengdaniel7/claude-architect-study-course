@@ -14,21 +14,30 @@ A complete, self-contained study site for Anthropic's **Claude Certified Archite
 - **🧪 Pre-test (30 Q) + 6 checkpoint quizzes** that track your score *and how much you guessed*
 - **🏋️ Build exercises** you do right on the page, with an AI-checked grading loop (see below)
 - **🩹 Repair guide** — the trickiest pre-test questions explained as pictures
-- Progress is saved automatically in your browser (localStorage) — no account, no server, no tracking
+- Progress is saved automatically in your browser (localStorage) — every tick, card and typed answer, the instant you make it; no account, no server, no tracking. (It's per-browser: clearing browser data clears progress, and it doesn't sync between devices.)
 
-## 🚀 Run it
+## 🚀 Run it — two ways
 
-**Option 1 — just visit the site** (if GitHub Pages is enabled on this repo): open the Pages URL, done.
+### 🌐 Option 1: just use the website (zero setup)
+Open **https://zengdaniel7.github.io/claude-architect-study-course/** — everything works right there: lessons, diagrams, quizzes, flashcards, exercises, and **your progress saves automatically in your browser** (checkmarks, mastered cards, exercise answers — no account needed). One catch: that progress lives in *that* browser on *that* device, and the course content itself is fixed — you can't change it.
 
-**Option 2 — run locally** (any OS, needs only Python):
-
+### 💻 Option 2: download it for FULL access (recommended)
 ```bash
 git clone https://github.com/zengdaniel7/claude-architect-study-course.git
 cd claude-architect-study-course
 python3 -m http.server 8000
 ```
+Open http://localhost:8000 — start at the **Home** page. Downloading unlocks what the website can't do:
+- **The course becomes YOURS to grow** — run an AI coding agent (like [Claude Code](https://claude.com/claude-code)) in the folder and the included [CLAUDE.md](CLAUDE.md) turns it into your personal tutor: it grades your exercise reports, keeps your mistake log, **adds new flashcards and exercises to the actual files** as you learn. The hosted site can never edit itself — a local copy can.
+- Works offline, and you can edit any lesson to match how you learn.
 
-Open http://localhost:8000 — start at the **Home** page.
+| | 🌐 Website | 💻 Downloaded |
+|---|---|---|
+| Lessons, quizzes, flashcards, exercises | ✅ | ✅ |
+| Progress auto-saves (in your browser) | ✅ | ✅ |
+| AI tutor that grades + upgrades the course files | ❌ | ✅ |
+| Edit lessons / add your own content | ❌ | ✅ |
+| Works offline | ❌ | ✅ |
 
 ## 🤖 Bring your own AI tutor
 
