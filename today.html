@@ -66,6 +66,13 @@
   </div>
   <p class="hint" id="lastseen" style="display:none"></p>
 
+  <!-- JOURNEY STRIP: yesterday ← today → coming up -->
+  <div class="card" id="journey" style="display:none">
+    <p class="hint" id="yline" style="display:none;margin:0 0 10px"></p>
+    <div id="jstrip" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"></div>
+    <p class="hint" style="margin:.7em 0 0"><a href="timeline.html"><b>🛤️ See the whole timeline</b></a> · <a href="daily-pipeline.html">📋 check any day, last week or next →</a></p>
+  </div>
+
   <!-- TODAY'S 5 STEPS -->
   <h2>📋 Today's 5 steps</h2>
   <div class="card">
@@ -73,6 +80,7 @@
     <div class="pbar" style="height:14px;margin-bottom:10px"><span id="pipebar"></span></div>
     <div id="steps"></div>
   </div>
+  <div class="card" id="doneearly" style="display:none;border:2px solid var(--green);background:#E9F6EF"></div>
 
   <!-- ARTICLES AS PICTURES -->
   <h2>📚 The articles — as pictures</h2>
@@ -195,6 +203,49 @@ document.getElementById("encourage").textContent = pct===0
   : pct<40 ? "Good momentum — keep chipping at one unit a day."
   : pct<80 ? "More than a third done. Stay steady." : "Almost there — finish strong. 🎯";
 
+// ---- journey strip: yesterday ← ⭐ now → coming up (the bridge between Today and the Timeline) ----
+(function(){
+  var host=document.getElementById("journey"), strip=document.getElementById("jstrip");
+  if(!host||!strip) return;
+  function chip(txt,href,style){
+    var a=document.createElement("a");
+    a.href=href; a.textContent=txt;
+    a.style.cssText="text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;"+(style||"");
+    return a;
+  }
+  function arrow(){var s=document.createElement("span");s.textContent="→";s.style.cssText="color:var(--muted);font-weight:800";return s;}
+  var idx=next?PATH.indexOf(next):PATH.length;
+  if(idx>0){
+    var p=PATH[idx-1];
+    strip.appendChild(chip((done[p.id]?"✓ ":"")+p.t,"curriculum.html#u-"+p.id, done[p.id]?"border-color:#A9D9BC;color:#1c6b40":""));
+    strip.appendChild(arrow());
+  }
+  if(next){
+    strip.appendChild(chip("⭐ NOW: "+next.t,"curriculum.html#u-"+next.id,"border-color:#E0A106;background:#FFF8E7"));
+  }else{
+    strip.appendChild(chip("🎉 all units done","quizzes.html","border-color:#A9D9BC;background:#E9F6EF"));
+  }
+  for(var k=1;k<=2;k++){
+    var u=PATH[idx+k]; if(!u)break;
+    strip.appendChild(arrow());
+    strip.appendChild(chip(u.t,"curriculum.html#u-"+u.id,"opacity:.75"));
+  }
+  // yesterday: anything left unfinished? (reads the weekly log)
+  try{
+    var y=new Date(); y.setDate(y.getDate()-1);
+    var ykey=y.getFullYear()+"-"+String(y.getMonth()+1).padStart(2,"0")+"-"+String(y.getDate()).padStart(2,"0");
+    var wl=JSON.parse(localStorage.getItem("ccaf-week-log")||"{}");
+    var yl=document.getElementById("yline");
+    if(Array.isArray(wl[ykey])){
+      var yn=wl[ykey].filter(Boolean).length;
+      yl.innerHTML = yn>=5 ? "✅ Yesterday: all 5 steps done — clean start today."
+        : "⏪ <b>Yesterday: "+yn+" / 5 steps</b> — the rest carried over (that's the plan working, not you failing). <a href=\"daily-pipeline.html\">Tick them off here →</a>";
+      yl.style.display="block";
+    }
+  }catch(e){}
+  host.style.display="block";
+})();
+
 // ---- pick up where you left off (written by curriculum/flashcards/guides) ----
 try{
   var last=JSON.parse(localStorage.getItem("ccaf-last")||"null");
@@ -236,6 +287,18 @@ function pbar(){
   var n=pst.checks.filter(Boolean).length;
   document.getElementById("pipeprog").textContent="Today: "+n+" / "+PIPE.length+" done"+(n===PIPE.length?"  🎉":"");
   document.getElementById("pipebar").style.width=(n/PIPE.length*100)+"%";
+  // finished early? show the smooth way forward
+  var de=document.getElementById("doneearly");
+  if(de){
+    if(n===PIPE.length){
+      var idx=next?PATH.indexOf(next):-1, up=(idx>=0)?PATH[idx+1]:null;
+      de.innerHTML="<b>🎉 All 5 steps done — finished early?</b><div class=\"btnrow\">"+
+        (next?'<a class="b quiz" href="'+next.quiz+'">🧪 Take the quiz → mark "'+next.t+'" done</a>':"")+
+        (up?'<a class="b go" href="curriculum.html#u-'+up.id+'">👀 Peek at what\'s next: '+up.t+' →</a>':"")+
+        '</div><p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day. The <a href="timeline.html">timeline</a> keeps your place for tomorrow.</p>';
+      de.style.display="block";
+    } else { de.style.display="none"; }
+  }
 }
 var sh=document.getElementById("steps");
 PIPE.forEach(function(it,i){

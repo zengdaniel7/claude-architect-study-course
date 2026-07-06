@@ -51,6 +51,7 @@
     </div>
     <div class="pbar"><span id="pbar"></span></div>
     <div class="legend" id="legend"></div>
+    <p style="margin:.7em 0 0;font-size:.92rem"><a href="#now"><b>⭐ Jump to where you are</b></a> · <a href="today.html">▶️ Back to Today (your 5 steps)</a> · <a href="daily-pipeline.html">📋 This week, last week, next week</a></p>
   </div>
 
   <div id="path"></div>
@@ -125,7 +126,7 @@ PATH.forEach(function(u,i){
     listOpen=true;
   }
   var cls=st.done[u.id]?"done":(u.id===nowId?"now":"");
-  h+='<li class="node '+cls+'">'+
+  h+='<li class="node '+cls+'"'+(u.id===nowId?' id="now" style="scroll-margin-top:80px"':'')+'>'+
     '<span class="lvl" style="background:'+LVLC[u.lvl]+'">'+u.lvl+'</span>'+
     '<span class="ttl">'+u.ic+" "+u.t+'</span>'+
     (st.done[u.id]?'<span class="donetag">✓ done</span>':'')+
