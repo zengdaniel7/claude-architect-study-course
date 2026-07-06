@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build Exercises — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .lead{font-size:1.05rem;color:var(--muted)}
+  .chiprow{margin:6px 0 0}
+  .stepcard{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:14px;padding:16px 18px;margin:14px 0}
+  .stepcard h3{margin:0 0 6px;font-size:1.08rem}
+  .promptbox{background:#F3EBDA;border:1px dashed #C9BD9F;border-radius:10px;padding:10px 14px;font-size:.88rem;white-space:pre-wrap;margin-top:10px;color:var(--muted)}
+  .copybtn{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.82rem;font-weight:700;padding:8px 14px;border-radius:999px;margin-top:10px}
+  .copybtn:hover{filter:brightness(1.08)}
+  .ansblock{margin-top:14px;background:#FDFAF2;border:1.5px solid #E8DFC8;border-radius:12px;padding:12px 14px}
+  .ansblock .anslab{font-weight:800;margin:0 0 6px;font-size:.95rem}
+  .ansblock .anslab .num{width:26px;height:26px;font-size:.85rem;border-radius:7px}
+  textarea.ans{width:100%;min-height:96px;font:inherit;font-size:.95rem;line-height:1.55;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;background:#fff;resize:vertical;color:var(--ink)}
+  textarea.ans:focus{outline:2px solid var(--accent)}
+  .quizcard{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--green);border-radius:14px;padding:16px 18px;margin:14px 0}
+  .quizcard h3{margin:0 0 4px;font-size:1.08rem}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+  .bigbtn{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:.92rem;padding:12px 22px;border-radius:999px;color:#fff}
+  .bigbtn:hover{filter:brightness(1.07)}
+  .bigbtn.check{background:var(--green)}
+  .bigbtn.report{background:var(--purple)}
+  .bigbtn.done{background:#fff;color:var(--ink);border:2px solid var(--line)}
+  .bigbtn.done.is-done{background:var(--green);color:#fff;border-color:var(--green)}
+  .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.85rem;color:var(--muted);margin:10px 0 0}
+  .flow b{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--ink);font-size:.82rem}
+  .exlist a.start{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:9px 18px;border-radius:999px;font-size:.88rem}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap" id="app"></div>
+
+<div id="toast">Copied 👍</div>
+
+<script src="exercises.js"></script>
+<script>
+(function(){
+  var toast=document.getElementById("toast");
+  function flash(msg){toast.textContent=msg||"Copied 👍";toast.classList.add("show");setTimeout(function(){toast.classList.remove("show");},2000);}
+  function copy(t,msg){
+    function fb(){var x=document.createElement("textarea");x.value=t;document.body.appendChild(x);x.select();try{document.execCommand("copy");}catch(_){}x.remove();flash(msg);}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash(msg);}).catch(fb);}else{fb();}
+  }
+  function localDate(){var n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");}
+
+  var app=document.getElementById("app");
+  var qid=(location.search.match(/[?&]id=([^&]+)/)||[])[1]||"";
+  var ex=null;
+  EXERCISES.forEach(function(e){if(e.id===qid)ex=e;});
+
+  /* ---------- PICKER (no ?id=) ---------- */
+  if(!ex){
+    var h='<header style="padding:30px 0 6px"><h1>🏋️ Build Exercises</h1>'+
+      '<p class="lead">Do the exercise <b>right here on this page</b> — every step has its own answer box, and answers save on this device as you type. Then one button checks your work instantly (any AI chat), one button reports it to Claude so the course upgrades itself.</p></header>';
+    EXERCISES.forEach(function(e){
+      var st={}; try{st=JSON.parse(localStorage.getItem("ccaf-ex-"+e.id)||"{}");}catch(_){}
+      h+='<div class="card exlist"><h3 style="margin:0 0 4px">'+e.icon+" "+e.title+'</h3>'+
+         '<p class="hint" style="margin:0 0 10px">'+e.mins+' · '+e.level+(st.done?' · <span class="tag ok">✓ done</span>':'')+'</p>'+
+         '<p style="margin:0 0 12px">'+e.goal+'</p>'+
+         '<a class="start" href="exercise.html?id='+e.id+'">'+(st.done?'Review it →':'Start →')+'</a></div>';
+    });
+    h+='<footer>More exercises appear here as you reach new units. · built by your Claude tutor</footer>';
+    app.innerHTML=h;
+    return;
+  }
+
+  /* ---------- RUNNER ---------- */
+  try{localStorage.setItem("ccaf-last",JSON.stringify({href:"exercise.html?id="+ex.id,label:"Exercise: "+ex.title,ts:Date.now()}))}catch(_){}
+
+  var SKEY="ccaf-ex-"+ex.id;
+  var st={a:{}};
+  try{var s=JSON.parse(localStorage.getItem(SKEY)||"{}");if(s&&typeof s==="object"){st=s;st.a=st.a||{};}}catch(_){}
+  function save(){st.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(st));}catch(_){}}
+
+  // ordered list of every answer field (step fields first, then quiz questions)
+  var FIELDS=[];
+  ex.steps.forEach(function(s){ if(s.field) FIELDS.push({id:s.field.id,label:s.field.label}); });
+  if(ex.quiz) ex.quiz.questions.forEach(function(q){ FIELDS.push({id:q.id,label:q.q}); });
+
+  var h='<header style="padding:30px 0 2px"><h1>'+ex.icon+" "+ex.title+'</h1>'+
+    '<p class="chiprow"><span class="chip">'+ex.mins+'</span><span class="chip">'+ex.level+'</span><span class="chip">💾 saves as you type</span></p>'+
+    '<p class="lead"><b>Goal:</b> '+ex.goal+'</p>'+
+    '<p class="hint">'+ex.why+'</p>'+
+    '<div class="flow">The loop: <b>1 · do each step here</b> → <b>2 · 🧠 instant check</b> → <b>3 · 📤 report to Claude</b> → course upgrades itself</div>'+
+    '</header>';
+
+  var boxNum=0;
+  ex.steps.forEach(function(s,i){
+    h+='<div class="stepcard"><h3>'+s.h+'</h3><p style="margin:.3em 0 0">'+s.body+'</p>';
+    if(s.prompt){
+      h+='<div class="promptbox" id="pb'+i+'"></div>'+
+         '<button class="copybtn" data-step="'+i+'">'+s.pl+'</button>';
+    }
+    if(s.field){
+      boxNum++;
+      h+='<div class="ansblock"><div class="anslab"><span class="num">'+boxNum+'</span>'+s.field.label+'</div>'+
+         '<textarea class="ans" data-f="'+s.field.id+'" placeholder=""></textarea></div>';
+    }
+    h+='</div>';
+  });
+
+  if(ex.quiz){
+    h+='<div class="quizcard"><h3>'+ex.quiz.title+'</h3><p class="hint" style="margin:.2em 0 0">'+ex.quiz.intro+'</p>';
+    ex.quiz.questions.forEach(function(q){
+      boxNum++;
+      h+='<div class="ansblock"><div class="anslab"><span class="num" style="background:var(--green)">'+boxNum+'</span>'+q.q+'</div>'+
+         '<textarea class="ans" data-f="'+q.id+'" placeholder=""></textarea></div>';
+    });
+    h+='</div>';
+  }
+
+  h+='<h2>✅ When you\'re done</h2><div class="card">'+
+    '<p style="margin:0"><b>1 · Instant check:</b> the green button copies ALL your answers <b>+ the hidden grading rubric</b> as one message — paste it into any AI chat (Comet sidebar, claude.ai) and it grades you on the spot.</p>'+
+    '<p><b>2 · Make it count:</b> the purple button copies a report — paste it to <b>Claude (your course tutor, in Claude Code)</b>. Claude grades it, logs mistakes, updates your flashcards and marks your 🔨 Build step.</p>'+
+    '<div class="actions">'+
+      '<button class="bigbtn check" id="btncheck">🧠 Copy answers + rubric → paste to any AI</button>'+
+      '<button class="bigbtn report" id="btnreport">📤 Copy report → paste to Claude</button>'+
+      '<button class="bigbtn done'+(st.done?' is-done':'')+'" id="btndone">'+(st.done?'✓ Done':'Mark done')+'</button>'+
+    '</div></div>';
+
+  h+='<footer><a href="exercise.html">← all exercises</a> · answers live only in this browser · built by your Claude tutor</footer>';
+  app.innerHTML=h;
+
+  // prompts go in via textContent (no HTML-escaping worries)
+  ex.steps.forEach(function(s,i){ if(s.prompt){document.getElementById("pb"+i).textContent=s.prompt;} });
+  document.querySelectorAll(".copybtn").forEach(function(b){
+    b.addEventListener("click",function(){copy(ex.steps[+b.getAttribute("data-step")].prompt,"Copied — paste it in a NEW chat 👍");});
+  });
+
+  // wire every answer box: restore saved text + placeholder + autosave
+  var PH={};
+  ex.steps.forEach(function(s){ if(s.field)PH[s.field.id]=s.field.ph||""; });
+  if(ex.quiz) ex.quiz.questions.forEach(function(q){ PH[q.id]=q.ph||""; });
+  document.querySelectorAll("textarea.ans").forEach(function(ta){
+    var fid=ta.getAttribute("data-f");
+    ta.placeholder=PH[fid]||"";
+    ta.value=st.a[fid]||"";
+    ta.addEventListener("input",function(){st.a[fid]=ta.value;save();});
+  });
+
+  function answersBlock(){
+    return FIELDS.map(function(f){
+      var v=(st.a[f.id]||"").trim();
+      return "— "+f.label+"\n"+(v||"(empty — ask me to do this part)");
+    }).join("\n\n");
+  }
+
+  document.getElementById("btncheck").addEventListener("click",function(){
+    var t="You are my strict-but-kind AI tutor. I'm a dyslexic beginner studying for the CCA-F exam — keep feedback short, plain words, no jargon.\n\n"+
+      "I completed this exercise:\nEXERCISE: "+ex.title+"\nGOAL: "+ex.goal+"\n\n"+
+      "GRADE MY WORK against this rubric — check every point:\n"+
+      ex.rubric.map(function(r,i){return (i+1)+". "+r;}).join("\n")+"\n\n"+
+      "MY WORK:\n"+answersBlock()+"\n\n"+
+      "Reply EXACTLY in this shape:\n✅ Right: what I got right\n❌ Fix: what's wrong or missing (explain simply)\n🔁 Redo: ONE small thing to redo, if needed\nScore: X / 10";
+    copy(t,"Copied — paste into a NEW AI chat 🧠");
+  });
+
+  document.getElementById("btnreport").addEventListener("click",function(){
+    var t="📤 CCA-F EXERCISE REPORT — for Claude, my course tutor\n\n"+
+      "Exercise: "+ex.id+" — "+ex.title+"\nUnit(s): "+ex.units.join(", ")+" · Date: "+localDate()+"\n\n"+
+      "MY ANSWERS\n"+answersBlock()+"\n\n"+
+      "TUTOR FEEDBACK SO FAR (I can paste an instant-check grade here):\n(none yet)\n\n"+
+      "Claude, as my tutor: grade this against the exercise rubric, add anything I got wrong to the Mistake Log (plus a mistake flashcard if it deserves one), update the course if a lesson needs it, and mark my 🔨 Build step done for today.";
+    copy(t,"Copied — paste it to Claude 📤");
+  });
+
+  var doneBtn=document.getElementById("btndone");
+  doneBtn.addEventListener("click",function(){
+    st.done=!st.done;save();
+    doneBtn.classList.toggle("is-done",st.done);
+    doneBtn.textContent=st.done?"✓ Done":"Mark done";
+    if(st.done){
+      // also tick today's 🔨 Build step in the daily pipeline (step index 2)
+      try{
+        var today=localDate(),p={};
+        try{p=JSON.parse(localStorage.getItem("ccaf-pipeline")||"{}");}catch(_){}
+        if(p.date!==today||!Array.isArray(p.checks)||p.checks.length!==5){p={date:today,checks:[false,false,false,false,false]};}
+        p.checks[2]=true;localStorage.setItem("ccaf-pipeline",JSON.stringify(p));
+      }catch(_){}
+      flash("Done! 🔨 Build step ticked — now 📤 send the report to Claude");
+    }
+  });
+})();
+</script>
+</body>
+</html>

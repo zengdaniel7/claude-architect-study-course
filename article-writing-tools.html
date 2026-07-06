@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Writing Tools for Agents — Visual Guide</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .lead{font-size:1.05rem;color:var(--muted)}
+  .dia{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;margin:16px 0;scroll-margin-top:70px}
+  .dia h3{margin:0 0 4px;font-size:1.15rem}
+  .dia .cap{font-size:.9rem;color:var(--muted);margin:2px 0 12px}
+  .dia .note{font-size:.92rem;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+  .dia .mem{background:#FFF8E7;border:1.5px dashed var(--yellow);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:.92rem}
+  .svgwrap{width:100%;overflow-x:auto}
+  svg{display:block;max-width:100%;height:auto;font-family:inherit}
+  svg text{font-family:"Atkinson Hyperlegible","Trebuchet MS",system-ui,sans-serif}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;margin:8px 0 0}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:.85em;height:.85em;border-radius:3px;display:inline-block}
+  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:999px}
+  .ask:hover{filter:brightness(1.08)}
+  .golearn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;font-weight:800;padding:10px 20px;border-radius:999px}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- shared arrowheads for all diagrams -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ar"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5C6B7A"/></marker>
+  <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D64545"/></marker>
+  <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2F9E63"/></marker>
+  <marker id="arB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2D7DD2"/></marker>
+  <marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A4FC4"/></marker>
+  <marker id="arO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8740C"/></marker>
+</defs></svg>
+
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+
+  <header style="padding:30px 0 6px">
+    <h1>🔧 Writing Tools for Agents — as pictures</h1>
+    <p class="lead">Anthropic's own guide to designing tools that agents actually use well — <b>this is exam gold</b> for the tool-design questions on CCA-F. Read each picture, say the sticky line out loud, then quiz yourself.</p>
+    <p><a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener" class="note">🔗 read the original on anthropic.com ↗</a></p>
+  </header>
+
+  <div class="legend" style="margin-bottom:10px">
+    <b style="font-size:.85rem">Color key:</b>
+    <span><i style="background:var(--red)"></i>risk / failure</span>
+    <span><i style="background:var(--green)"></i>success / safe</span>
+    <span><i style="background:var(--blue)"></i>context / data</span>
+    <span><i style="background:var(--purple)"></i>tools / API</span>
+    <span><i style="background:var(--orange)"></i>human review</span>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <div class="dia" id="s1">
+    <h3>1 · Why is a tool different from a normal function?</h3>
+    <p class="cap">Answer: a tool is a <b>contract with a non-deterministic caller</b> — the agent can misread it, misuse it, or pick the wrong one.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="35" width="230" height="80" rx="14" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="135" y="65" text-anchor="middle" font-size="13" font-weight="800">normal function call</text>
+      <text x="135" y="86" text-anchor="middle" font-size="11" fill="#5C6B7A">code calls code</text>
+      <text x="135" y="104" text-anchor="middle" font-size="11" fill="#5C6B7A">predictable every time ✅</text>
+      <line x1="255" y1="75" x2="345" y2="75" stroke="#A8B3BD" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#ar)"/>
+      <rect x="20" y="130" width="230" height="80" rx="14" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="135" y="160" text-anchor="middle" font-size="13" font-weight="800">agent tool call 🔧</text>
+      <text x="135" y="181" text-anchor="middle" font-size="11" fill="#5C6B7A">an AGENT decides</text>
+      <text x="135" y="199" text-anchor="middle" font-size="11" fill="var(--red)" font-weight="700">may guess wrong ⚠️</text>
+      <line x1="255" y1="170" x2="345" y2="170" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <rect x="350" y="35" width="530" height="150" rx="14" fill="#FDF1E4" stroke="var(--orange)" stroke-width="2.5"/>
+      <text x="615" y="62" text-anchor="middle" font-size="13" font-weight="800" fill="var(--orange)">the tool is a CONTRACT — it must survive:</text>
+      <text x="420" y="90" text-anchor="middle" font-size="12" font-weight="700">❌ wrong tool picked</text>
+      <text x="615" y="90" text-anchor="middle" font-size="12" font-weight="700">❌ bad parameters</text>
+      <text x="810" y="90" text-anchor="middle" font-size="12" font-weight="700">❌ misread docs</text>
+      <text x="615" y="140" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ good design survives all three</text>
+      <text x="615" y="162" text-anchor="middle" font-size="10.5" fill="#5C6B7A">clear names, clear docs, forgiving inputs</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> when code calls code, the call is exact. When an <b>agent</b> calls a tool, it's guessing based on a description — it might grab the wrong tool or fill in odd values. You must design for that guessing.</p>
+    <div class="mem">💡 <b>Remember it as:</b> a tool is a contract with a guesser, not an order to a robot.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain why agent tools must be designed as 'contracts with a non-deterministic caller' — different from normal deterministic function calls. Give one tiny example of an agent picking the wrong tool or parameter. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: Tool design unit →</a></p>
+  </div>
+
+  <!-- ============ 2 ============ -->
+  <div class="dia" id="s2">
+    <h3>2 · How do you prototype a tool before trusting it?</h3>
+    <p class="cap">Answer: build it <b>fast</b>, wrap it in a local MCP server, then <b>watch a real agent use it</b> and note the rough edges.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="70" width="170" height="70" rx="12" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="105" y="98" text-anchor="middle" font-size="12.5" font-weight="800">llms.txt docs 📄</text>
+      <text x="105" y="118" text-anchor="middle" font-size="10.5" fill="#5C6B7A">LLM-friendly API notes</text>
+      <line x1="195" y1="105" x2="280" y2="90" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="285" y="55" width="190" height="70" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="380" y="83" text-anchor="middle" font-size="12.5" font-weight="800">quick MCP wrapper 🔧</text>
+      <text x="380" y="103" text-anchor="middle" font-size="10.5" fill="#5C6B7A">rough draft, not perfect</text>
+      <line x1="480" y1="90" x2="565" y2="90" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="570" y="55" width="150" height="70" rx="12" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2.5"/>
+      <text x="645" y="83" text-anchor="middle" font-size="12.5" font-weight="800">try it live 🧑</text>
+      <text x="645" y="103" text-anchor="middle" font-size="10.5" fill="#5C6B7A">manual test drive</text>
+      <text x="450" y="160" text-anchor="middle" font-size="11" fill="#5C6B7A">watch for confusion, weird calls, missing info</text>
+      <text x="450" y="185" text-anchor="middle" font-size="11" fill="var(--green)" font-weight="700">→ fix the rough edges before scaling up</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> don't design a tool in your head. Wire up a quick version, hand it to a real agent, and watch <i>where it stumbles</i>. Those stumbles tell you exactly what to fix.</p>
+    <div class="mem">💡 <b>Remember it as:</b> prototype fast, then watch it trip.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain how to prototype an agent tool: llms.txt docs, wrapping in a local MCP server, manual testing to find rough edges, and gathering feedback. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: Tool design unit →</a></p>
+  </div>
+
+  <!-- ============ 3 ============ -->
+  <div class="dia" id="s3">
+    <h3>3 · What makes a GOOD evaluation task for a tool?</h3>
+    <p class="cap">Answer: <b>realistic data + many tool calls + a verifiable answer</b> — not a toy sandbox.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="250" height="150" rx="14" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="145" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="var(--red)">❌ weak eval</text>
+      <text x="145" y="86" text-anchor="middle" font-size="11.5">toy sandbox data</text>
+      <text x="145" y="108" text-anchor="middle" font-size="11.5">1 easy tool call</text>
+      <text x="145" y="130" text-anchor="middle" font-size="11.5">"looks about right"</text>
+      <text x="145" y="158" text-anchor="middle" font-size="10.5" fill="#5C6B7A">tells you almost nothing</text>
+      <text x="310" y="112" text-anchor="middle" font-size="22" font-weight="800" fill="#5C6B7A">vs</text>
+      <rect x="365" y="20" width="510" height="170" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="620" y="48" text-anchor="middle" font-size="13" font-weight="800" fill="var(--green)">✅ strong eval</text>
+      <text x="620" y="75" text-anchor="middle" font-size="12" font-weight="700">🗂 realistic, real-world data source</text>
+      <text x="620" y="100" text-anchor="middle" font-size="12" font-weight="700">🔁 needs MANY tool calls (maybe dozens)</text>
+      <text x="620" y="125" text-anchor="middle" font-size="12" font-weight="700">✔️ paired with a verifiable outcome</text>
+      <text x="620" y="150" text-anchor="middle" font-size="12" font-weight="700">📊 measured: accuracy, time, calls, tokens, errors</text>
+      <text x="620" y="174" text-anchor="middle" font-size="10.5" fill="#5C6B7A">run programmatically, in a simple agent loop</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a single easy test proves nothing. A good eval forces the agent to chain several real tool calls on real-ish data, and you can check the final answer against a known-correct result.</p>
+    <div class="mem">💡 <b>Remember it as:</b> make the eval sweat — dozens of calls, real data, a real checkable answer.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain what makes a strong evaluation task for an agent tool: realistic data, many tool calls, verifiable outcomes, and the metrics to track (accuracy, runtime, tool calls, tokens, errors). Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: Tool design unit →</a></p>
+  </div>
+
+  <!-- ============ 4 ============ -->
+  <div class="dia" id="s4">
+    <h3>4 · Why consolidate several API calls into ONE tool?</h3>
+    <p class="cap">Answer: bundling related steps into one tool <b>saves context</b> and gets the job done in fewer turns.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <text x="150" y="28" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--red)">❌ 3 raw API wrappers</text>
+      <rect x="20" y="40" width="130" height="50" rx="10" fill="#FBEAEA" stroke="var(--red)" stroke-width="2"/>
+      <text x="85" y="70" text-anchor="middle" font-size="11" font-family="monospace">list_users</text>
+      <rect x="160" y="40" width="130" height="50" rx="10" fill="#FBEAEA" stroke="var(--red)" stroke-width="2"/>
+      <text x="225" y="70" text-anchor="middle" font-size="11" font-family="monospace">list_events</text>
+      <rect x="300" y="40" width="130" height="50" rx="10" fill="#FBEAEA" stroke="var(--red)" stroke-width="2"/>
+      <text x="365" y="70" text-anchor="middle" font-size="11" font-family="monospace">create_event</text>
+      <text x="225" y="112" text-anchor="middle" font-size="10.5" fill="#5C6B7A">agent must call all 3, in the right order, itself</text>
+      <line x1="430" y1="65" x2="590" y2="65" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="590" y="30" width="290" height="90" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="735" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="var(--green)">✅ one tool:</text>
+      <text x="735" y="80" text-anchor="middle" font-size="12" font-family="monospace" font-weight="700">schedule_event()</text>
+      <text x="735" y="102" text-anchor="middle" font-size="10.5" fill="#5C6B7A">finds availability + books it</text>
+      <rect x="20" y="150" width="860" height="55" rx="12" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2"/>
+      <text x="450" y="172" text-anchor="middle" font-size="12" font-weight="700">also works for: search_logs (returns only relevant lines) · get_customer_context</text>
+      <text x="450" y="192" text-anchor="middle" font-size="11" fill="#5C6B7A">(pulls everything about a customer in ONE call, not five)</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> exposing every raw endpoint makes the agent do the planning AND the plumbing. Bundle multi-step work — find + book, or gather-everything-about-X — into a single higher-level tool.</p>
+    <div class="mem">💡 <b>Remember it as:</b> few thoughtful tools beat many thin API wrappers.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain why you should consolidate multi-step API operations into one agent tool (e.g. schedule_event instead of list_users + list_events + create_event). Use the get_customer_context example too. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: Tool design unit →</a></p>
+  </div>
+
+  <!-- ============ 5 ============ -->
+  <div class="dia" id="s5">
+    <h3>5 · What is namespacing, and why does it matter?</h3>
+    <p class="cap">Answer: grouping tools under a shared <b>prefix</b> so the agent can tell similar tools apart.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+      <text x="220" y="28" text-anchor="middle" font-size="12.5" font-weight="800">service-based prefix</text>
+      <rect x="20" y="40" width="190" height="46" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="115" y="68" text-anchor="middle" font-size="11.5" font-family="monospace" font-weight="700">asana_search</text>
+      <rect x="230" y="40" width="190" height="46" rx="10" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="325" y="68" text-anchor="middle" font-size="11.5" font-family="monospace" font-weight="700">jira_search</text>
+      <text x="670" y="28" text-anchor="middle" font-size="12.5" font-weight="800">resource-based prefix</text>
+      <rect x="470" y="40" width="210" height="46" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="575" y="68" text-anchor="middle" font-size="11" font-family="monospace" font-weight="700">asana_projects_search</text>
+      <rect x="690" y="40" width="190" height="46" rx="10" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="785" y="68" text-anchor="middle" font-size="11" font-family="monospace" font-weight="700">asana_users_search</text>
+      <rect x="20" y="110" width="860" height="70" rx="14" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2"/>
+      <text x="450" y="138" text-anchor="middle" font-size="12.5" font-weight="800">without a clear prefix, the agent can't tell tools apart 🤷</text>
+      <text x="450" y="160" text-anchor="middle" font-size="11" fill="#5C6B7A">prefix vs suffix choice measurably changes eval scores — test both</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> when you have many tools that sound alike, group them by a shared prefix — by service (asana_, jira_) or by resource (asana_projects_, asana_users_). This helps the agent pick the right one fast.</p>
+    <div class="mem">💡 <b>Remember it as:</b> namespacing is folders for tools — like naming files so they sort together.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain namespacing for agent tools: prefix-based vs suffix-based grouping (asana_search vs asana_projects_search), and why the choice can change evaluation performance. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: Tool design unit →</a></p>
+  </div>
+
+  <!-- ============ 6 ============ -->
+  <div class="dia" id="s6">
+    <h3>6 · What should a tool RETURN — raw data or something else?</h3>
+    <p class="cap">Answer: return <b>high-signal, meaningful context</b> — not a raw technical dump.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="380" height="150" rx="14" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="210" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="var(--red)">❌ raw / cryptic</text>
+      <text x="210" y="86" text-anchor="middle" font-size="12" font-family="monospace">id: "usr_8f3a2b1c"</text>
+      <text x="210" y="110" text-anchor="middle" font-size="12" font-family="monospace">256px_image_url: "…"</text>
+      <text x="210" y="134" text-anchor="middle" font-size="12" font-family="monospace">mime_type: "image/png"</text>
+      <text x="210" y="158" text-anchor="middle" font-size="10.5" fill="#5C6B7A">agent has to decode what matters</text>
+      <text x="450" y="112" text-anchor="middle" font-size="22" font-weight="800" fill="#5C6B7A">→</text>
+      <rect x="500" y="30" width="380" height="150" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="690" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="var(--green)">✅ high-signal / meaningful</text>
+      <text x="690" y="86" text-anchor="middle" font-size="12" font-family="monospace">name: "Dana Lee"</text>
+      <text x="690" y="110" text-anchor="middle" font-size="12" font-family="monospace">image_url: "…"</text>
+      <text x="690" y="134" text-anchor="middle" font-size="12" font-family="monospace">file_type: "png"</text>
+      <text x="690" y="158" text-anchor="middle" font-size="10.5" fill="#5C6B7A">agent reads it and just USES it</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> agents read text, not database schemas. Prefer <code>name</code> over an opaque id, <code>image_url</code> over <code>256px_image_url</code>, <code>file_type</code> over <code>mime_type</code> — plain words the model already understands.</p>
+    <div class="mem">💡 <b>Remember it as:</b> return what a person would say, not what a database would store.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain why agent tools should return high-signal meaningful context instead of raw technical fields — with the name vs id, image_url vs 256px_image_url, file_type vs mime_type examples. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: Tool design unit →</a></p>
+  </div>
+
+  <!-- ============ 7 ============ -->
+  <div class="dia" id="s7">
+    <h3>7 · How do you keep tool responses token-efficient?</h3>
+    <p class="cap">Answer: <b>paginate, filter, truncate</b> with sensible defaults — and let the agent choose response detail.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="230" height="150" rx="14" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="135" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="var(--red)">❌ dump everything</text>
+      <text x="135" y="86" text-anchor="middle" font-size="11.5">10k rows 📄📄📄</text>
+      <text x="135" y="108" text-anchor="middle" font-size="11.5">no limit, no filter</text>
+      <text x="135" y="140" text-anchor="middle" font-size="10.5" fill="#5C6B7A">blows the context window,</text>
+      <text x="135" y="158" text-anchor="middle" font-size="10.5" fill="#5C6B7A">buries the real answer</text>
+      <line x1="260" y1="105" x2="345" y2="105" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="350" y="20" width="530" height="170" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="615" y="48" text-anchor="middle" font-size="13" font-weight="800" fill="var(--green)">✅ built-in controls</text>
+      <text x="450" y="76" text-anchor="middle" font-size="12" font-weight="700">📄 pagination</text>
+      <text x="650" y="76" text-anchor="middle" font-size="12" font-weight="700">🎯 range select</text>
+      <text x="450" y="102" text-anchor="middle" font-size="12" font-weight="700">🔍 filtering</text>
+      <text x="650" y="102" text-anchor="middle" font-size="12" font-weight="700">✂️ truncation</text>
+      <rect x="390" y="118" width="450" height="52" rx="10" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2"/>
+      <text x="615" y="140" text-anchor="middle" font-size="11.5" font-weight="700">response_format: "concise" | "detailed"</text>
+      <text x="615" y="160" text-anchor="middle" font-size="10.5" fill="#5C6B7A">agent picks how much detail it needs</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> big raw dumps waste tokens and hide the answer. Give tools sensible default limits, filters, and truncation — and when you truncate, say so and hint how to get more.</p>
+    <div class="mem">💡 <b>Remember it as:</b> don't hand over the whole filing cabinet — hand over the one folder, with a note if you trimmed it.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain token-efficient tool responses: pagination, range selection, filtering, truncation with sensible defaults, and a response_format concise/detailed parameter. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: Tool design unit →</a></p>
+  </div>
+
+  <!-- ============ 8 ============ -->
+  <div class="dia" id="s8">
+    <h3>8 · Why do small wording changes to a tool description matter so much?</h3>
+    <p class="cap">Answer: the description IS <b>prompt engineering</b> — it's loaded straight into the agent's context every time.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="400" height="160" rx="14" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="220" y="56" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--red)">❌ vague description</text>
+      <text x="220" y="82" text-anchor="middle" font-size="11.5" font-family="monospace">"user" (id? name? object?)</text>
+      <text x="220" y="106" text-anchor="middle" font-size="11.5">no mention of query syntax</text>
+      <text x="220" y="130" text-anchor="middle" font-size="11.5">no example given</text>
+      <text x="220" y="160" text-anchor="middle" font-size="10.5" fill="#5C6B7A">agent guesses — and guesses wrong</text>
+      <rect x="480" y="30" width="400" height="160" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="680" y="56" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ written for a new teammate</text>
+      <text x="680" y="82" text-anchor="middle" font-size="11.5" font-family="monospace">user_id (not just "user")</text>
+      <text x="680" y="106" text-anchor="middle" font-size="11.5">explains special query format</text>
+      <text x="680" y="130" text-anchor="middle" font-size="11.5">defines any team-specific terms</text>
+      <text x="680" y="160" text-anchor="middle" font-size="10.5" fill="#5C6B7A">agent calls it correctly, first try</text>
+      <text x="450" y="210" text-anchor="middle" font-size="11" fill="#5C6B7A">same tool, same code — the WORDS change the result</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> the model never sees your code — only the description. Write it like onboarding a new hire: spell out formats, define jargon, name parameters unambiguously (<code>user_id</code>, not <code>user</code>).</p>
+    <div class="mem">💡 <b>Remember it as:</b> the description is the whole interview — the agent never reads your source code.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain why tool descriptions are a form of prompt engineering: describe tools like onboarding a new team member, make implicit context explicit, use unambiguous parameter names like user_id. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: Tool design unit →</a></p>
+  </div>
+
+  <!-- ============ FOOTER CTA ============ -->
+  <div class="card" style="text-align:center;margin-top:22px">
+    <p style="margin:0 0 10px"><b>Read them all?</b> Now make it stick — the Learn mode will keep re-asking anything you miss:</p>
+    <a class="golearn" href="flashcards.html?deck=writing-tools&mode=learn">🧠 Test me on these 8 →</a>
+    <p class="hint" style="margin:12px 0 0">Read the source: <a class="note" href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener">Writing effective tools for agents (Anthropic) ↗</a> · see it in context: <a class="note" href="curriculum.html#u-m2">Curriculum: Tool design unit →</a></p>
+  </div>
+
+  <footer>
+    Built from the Anthropic engineering article "Writing effective tools for agents" · same color key as the <a class="note" href="learning-map.html">Visual Learning Map</a> · 2026-07-02
+  </footer>
+</div>
+
+<div id="toast">Copied — paste it to your tutor 👍</div>
+<script>
+(function(){
+  try{localStorage.setItem("ccaf-last",JSON.stringify({href:"article-writing-tools.html",label:"Visual guide: Writing Tools for Agents",ts:Date.now()}))}catch(e){}
+  var toast=document.getElementById('toast');
+  function flash(){toast.classList.add('show');setTimeout(function(){toast.classList.remove('show');},1600);}
+  function fb(t){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);flash();}
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('.ask'); if(!b||!b.getAttribute('data-q')) return;
+    var t=b.getAttribute('data-q');
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(flash).catch(function(){fb(t);});}else{fb(t);}
+  });
+})();
+</script>
+</body>
+</html>

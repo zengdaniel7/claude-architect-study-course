@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quizzes — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .qrow{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .qrow:last-child{border-bottom:0}
+  .qrow .body{flex:1 1 auto}
+  .qrow .ttl{font-weight:700}
+  .score{font-weight:800;font-variant-numeric:tabular-nums;min-width:54px;text-align:right}
+  .take{background:var(--green);color:#fff;text-decoration:none;font-weight:700;padding:8px 16px;border-radius:999px;font-size:.85rem;white-space:nowrap}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+<div class="wrap">
+  <h1>🎯 Practice</h1>
+  <p class="sub">Everything you practice with, in one place — quizzes, flashcards, exercises, and the visual repair guide.</p>
+
+  <div class="card" style="display:flex;flex-wrap:wrap;gap:10px">
+    <a class="take" style="background:var(--accent)" href="pretest.html">🧪 Pre-Test (30 Q diagnostic)</a>
+    <a class="take" style="background:#E8740C" href="flashcards.html">🃏 Flashcards (5 decks)</a>
+    <a class="take" style="background:var(--purple)" href="exercise.html">🏋️ Build exercises</a>
+    <a class="take" style="background:var(--red)" href="repair-map.html">🩹 Repair guide (pictures)</a>
+  </div>
+
+  <h2>📊 Checkpoint quizzes</h2>
+  <p class="hint">Short checks woven through the plan. Take one at the end of each phase — they show you (and your tutor) exactly where you're at.</p>
+  <div class="callout info">Each quiz tracks your <b>score over time</b> and <b>how much you guessed</b>. Aim to retake until you hit it <b>without guessing</b> — that's real mastery, not luck.</div>
+
+  <div class="card" id="list"></div>
+
+  <p class="hint" id="overall"></p>
+  <footer>Your pre-test lives separately: <a href="pretest.html">🧪 Pre-Test</a>. Re-take it every few weeks to re-tune <a href="my-plan.html">My Plan</a>.</footer>
+</div>
+<script src="quizzes.js"></script>
+<script>
+function HKEY(k){return "ccaf-quiz-"+k;}
+function history(k){try{return JSON.parse(localStorage.getItem(HKEY(k))||"[]");}catch(e){return [];}}
+var banks=window.QUIZ_BANKS||{}, order=window.QUIZ_ORDER||Object.keys(banks);
+var list=document.getElementById("list"), totalBest=0, totalQ=0, taken=0;
+order.forEach(function(k){
+  var b=banks[k]; if(!b)return;
+  var h=history(k); var best=h.length?h.reduce(function(a,c){return c.score>a.score?c:a;}):null;
+  if(best){taken++; totalBest+=best.score;} totalQ+=b.questions.length;
+  var row=document.createElement("div");row.className="qrow";
+  var status= best ? (best.score===b.questions.length && best.guessed===0 ? "✅ mastered" : "best "+best.score+"/"+b.questions.length+(best.guessed?(" · "+best.guessed+" guessed"):"")) : "not taken";
+  row.innerHTML='<div class="body"><div class="ttl">'+b.emoji+' '+b.title+'</div>'+
+    '<div class="hint">'+b.phase+' · '+b.questions.length+' questions · '+status+'</div></div>'+
+    '<div class="score">'+(best?best.score+"/"+b.questions.length:"—")+'</div>'+
+    '<a class="take" href="quiz.html?set='+k+'">'+(best?"Retake":"Take")+'</a>';
+  list.appendChild(row);
+});
+document.getElementById("overall").textContent="Quizzes taken: "+taken+"/"+order.length+". Best total so far: "+totalBest+"/"+totalQ+" across all checkpoints.";
+</script>
+</body>
+</html>

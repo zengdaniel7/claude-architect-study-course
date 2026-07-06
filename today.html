@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Today — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .hero{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin:14px 0}
+  .big{font-size:2.2rem;font-weight:800;line-height:1}
+  .pbar{height:18px;border-radius:10px;background:#EFE7D6;overflow:hidden;margin:10px 0 4px}
+  .pbar>span{display:block;height:100%;background:var(--green);border-radius:10px;width:0;transition:width .3s}
+  .next{background:#EAF2FB;border:2px solid var(--accent);border-radius:18px;padding:20px 22px;margin:16px 0}
+  .next .ttl{font-size:1.5rem;font-weight:800;margin:4px 0}
+  .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  .b{display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:800;border-radius:999px;padding:11px 20px;text-decoration:none;font-size:.95rem}
+  .b.go{background:var(--accent);color:#fff} .b.quiz{background:var(--green);color:#fff} .b.ask{background:#EDE6D6;color:var(--ink)}
+  .b:hover{filter:brightness(1.06)}
+  .step{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--line)}
+  .step:last-child{border-bottom:0}
+  .step input{width:24px;height:24px;flex:0 0 auto;margin-top:2px;accent-color:var(--green)}
+  .step .lab{font-weight:700}
+  .step .d{font-size:.86rem;color:var(--muted)}
+  .mini{display:inline-block;background:var(--accent);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:.76rem;padding:5px 11px;cursor:pointer;margin-top:6px}
+  .quicklinks a{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;margin:4px 8px 0 0;text-decoration:none;color:var(--ink);font-weight:700;font-size:.88rem}
+  .quicklinks a:hover{border-color:var(--accent);color:var(--accent)}
+  .watchlink{display:inline-block;background:var(--green);color:#fff;border-radius:999px;padding:7px 15px;margin:6px 8px 0 0;text-decoration:none;font-weight:800;font-size:.85rem}
+  .watchlink:hover{filter:brightness(1.06)}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:70}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+  <header style="padding:26px 0 4px">
+    <h1>▶️ Today</h1>
+    <p class="sub" id="datesub"></p>
+  </header>
+
+  <!-- WHERE YOU ARE -->
+  <div class="hero">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px">
+      <div><div class="big" id="pct">0%</div><div class="hint">of the course done</div></div>
+      <div style="text-align:right"><div style="font-weight:800;font-size:1.1rem" id="levelnow">Getting started</div><div class="hint" id="unitsdone">0 / 16 units</div></div>
+    </div>
+    <div class="pbar"><span id="pbar"></span></div>
+    <p class="hint" id="encourage" style="margin:.4em 0 0"></p>
+    <p style="margin:.5em 0 0;font-size:.9rem"><a href="timeline.html"><b>🛤️ See the whole timeline</b> — every unit, what's done, where you are →</a></p>
+  </div>
+
+  <!-- NEXT UNIT -->
+  <h2>🎯 Your next unit</h2>
+  <div class="next">
+    <div class="hint" id="nextlevel">—</div>
+    <div class="ttl" id="nexttitle">Loading…</div>
+    <div id="nextone" style="color:var(--muted)"></div>
+    <div class="btnrow">
+      <a class="b go" id="nextgo" href="curriculum.html">Open it on the curriculum →</a>
+      <a class="b quiz" id="nextquiz" href="quizzes.html">🧪 Its quiz</a>
+      <button class="b ask" id="nextask">💬 Ask my tutor to teach it</button>
+    </div>
+    <p class="hint" style="margin:.7em 0 0">Tip: open it, watch/draw/build, then mark it done on the curriculum — this page updates automatically.</p>
+  </div>
+  <p class="hint" id="lastseen" style="display:none"></p>
+
+  <!-- TODAY'S 5 STEPS -->
+  <h2>📋 Today's 5 steps</h2>
+  <div class="card">
+    <p class="hint" id="pipeprog">0 / 5 done today</p>
+    <div class="pbar" style="height:14px;margin-bottom:10px"><span id="pipebar"></span></div>
+    <div id="steps"></div>
+  </div>
+
+  <!-- ARTICLES AS PICTURES -->
+  <h2>📚 The articles — as pictures</h2>
+  <div class="card quicklinks">
+    <p class="hint" style="margin:0 0 8px">Every article the course points to, <b>retold as diagrams right here on your site</b> — no going anywhere else. (Each page still links the original at the top if you want it.)</p>
+    <a href="article-effective-agents.html">🧩 Building effective agents</a>
+    <a href="article-multi-agent.html">🕸️ Multi-agent research system</a>
+    <a href="article-writing-tools.html">🔧 Writing tools for agents</a>
+    <a href="repair-map.html">🩹 The trickiest pre-test questions</a>
+  </div>
+
+  <!-- QUICK -->
+  <h2>⚡ Quick practice</h2>
+  <div class="card quicklinks">
+    <a href="flashcards.html">🃏 Flip flashcards</a>
+    <a href="exercise.html">🏋️ Build exercises</a>
+    <a href="quizzes.html">📊 Take a quiz</a>
+    <a href="learning-map.html">🗺️ See the big picture</a>
+    <a href="pretest.html">🧪 Re-take the pre-test</a>
+  </div>
+
+  <footer>This page reads your saved progress (curriculum + daily steps) on this device. · 2026-06-28</footer>
+</div>
+
+<div id="toast">Copied — paste it to your tutor 👍</div>
+
+<script>
+// ---- recommended path through the Atomic Curriculum (matches curriculum.html ids) ----
+var PATH=[
+ {id:"o1",lvl:"Organisms",t:"The Agent Loop",one:"Model + tools + a loop until stop_reason says done",quiz:"quiz.html?set=agentic",
+  ask:"This is my #1 priority. Teach me the Agent Loop for CCA-F: think-tool-result-repeat, stop_reason (tool_use vs end_turn), why iteration caps are weak, and runaway guards. One example, 3 flashcards, then quiz me."},
+ {id:"o2",lvl:"Organisms",t:"Orchestrator–Workers",one:"A coordinator splits work across subagents",quiz:"quiz.html?set=agentic",
+  ask:"Teach me Orchestrator–Workers (multi-agent) for CCA-F: coordinator role, explicit context passing, parallel work, provenance, and when NOT to use multi-agent. One example, 3 flashcards."},
+ {id:"rel",lvl:"Reliability thread",t:"Reliability — the thread",one:"Lost-in-the-middle, verification ladder, provenance, human-in-loop",quiz:"quiz.html?set=reliability",
+  ask:"This is my weak spot. Teach me Reliability for CCA-F: lost-in-the-middle, verification ladder (code>visual>LLM-judge), provenance, human-in-the-loop, batch vs real-time, retries+caching. One example each, then quiz me."},
+ {id:"o3",lvl:"Organisms",t:"An MCP server",one:"Tools (actions) vs resources (read-only) vs prompts (workflows)",quiz:"quiz.html?set=tools-mcp",
+  ask:"Teach me MCP for CCA-F: tools vs resources vs prompts, who controls each, scope, secrets. The trap is using a tool when a read-only resource fits. One example, 3 flashcards."},
+ {id:"o4",lvl:"Organisms",t:"Claude Code workflows",one:"CLAUDE.md, commands, skills, subagents, hooks, headless",quiz:"quiz.html?set=claude-code",
+  ask:"Teach me Claude Code workflows for CCA-F: CLAUDE.md, slash commands, skills, subagents, hooks, headless claude -p — and when a hook beats a prompt. One example, 3 flashcards."},
+ {id:"m1",lvl:"Molecules",t:"A structured-output call",one:"Prompt + schema → guaranteed JSON",quiz:"quiz.html?set=prompting",
+  ask:"Teach me a structured-output call for CCA-F: prompt + schema, required/optional, nullable, enum, and invalid-JSON vs missing-fact. One example, 3 flashcards."},
+ {id:"m2",lvl:"Molecules",t:"One tool call",one:"Give Claude one action; read the result",quiz:"quiz.html?set=tools-mcp",
+  ask:"Teach me one tool call for CCA-F: name, description, inputs, tool_result, is_error, tool_choice — and why vague descriptions cause wrong tool calls. One example, 3 flashcards."},
+ {id:"m4",lvl:"Molecules",t:"Built-in tools",one:"Read · Write · Edit · Bash · Grep · Glob — pick the right one",quiz:"quiz.html?set=tools-mcp",
+  ask:"Teach me Claude Code's built-in tools for CCA-F: when to use Grep vs Glob vs Read/Write vs Edit vs Bash, and the 'grep an entry point then read to follow imports' pattern. One example, 3 flashcards."},
+ {id:"m3",lvl:"Molecules",t:"Prompt techniques",one:"Clear instructions, few-shot, chaining",quiz:"quiz.html?set=prompting",
+  ask:"Teach me prompt techniques for CCA-F: explicit criteria, few-shot, output format, prompt chaining. One example, 3 flashcards."},
+ {id:"t1",lvl:"Templates",t:"Support-agent system",one:"Agent + tools + escalation rules",quiz:"quiz.html?set=agentic",
+  ask:"Walk me through a support-agent system for CCA-F: the loop in context, a refund limit that must escalate, why that needs a hook not a prompt, structured handoff fields. One example, 3 flashcards."},
+ {id:"t2",lvl:"Templates",t:"Research multi-agent system",one:"Search → analyze → synthesize → report",quiz:"quiz.html?set=agentic",
+  ask:"Walk me through a research multi-agent system for CCA-F: decompose, pass context, gather, attach provenance to every finding. Where does it break? One example, 3 flashcards."},
+ {id:"t3",lvl:"Templates",t:"PR-review / CI pipeline",one:"Real-time vs batch; file pass + integration pass",quiz:"quiz.html?set=reliability",
+  ask:"Walk me through a PR-review/CI pipeline for CCA-F: real-time vs batch, file-by-file then integration pass, claude -p JSON output, cutting false positives. One example, 3 flashcards."},
+ {id:"p1",lvl:"Pages",t:"The 6 exam scenarios",one:"Whole systems, real tradeoffs — exam style",quiz:"pretest.html",
+  ask:"Give me one CCA-F production scenario like the exam. Make me choose the approach and justify it, name the tradeoff, the reliability angle. Then grade me."},
+ {id:"p2",lvl:"Pages",t:"Your capstone build",one:"Build one real thing, end to end",quiz:"projects.html",
+  ask:"Help me pick and scope a CCA-F capstone I can build as a beginner: the system, a tiny first version, one guardrail, how I'll explain it. Keep it small and real."},
+ {id:"px",lvl:"Pages",t:"Anti-patterns & decision frameworks",one:"The wrong answers — and how to pick A vs B",quiz:"pretest.html",
+  ask:"Drill me on CCA-F anti-patterns (the wrong answers): 8 scenario questions where one option is a classic trap (parsing text to stop a loop, iteration caps, prompt-enforcing critical rules, sentiment-based escalation, swallowing errors, too many tools, same-session review, aggregate metrics). Make me pick AND explain. Then grade me."},
+ {id:"a1",lvl:"Atoms",t:"Core vocabulary (refresh)",one:"Keep the 8 base terms warm",quiz:"quiz.html?set=foundations",
+  ask:"Quiz me on the 8 core CCA-F terms (API, JSON, schema, token, context window, prompt, tool, model), plain words, tell me what I miss."}
+];
+var TOTAL=PATH.length;
+// best specific "watch" link per unit. ▶ deep links = enrolled lessons that open the player; others are the exact free article/course for that topic.
+var WATCH={
+ o1:["article-effective-agents.html","🧩 Effective agents — as pictures"],
+ o2:["https://anthropic.skilljar.com/claude-code-101/469796","Claude Code 101 ▶ Subagents"],
+ rel:["https://anthropic.skilljar.com/claude-code-101/469793","Claude Code 101 ▶ Context management"],
+ o3:["https://anthropic.skilljar.com/claude-code-101/469797","Claude Code 101 ▶ MCP"],
+ o4:["https://anthropic.skilljar.com/claude-code-101/469789","Claude Code 101 ▶ How Claude Code works"],
+ m1:["https://anthropic.skilljar.com/claude-with-the-anthropic-api","Building with the Claude API (Academy · free, enroll once)"],
+ m2:["https://anthropic.skilljar.com/claude-with-the-anthropic-api","Building with the Claude API (Academy · free, enroll once)"],
+ m4:["https://anthropic.skilljar.com/claude-code-101/469789","Claude Code 101 ▶ How Claude Code works"],
+ m3:["https://anthropic.skilljar.com/claude-with-the-anthropic-api","Building with the Claude API (Academy · free, enroll once)"],
+ t1:["https://anthropic.skilljar.com/claude-code-101/469798","Claude Code 101 ▶ Hooks"],
+ t2:["https://anthropic.skilljar.com/claude-code-101/469796","Claude Code 101 ▶ Subagents"],
+ t3:["https://anthropic.skilljar.com/claude-code-101/469794","Claude Code 101 ▶ Code review"],
+ p1:["pretest.html","Drill: re-take the Pre-Test"],
+ p2:["projects.html","Projects & rubrics"],
+ px:["pretest.html","Drill: anti-pattern questions"],
+ a1:["https://anthropic.skilljar.com/claude-101/383389","Claude 101 ▶ Meet Claude"]
+};
+// in-site build exercise per unit (exercise.html runner) — shown on the 🔨 Build step
+var BUILDX={
+ o1:["exercise.html?id=gate-chain","🚦 Flashcard Factory — chain with a gate"],
+ m3:["exercise.html?id=gate-chain","🚦 Flashcard Factory — chain with a gate"]
+};
+
+// ---- read curriculum progress ----
+var done={};
+try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&s.done)done=s.done;}catch(e){}
+var nDone=PATH.filter(function(u){return done[u.id];}).length;
+var pct=Math.round(nDone/TOTAL*100);
+document.getElementById("pct").textContent=pct+"%";
+document.getElementById("pbar").style.width=pct+"%";
+document.getElementById("unitsdone").textContent=nDone+" / "+TOTAL+" units";
+
+// next undone unit on the path
+var next=PATH.filter(function(u){return !done[u.id];})[0];
+var WL = next ? (WATCH[next.id]||["curriculum.html#u-"+next.id,"Open today's unit"]) : ["quizzes.html","Take a timed quiz"];
+if(!next){
+  document.getElementById("levelnow").textContent="🎉 All units done!";
+  document.getElementById("nextlevel").textContent="You did it";
+  document.getElementById("nexttitle").textContent="Switch to timed practice + the pre-test";
+  document.getElementById("nextone").textContent="Re-take quizzes under time and explain each wrong answer.";
+  document.getElementById("nextgo").href="quizzes.html";
+  document.getElementById("nextquiz").href="pretest.html";
+  document.getElementById("nextask").setAttribute("data-q","I've finished the curriculum units. Build me a timed exam-readiness plan for CCA-F: which quizzes to redo, how to review wrong answers, and a mock-exam routine.");
+}else{
+  document.getElementById("levelnow").textContent="Now in: "+next.lvl;
+  document.getElementById("nextlevel").textContent=next.lvl+(done[PATH[0].id]?"":"  ·  start here ★");
+  document.getElementById("nexttitle").textContent=next.t;
+  document.getElementById("nextone").textContent=next.one;
+  document.getElementById("nextgo").href="curriculum.html#u-"+next.id;
+  document.getElementById("nextquiz").href=next.quiz;
+  document.getElementById("nextask").setAttribute("data-q",next.ask);
+}
+document.getElementById("encourage").textContent = pct===0
+  ? "Fresh start. Do just the next unit today — that's a win."
+  : pct<40 ? "Good momentum — keep chipping at one unit a day."
+  : pct<80 ? "More than a third done. Stay steady." : "Almost there — finish strong. 🎯";
+
+// ---- pick up where you left off (written by curriculum/flashcards/guides) ----
+try{
+  var last=JSON.parse(localStorage.getItem("ccaf-last")||"null");
+  if(last && last.href && last.label && (Date.now()-(last.ts||0)) < 14*24*60*60*1000){
+    var ls=document.getElementById("lastseen");
+    var a=document.createElement("a"); a.href=last.href;
+    var b=document.createElement("b"); b.textContent=last.label; a.appendChild(b);
+    ls.appendChild(document.createTextNode("⏪ Pick up where you left off: "));
+    ls.appendChild(a); ls.appendChild(document.createTextNode(" →"));
+    ls.style.display="block";
+  }
+}catch(e){}
+
+// ---- daily 5 steps (shared key with the dashboard) ----
+var PIPE=[
+ {label:"🎥 Watch / listen (15–25 min)", d:"Your specific lesson for today's unit is right here 👇 Captions on; pause and sketch.",
+  ask:"What exactly should I watch today for my current unit, and where? Give the course + lesson + a one-line focus."},
+ {label:"✏️ Draw it as boxes + arrows", d:"From memory, redraw today's idea. Use the color key.",
+  ask:"Describe the ONE boxes-and-arrows diagram for today's unit so I can copy it."},
+ {label:"🔨 Build one tiny example", d:"Smallest working version — real code or a paper simulation.",
+  ask:"Give me today's tiny build task — the smallest real thing I can do in ~20 min for my current unit, with starter steps."},
+ {label:"🗣️ Explain it out loud (60 sec)", d:"Say it in plain words, no notes.",
+  ask:"I'll explain today's unit in my own words — quiz and grade me, and tell me what I missed."},
+ {label:"🃏 3 flashcards + 1 mistake card", d:"3 Q→A cards + 1 card for something you got wrong.",
+  ask:"Turn today's unit into 3 short flashcards (Q then A) plus 1 mistake card."}
+];
+var PKEY="ccaf-pipeline";
+var _n=new Date(),today=_n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC — resets at YOUR midnight
+var pst={};
+try{pst=JSON.parse(localStorage.getItem(PKEY)||"{}");}catch(e){}
+if(pst.date!==today||!Array.isArray(pst.checks)||pst.checks.length!==PIPE.length){pst={date:today,checks:PIPE.map(function(){return false;})};}
+document.getElementById("datesub").textContent="Today is "+today+" · here's where you are and what to do.";
+function psave(){try{localStorage.setItem(PKEY,JSON.stringify(pst));}catch(e){}}
+function pbar(){
+  var n=pst.checks.filter(Boolean).length;
+  document.getElementById("pipeprog").textContent="Today: "+n+" / "+PIPE.length+" done"+(n===PIPE.length?"  🎉":"");
+  document.getElementById("pipebar").style.width=(n/PIPE.length*100)+"%";
+}
+var sh=document.getElementById("steps");
+PIPE.forEach(function(it,i){
+  var w=document.createElement("div");w.className="step";
+  var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!pst.checks[i];
+  var body=document.createElement("div");
+  body.innerHTML='<div class="lab">'+it.label+'</div><div class="d">'+it.d+'</div>';
+  if(i===0){
+    var wl=document.createElement("a");wl.className="watchlink";wl.href=WL[0];
+    if(/^https?:/.test(WL[0])){wl.target="_blank";wl.rel="noopener";}
+    wl.textContent="▶ "+WL[1];body.appendChild(wl);
+  }
+  if(i===2 && next && BUILDX[next.id]){
+    var bl=document.createElement("a");bl.className="watchlink";bl.href=BUILDX[next.id][0];
+    bl.textContent="🏋️ "+BUILDX[next.id][1];body.appendChild(bl);
+  }
+  var ab=document.createElement("button");ab.className="mini";ab.textContent="💬 Ask my tutor";ab.setAttribute("data-q",it.ask);
+  body.appendChild(ab);
+  cb.addEventListener("change",function(){pst.checks[i]=cb.checked;psave();pbar();});
+  w.appendChild(cb);w.appendChild(body);sh.appendChild(w);
+});
+pbar();
+
+// ---- copy-to-tutor ----
+var toast=document.getElementById("toast");
+function flash(){toast.classList.add("show");setTimeout(function(){toast.classList.remove("show");},1600);}
+document.addEventListener("click",function(e){
+  var b=e.target.closest("[data-q]"); if(!b) return;
+  var t=b.getAttribute("data-q")||"";
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(flash).catch(function(){fb(t);});}else{fb(t);}
+});
+function fb(t){var x=document.createElement("textarea");x.value=t;document.body.appendChild(x);x.select();try{document.execCommand("copy");}catch(_){}x.remove();flash();}
+</script>
+</body>
+</html>

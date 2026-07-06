@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Plan — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+  <h1>🧭 My Plan</h1>
+  <p class="sub">A worked example, tuned from one real beginner's pre-test: <b>20/30, but 18 guessed</b>. <a href="pretest.html">Take the Pre-Test</a>, then adapt this to YOUR numbers. (Master reference = <a href="curriculum.html">Curriculum</a>.)</p>
+
+  <div class="callout info">
+    <b>The logic (works for any score):</b> a score with lots of <b>guessing</b> is smaller than it looks — this learner's 20 was really ≈12. So: <b>lock the basics FAST</b> (a brief overview, below), then spend the real time where you're <b>weak AND the exam is heavy</b> — Agentic (27%) and Reliability (15%).
+  </div>
+
+  <h2>⚡ Fast Foundations — the simple stuff, in one screen</h2>
+  <p class="hint">A brief overview so the basics are covered (not re-taught for weeks). Read once; the glossary project locks them in.</p>
+  <div class="card">
+    <ul>
+      <li><b>API</b> — a way for two programs to talk (you send a request, you get a response).</li>
+      <li><b>JSON</b> — a simple text format for structured data, like <code>{ "name": "Dan" }</code>.</li>
+      <li><b>Schema</b> — the expected <i>shape</i> of data: which fields exist and what type each is.</li>
+      <li><b>CLI / terminal</b> — typing commands to your computer instead of clicking.</li>
+      <li><b>Git</b> — saves versions of your files so you can track and undo changes.</li>
+      <li><b>Token</b> — a chunk of text (~¾ of a word). Models read and bill by tokens.</li>
+      <li><b>Model</b> — the AI "brain" (e.g., Claude) that turns input into output.</li>
+      <li><b>Prompt</b> — the instructions/question you give the model.</li>
+      <li><b>Context window</b> — how much text the model can hold in mind at once.</li>
+      <li><b>Tool</b> — an action you let the model call (search, run code, look up an order).</li>
+      <li><b>Agent</b> — a model that loops: think → use a tool → read the result → repeat → finish.</li>
+      <li><b>MCP</b> — a standard "plug" that connects Claude to outside tools and data.</li>
+      <li><b>Structured output</b> — making the model return clean JSON that matches a schema.</li>
+    </ul>
+  </div>
+
+  <h2>🎯 How the time gets spent <span class="hint" style="font-weight:400">(the "You" column = the example learner — swap in your pre-test scores)</span></h2>
+  <table>
+    <tr><th>Area</th><th>You</th><th>Exam</th><th>How we treat it</th></tr>
+    <tr><td>🔵 Foundations + ecosystem</td><td>4/5 *</td><td>—</td><td>⚡ <b>Brief</b> — confirm + glossary (kill the guessing)</td></tr>
+    <tr><td>🟠 Prompting & Structured Output</td><td>3/5</td><td>20%</td><td>🟡 <b>Solid</b> — real practice</td></tr>
+    <tr><td>🟣 Tools & MCP</td><td>4/5 *</td><td>18%</td><td>⚡ Brief refresh + <b>build a real MCP server</b></td></tr>
+    <tr><td>🟠 Claude Code</td><td>4/5 *</td><td>20%</td><td>⚡ Brief refresh + <b>real practice</b></td></tr>
+    <tr><td>🔴 Agentic Architecture</td><td>3/5</td><td><b>27%</b></td><td>🔵 <b>DEEP — the most time</b> (biggest + weak)</td></tr>
+    <tr><td>🟢 Context & Reliability</td><td><b>2/5</b></td><td>15%</td><td>🔴 <b>DEEP & SLOW</b> (your weakest)</td></tr>
+  </table>
+  <p class="hint">* Scored 4/5 but with lots of guessing — so confirm these quickly rather than assume them.</p>
+
+  <h2>🗺️ The path (at ~20 hrs/week → about 9 weeks)</h2>
+  <details open><summary>⚡ Phase 0 (Days 1–4) — Fast Foundations</summary><div class="body">Read the overview above · build the <b>Visual Glossary</b> (Project 1) · draw the Claude ecosystem map · watch <b>Claude 101</b>. <b>Goal:</b> stop guessing on basic words.<br><a href="quiz.html?set=foundations">📊 Checkpoint quiz →</a></div></details>
+  <details><summary>🟠 Phase 1 (Week 1) — Prompting & Structured Output <span class="chip">20% · your 3/5</span></summary><div class="body">Explicit criteria, few-shot, chaining, JSON schema, nullable/enum, validation vs missing data. Build the Prompt Clinic + Extraction Lab.<br><a href="quiz.html?set=prompting">📊 Checkpoint quiz →</a></div></details>
+  <details><summary>🟣 Phase 2 (Week 2) — Tools & MCP <span class="chip">18%</span></summary><div class="body">Quick refresh of tool descriptions / tool_choice / is_error, then <b>build a tiny MCP server</b> (tools vs resources vs prompts).<br><a href="quiz.html?set=tools-mcp">📊 Checkpoint quiz →</a></div></details>
+  <details><summary>🟠 Phase 3 (Week 2–3) — Claude Code <span class="chip">20%</span></summary><div class="body">Brief concept refresh + real practice: CLAUDE.md, skills, slash commands, hooks, plan mode, headless.<br><a href="quiz.html?set=claude-code">📊 Checkpoint quiz →</a></div></details>
+  <details><summary>🔴 Phase 4 (Weeks 3–6) — Agentic Architecture <span class="chip">27% · DEEP</span></summary><div class="body">Agent loop, stop_reason (tool_use vs end_turn), orchestrator-workers, multi-agent, when NOT to. Build the Loop Board → Escalation Agent → Multi-Agent Pipeline. <b>This gets the most time.</b><br><a href="quiz.html?set=agentic">📊 Checkpoint quiz →</a></div></details>
+  <details><summary>🟢 Phase 5 (Weeks 6–8) — Context & Reliability <span class="chip">15% · your 2/5</span></summary><div class="body">Go slow here. Context windows, lost-in-the-middle, pruning/summaries, evals, retries, batch vs real-time, provenance, human-in-the-loop. Build the CI/CD review pipeline.<br><a href="quiz.html?set=reliability">📊 Checkpoint quiz →</a></div></details>
+  <details><summary>🏁 Phase 6 (Weeks 8–9) — Capstone + mocks</summary><div class="body">Final architecture blueprint · 2 timed mocks · redraw all 5 domains from memory.</div></details>
+
+  <h2>🃏 Flashcard focus (the words most people guess on)</h2>
+  <div class="card">
+    Make cards for these first — they're where luck carried you: <b>provenance</b> · <b>human-in-the-loop</b> · <b>batch vs real-time</b> · <b>context getting buried</b> (lost-in-the-middle) · <b>stop_reason</b> · <b>is_error</b> (the real one vs "isRetryable") · <b>nullable fields</b> · <b>tool vs resource</b>.
+  </div>
+
+  <h2>▶️ This week</h2>
+  <div class="callout ok">
+    <ol>
+      <li><b>Days 1–2:</b> Visual Glossary + watch Claude 101 (lock the basics).</li>
+      <li><b>Day 3:</b> ecosystem map + flashcard every guessed/wrong pre-test question.</li>
+      <li><b>Days 4–7:</b> start Phase 1 — Prompting & Structured Output.</li>
+    </ol>
+  </div>
+
+  <footer>Built from a real pre-test as a worked example · the full reference plan is in <a href="curriculum.html">Curriculum</a>. Re-do the pre-test in a few weeks to re-tune this.</footer>
+</div>
+</body>
+</html>

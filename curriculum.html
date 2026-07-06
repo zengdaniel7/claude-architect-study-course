@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Atomic Curriculum — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .lead{font-size:1.05rem;color:var(--muted)}
+  .ladder-wrap{width:100%;overflow-x:auto}
+  svg{display:block;max-width:100%;height:auto}
+  svg text{font-family:"Atkinson Hyperlegible","Work Sans",system-ui,sans-serif}
+  .startcall{background:#FBE7E5;border:1px solid #E5A9A4;border-radius:14px;padding:14px 18px;margin:14px 0}
+  .levelhead{display:flex;align-items:center;gap:12px;margin:30px 0 6px}
+  .levelhead .dot{width:18px;height:18px;border-radius:6px;flex:0 0 auto}
+  .levelhead h2{margin:0;border:0;padding:0;font-size:1.5rem}
+  .levelhead .sub{color:var(--muted);font-size:.9rem}
+  .unit{border:1px solid var(--line);border-left:6px solid var(--line);border-radius:14px;margin:10px 0;background:var(--card);overflow:hidden;scroll-margin-top:70px}
+  .unit>summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .unit>summary::-webkit-details-marker{display:none}
+  .unit>summary:hover{background:#FFFdF6}
+  .unit .ic{font-size:1.35rem;flex:0 0 auto}
+  .unit .ttl{font-weight:800}
+  .unit .one{color:var(--muted);font-size:.9rem;flex:1 1 200px;min-width:140px}
+  .unit .chev{color:var(--accent);font-weight:800;font-size:1.1rem}
+  .tag{display:inline-block;font-size:.68rem;font-weight:800;padding:2px 9px;border-radius:999px;vertical-align:middle;white-space:nowrap}
+  .tag.weak{background:var(--red);color:#fff}
+  .tag.start{background:#332700;color:#FFD66B}
+  .tag.light{background:#E8F5EC;color:#1c6b40;border:1px solid #A9D9BC}
+  .tag.thread{background:var(--blue);color:#fff}
+  .statusdot{width:16px;height:16px;border-radius:50%;border:2px solid var(--line);flex:0 0 auto}
+  .statusdot.done{background:var(--green);border-color:var(--green)}
+  .ubody{padding:2px 16px 14px}
+  .row{display:flex;gap:12px;padding:10px 0;border-top:1px dashed var(--line);align-items:flex-start}
+  .row .rl{flex:0 0 110px;font-weight:800;font-size:.82rem;display:flex;align-items:center;gap:5px}
+  .row .rc{flex:1 1 auto;font-size:.92rem}
+  .row .rc a{color:var(--accent);font-weight:700;text-decoration:none}
+  .row .rc a:hover{text-decoration:underline}
+  .row .rc ul{margin:.2em 0;padding-left:1.1em}
+  .row .rc li{margin:3px 0}
+  .vid{display:inline-block;margin:3px 8px 0 0;background:#FFF3E6;border:1px solid #E8CE7A;border-radius:999px;padding:3px 11px;font-size:.82rem;color:#7a4a00;text-decoration:none;font-weight:700}
+  .vid:hover{filter:brightness(.97)}
+  .qlink{display:inline-block;background:var(--green);color:#fff;border-radius:999px;padding:5px 14px;font-size:.83rem;font-weight:800;text-decoration:none}
+  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:999px}
+  .ask:hover{filter:brightness(1.08)}
+  .donebtn{border:0;cursor:pointer;background:#EDE6D6;color:#26303B;font:inherit;font-size:.8rem;font-weight:800;padding:7px 14px;border-radius:999px}
+  .donebtn.is-done{background:var(--green);color:#fff}
+  .pbar{height:16px;border-radius:9px;background:#EFE7D6;overflow:hidden;margin-top:8px}
+  .pbar>span{display:block;height:100%;background:var(--green);border-radius:9px;width:0;transition:width .3s}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+  <header style="padding:30px 0 6px">
+    <h1>⚛️ The Atomic Curriculum</h1>
+    <p class="lead">The whole CCA-F path built like a system — from the smallest <b>building blocks</b> up to full <b>production systems</b>, using <a href="https://atomicdesign.bradfrost.com/" target="_blank" rel="noopener" class="note">Brad Frost's Atomic Design</a> as the backbone. Each unit has a <b>diagram, plain words, chapters, videos &amp; a quiz</b> — folded away until you tap it, so it's never a wall.</p>
+  </header>
+
+  <div class="callout" style="background:#EFEAF8;border:1px solid #d6c8ef;border-radius:14px;padding:12px 16px">
+    💡 <b>How to read this:</b> the levels go small → big (Atoms → Pages), but you <b>don't study them in order</b>. Atomic Design is a <i>map</i>, not a staircase. The recommended path (weights-first — biggest exam domains early) starts at <b>Organisms → The Agent Loop</b> 👇.
+  </div>
+
+  <!-- progress -->
+  <div class="card">
+    <b id="pcount">Progress: 0 / 16 units</b>
+    <div class="pbar"><span id="pbar"></span></div>
+    <p class="hint" id="phint" style="margin:.5em 0 0">Tap a unit, work through its rows, then hit <b>✓ Mark done</b>. Your progress saves on this device.</p>
+  </div>
+
+  <!-- the ladder -->
+  <h2>🪜 The whole system at a glance</h2>
+  <div class="card">
+    <div class="ladder-wrap">
+    <svg viewBox="0 0 720 360" role="img" aria-label="atomic design ladder for the curriculum">
+      <!-- reliability rail -->
+      <rect x="20" y="20" width="40" height="320" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="40" y="185" text-anchor="middle" font-size="13" font-weight="800" fill="#2D7DD2" transform="rotate(-90 40 185)">RELIABILITY runs through it all</text>
+      <!-- Pages -->
+      <rect x="80" y="20" width="620" height="52" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="100" y="44" font-size="15" font-weight="800" fill="#1c6b40">PAGES</text>
+      <text x="100" y="62" font-size="11.5" fill="#5C6B7A">real production scenarios + your capstone — the exam's world</text>
+      <!-- Templates -->
+      <rect x="80" y="80" width="620" height="52" rx="10" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="100" y="104" font-size="15" font-weight="800" fill="#6a30a8">TEMPLATES</text>
+      <text x="100" y="122" font-size="11.5" fill="#5C6B7A">architecture blueprints — support agent, research system, CI pipeline</text>
+      <!-- Organisms (start here) -->
+      <rect x="80" y="140" width="620" height="58" rx="10" fill="#FBE7E5" stroke="var(--red)" stroke-width="3"/>
+      <text x="100" y="166" font-size="15" font-weight="800" fill="#b62f2f">ORGANISMS  ★</text>
+      <text x="100" y="184" font-size="11.5" fill="#5C6B7A">working patterns — the Agent Loop, MCP server, Claude Code, multi-agent</text>
+      <text x="682" y="173" text-anchor="end" font-size="12" font-weight="800" fill="#b62f2f">◀ START HERE</text>
+      <!-- Molecules -->
+      <rect x="80" y="206" width="620" height="52" rx="10" fill="#FFF8E6" stroke="var(--yellow)" stroke-width="2.5"/>
+      <text x="100" y="230" font-size="15" font-weight="800" fill="#8a6400">MOLECULES</text>
+      <text x="100" y="248" font-size="11.5" fill="#5C6B7A">single techniques — one tool call, a structured-output call, prompt chaining</text>
+      <!-- Atoms -->
+      <rect x="80" y="266" width="620" height="52" rx="10" fill="#EFEFEF" stroke="#9AA7B2" stroke-width="2.5"/>
+      <text x="100" y="290" font-size="15" font-weight="800" fill="#5C6B7A">ATOMS ✓</text>
+      <text x="100" y="308" font-size="11.5" fill="#5C6B7A">the vocabulary — API, JSON, schema, context window… (you've locked these)</text>
+      <text x="390" y="338" text-anchor="middle" font-size="11" fill="#9A8C73">↑ abstract building blocks become concrete systems ↑</text>
+    </svg>
+    </div>
+  </div>
+
+  <div class="startcall">
+    🚀 <b>Your fastest path:</b> <a href="#u-o1" class="note" style="font-weight:800">① Agent Loop</a> → ② Orchestrator–Workers → ③ Reliability thread → ④ MCP → ⑤ Claude Code → then Templates → Pages. Dip <i>down</i> to a Molecule or Atom whenever a word is fuzzy.
+  </div>
+
+  <div id="levels"></div>
+
+  <details class="card" style="margin-top:18px">
+    <summary style="cursor:pointer;font-weight:800">📺 Optional deeper background <span class="hint" style="font-weight:600">— not exam-required, general LLM-agent theory</span></summary>
+    <p class="hint" style="margin:.6em 0 0">The exam is Anthropic-specific — the Skilljar lessons + docs linked in each unit are what you need. If you later want broader, university-level theory on agents (framework-agnostic, not Claude-specific), these two free courses are solid:</p>
+    <ul style="margin:.4em 0 0">
+      <li><a href="https://rdi.berkeley.edu/agentic-ai/f25" target="_blank" rel="noopener" class="note">UC Berkeley — Agentic AI (Fall 2025)</a> — LLM agent loops, tool use, planning, evaluation.</li>
+      <li><a href="https://rdi.berkeley.edu/adv-llm-agents/sp25" target="_blank" rel="noopener" class="note">UC Berkeley — Advanced LLM Agents (Spring 2025)</a> — multi-agent coordination + safety.</li>
+    </ul>
+    <p class="hint" style="margin:.5em 0 0">Hundreds more free CS courses (algorithms, systems, security, software architecture) live in the community-maintained <a href="https://github.com/Developer-Y/cs-video-courses" target="_blank" rel="noopener" class="note">cs-video-courses</a> list — great for after the exam.</p>
+  </details>
+
+  <footer>
+    Built on <b>Atomic Design</b> by Brad Frost (2016) — used here as a learning map, not a UI method. Read it free: <a href="https://atomicdesign.bradfrost.com/" target="_blank" rel="noopener" class="note">atomicdesign.bradfrost.com</a>. Prefer a week-by-week view? The <a href="dashboard.html#weeks" class="note">12-week plan</a> lives on the dashboard. · updated 2026-07-01
+  </footer>
+</div>
+
+<div id="toast">Copied — paste it to your tutor 👍</div>
+
+<script>
+var V="https://anthropic.skilljar.com/";
+var LEVELS=[
+  {key:"atoms",name:"Atoms",dot:"#9AA7B2",sub:"the irreducible building blocks — the words everything else is made of"},
+  {key:"molecules",name:"Molecules",dot:"var(--yellow)",sub:"the smallest useful techniques — each does one thing well"},
+  {key:"organisms",name:"Organisms",dot:"var(--red)",sub:"working patterns — where the biggest, highest-stakes exam topics live"},
+  {key:"templates",name:"Templates",dot:"var(--purple)",sub:"architecture blueprints — real systems, without the final details"},
+  {key:"pages",name:"Pages",dot:"var(--green)",sub:"the real thing — production scenarios with tradeoffs, and your capstone"}
+];
+var UNITS=[
+  {id:"a1",lvl:"atoms",ic:"🔤",title:"Core vocabulary",one:"The 8 words everything is built from",tag:{t:"✓ locked — keep warm",c:"light"},
+   words:"API, JSON, schema, token, context window, prompt, tool, model. You already nailed these (4/5, 0 guesses) — just keep them fresh with flashcards.",
+   chapters:["API = two programs talking","JSON = data with labels","Schema = the shape rules","Context window = short-term memory","Prompt · Tool · Token · Model"],
+   dia:{h:"learning-map.html#m-sysdesign",l:"System-design foundations diagram"},
+   vids:[["https://anthropic.skilljar.com/claude-101/383389","Claude 101 ▶ play"],[V+"claude-platform-101","Claude Platform 101"]],
+   quiz:["quiz.html?set=foundations","Foundations quiz"],
+   ask:"I'm a dyslexic beginner. Quiz me on the 8 core CCA-F terms (API, JSON, schema, token, context window, prompt, tool, model) one at a time, plain words, tell me what I miss."},
+  {id:"m1",lvl:"molecules",ic:"🧩",title:"A structured-output call",one:"Prompt + schema then guaranteed JSON",tag:null,
+   words:"Ask Claude for data in a fixed shape and validate it. Nullable fields let it say not-present instead of inventing. Format error then retry with the error; real fact missing then human.",
+   chapters:["required vs optional","nullable stops hallucination","enums for fixed choices","enum + \"other\" + a detail string keeps categories extensible","strict mode / output_config for guaranteed JSON","schema-valid ≠ semantically correct","validate vs missing data","retry appends the SPECIFIC validation errors, not just \"try again\"","retry vs human-review"],
+   dia:{h:"learning-map.html#m-prompting",l:"Structured-output pipeline"},
+   vids:[[V+"claude-with-the-anthropic-api","Building with the Claude API"]],
+   quiz:["quiz.html?set=prompting","Prompting quiz"],
+   ask:"Teach me a structured-output call for CCA-F: prompt + schema, required/optional, nullable, enum, and what to do when JSON is invalid vs when a fact is missing. One example, 3 flashcards."},
+  {id:"m2",lvl:"molecules",ic:"🔧",title:"One tool call",one:"Give Claude one action; read the result",tag:null,
+   words:"A tool = a name, a clear description, inputs, and a result you feed back. Vague descriptions make Claude pick the wrong tool. Report failures with is_error so it can recover.",
+   chapters:["name + description (be clear!)","inputs / parameters","tool_result back into the loop","is_error for failures","empty result [] vs a failure (timeout) — handle them differently","keep it to ~4–5 tools per agent (not 18)","tool_choice: auto / any / forced","near-identical descriptions cause misrouting (analyze_content vs analyze_document)","fix overlap: rename/split into purpose-built tools, not vague generic ones","error types: transient / validation / business / permission — each handled differently","design your error payload so code can route retries (e.g. a retryable flag + category) — ⚠️ but \"isRetryable\" is prep-quiz wording, NOT an official field: the real signal is is_error + a clear message","scope each agent's tools to its role — off-role tools get misused"],
+   dia:{h:"learning-map.html#m-toolsmcp",l:"Tools & MCP diagram"},
+   vids:[[V+"claude-with-the-anthropic-api","Building with the Claude API"]],
+   quiz:["quiz.html?set=tools-mcp","Tools & MCP quiz"],
+   ask:"Teach me one tool call for CCA-F: name, description, inputs, tool_result, is_error, tool_choice — and why vague descriptions cause wrong tool calls. One example, 3 flashcards."},
+  {id:"m3",lvl:"molecules",ic:"✍️",title:"Prompt techniques",one:"Clear instructions, few-shot, chaining",tag:null,
+   words:"Move from make-the-answer-good to make-the-system-reliable: explicit criteria, one good + one bad example (few-shot), and breaking a job into sequential steps (chaining).",
+   chapters:["explicit criteria","explicit criteria beats \"be conservative\" — vague guidance won't cut false positives","few-shot examples","few-shot teaches the REASONING so the model generalizes to new cases","2–4 targeted examples for ambiguous cases, not just one good + one bad","one noisy category erodes trust in ALL of them — disable it and fix the prompt","output format","prompt chaining (steps feed the next)"],
+   dia:{h:"learning-map.html#m-prompting",l:"Prompting diagram"},
+   vids:[[V+"claude-with-the-anthropic-api","Building with the Claude API"]],
+   quiz:["quiz.html?set=prompting","Prompting quiz"],
+   ask:"Teach me prompt techniques for CCA-F: explicit criteria, few-shot (one good + one bad), output format, and prompt chaining. Beginner-friendly, one example, 3 flashcards."},
+  {id:"m4",lvl:"molecules",ic:"🧰",title:"Built-in tools",one:"Read · Write · Edit · Bash · Grep · Glob — pick the right one",tag:{t:"18%",c:"light"},
+   words:"Claude Code ships with file & search tools, and the exam tests picking the right one. Grep searches file CONTENTS; Glob matches file NAMES/paths; Read/Write handle whole files; Edit changes one unique piece of text; Bash runs commands. Explore a codebase by grepping for an entry point, then Read to follow the imports.",
+   chapters:["Grep = search inside files (content)","Glob = match filenames / paths (e.g. **/*.test.ts)","Read / Write = whole-file open & save","Edit = change one unique piece of text; Read+Write if the match isn't unique","Bash = run shell commands","explore big codebases: Grep an entry point, then Read to follow imports"],
+   dia:{h:"learning-map.html#m-claudecode",l:"Claude Code anatomy diagram"},
+   vids:[["https://anthropic.skilljar.com/claude-code-101/469789","Claude Code 101 ▶ How it works"],[V+"claude-code-in-action","Claude Code in Action"]],
+   quiz:["quiz.html?set=tools-mcp","Tools & MCP quiz"],
+   ask:"Teach me Claude Code's built-in tools for CCA-F: when to use Grep vs Glob vs Read/Write vs Edit vs Bash, and the 'grep an entry point then read to follow imports' pattern. One example, 3 flashcards."},
+  {id:"o1",lvl:"organisms",ic:"🤖",title:"The Agent Loop",one:"Model + tools + a loop until stop_reason says done",tag:{t:"🔴 weak · 27%",c:"weak"},start:true,
+   words:"An agent keeps going: think then use a tool then read the result then repeat then finish. The real stop signal is stop_reason (tool_use = keep going, end_turn = done) — NOT a fixed max-5-turns.",
+   chapters:["think then tool then result then repeat","stop_reason runs the loop: tool_use = continue, end_turn = done","know the other values too: max_tokens, stop_sequence, pause_turn, refusal, model_context_window_exceeded","NEVER read the text to decide when to stop — check stop_reason","why fixed iteration caps are a weak primary stop","model decides the next tool from context — not a fixed decision tree","guardrails so it can't run away","start with RAW API calls + simple patterns — a framework hides prompts, tools & errors (<a href='learning-map.html#m-frameworks'>glass box vs magic box</a>)"],
+   dia:{h:"learning-map.html#m-agentic",l:"The Agent Loop diagram"},
+   vids:[["article-effective-agents.html","🧩 Effective agents — as pictures"],["https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons","Handling stop reasons (docs)"]],
+   quiz:["quiz.html?set=agentic","Agentic quiz"],
+   ask:"This is my #1 priority. Teach me the Agent Loop for CCA-F: think-tool-result-repeat, stop_reason (tool_use vs end_turn), why iteration caps are a weak primary stop, and runaway guards. One example, 3 flashcards, then quiz me."},
+  {id:"o2",lvl:"organisms",ic:"🕸️",title:"Orchestrator–Workers",one:"A coordinator splits work across subagents",tag:{t:"🔴 weak · 27%",c:"weak"},
+   words:"For big jobs, a coordinator decomposes the work, sends each subagent context, and gathers results. Subagents do NOT automatically know what the coordinator knows — pass context explicitly. Don't go multi-agent when one loop would do.",
+   chapters:["coordinator role","explicit context passing","parallel work","provenance on every finding","when NOT to use multi-agent","NOT \"advanced parallelization\": parallelization runs KNOWN subtasks — the orchestrator DECIDES them per input","coordinator routes all inter-agent comms and errors — subagents never talk directly","pick only the subagents a query actually needs, not the full pipeline","narrow decomposition risk: missing whole subtopics of a broad question","spawn subagents via the Task tool — allowedTools must include Task","AgentDefinition sets each subagent's description, system prompt & tool limits"],
+   dia:{h:"learning-map.html#m-agentic",l:"Orchestrator–Workers diagram"},
+   vids:[["https://anthropic.skilljar.com/claude-code-101/469796","Claude Code 101 ▶ Subagents"],["article-multi-agent.html","🕸️ Multi-agent research — as pictures"],[V+"introduction-to-subagents","Introduction to subagents"]],
+   quiz:["quiz.html?set=agentic","Agentic quiz"],
+   ask:"Teach me Orchestrator–Workers (multi-agent) for CCA-F: coordinator role, explicit context passing, parallel work, provenance, and when NOT to use multi-agent. One example, 3 flashcards."},
+  {id:"o3",lvl:"organisms",ic:"🔌",title:"An MCP server",one:"Tools (actions) vs resources (read-only) vs prompts (workflows)",tag:{t:"18%",c:"light"},
+   words:"MCP is the standard plug that connects Claude to outside systems. Three parts: tools = actions, resources = read-only context, prompts = reusable workflows. If Claude only needs to READ, it's a resource — not a tool.",
+   chapters:["tools = actions (model-controlled)","resources = read-only (app-controlled)","prompts = workflows (user-controlled)","transport: stdio vs Streamable HTTP","config: .mcp.json (project) vs ~/.claude.json (user)","secrets via env vars","tools from every connected MCP server are all available at once","resources can double as content catalogs, cutting exploratory tool calls","thin tool descriptions push Claude to prefer built-in tools like Grep"],
+   dia:{h:"learning-map.html#m-toolsmcp",l:"MCP three-parts diagram"},
+   vids:[["https://anthropic.skilljar.com/claude-code-101/469797","Claude Code 101 ▶ MCP"],[V+"introduction-to-model-context-protocol","Introduction to MCP"],[V+"model-context-protocol-advanced-topics","MCP: Advanced Topics"]],
+   quiz:["quiz.html?set=tools-mcp","Tools & MCP quiz"],
+   ask:"Teach me MCP for CCA-F: tools vs resources vs prompts, who controls each, scope, and secrets. The classic trap is using a tool when a read-only resource fits. One example, 3 flashcards."},
+  {id:"o4",lvl:"organisms",ic:"⚙️",title:"Claude Code workflows",one:"CLAUDE.md, commands, skills, subagents, hooks, headless",tag:{t:"20%",c:"light"},
+   words:"Three jobs, in order. SET UP: CLAUDE.md project memory, slash commands, skills, path rules. RUN: plan mode, subagents, hooks, headless claude -p. STEER: concrete examples, TDD, the interview pattern, resume/fork sessions. One rule above all: rules that MUST hold go in hooks, not just a prompt.",
+   chapters:["§ ⚙️ Set it up","CLAUDE.md hierarchy + @import + AGENTS.md interop","user-level CLAUDE.md isn't git-shared — teammates miss rules kept there","path-specific rules (.claude/rules/)","rules use YAML frontmatter globs (e.g. **/*.test.tsx) — beats scattered dir CLAUDE.md","slash commands & skills (SKILL.md)","commands & skills: project dir (shared, version-controlled) vs user dir (personal)","SKILL.md frontmatter: context: fork, allowed-tools, argument-hint","§ ▶️ Run it","plan mode vs direct + permission modes","subagents (own context)","Explore subagent isolates verbose discovery, returns just a summary","hooks = deterministic gates (PreToolUse / PostToolUse)","headless claude -p","§ 🎯 Steer it","refine output: 2–3 concrete I/O examples or a failing TDD test","interview pattern: let Claude ask clarifying questions before it builds","interacting issues → fix in one message; independent issues → fix sequentially","session control: --resume session-name continues a past session; fork branches it","after resuming, tell the agent which files changed meanwhile"],
+   dia:{h:"learning-map.html#m-claudecode",l:"Claude Code anatomy diagram"},
+   vids:[["https://anthropic.skilljar.com/claude-code-101/469789","Claude Code 101 ▶ How it works"],["https://anthropic.skilljar.com/claude-code-101/469795","Claude Code 101 ▶ CLAUDE.md"],[V+"claude-code-in-action","Claude Code in Action"],[V+"introduction-to-agent-skills","Introduction to agent skills"]],
+   quiz:["quiz.html?set=claude-code","Claude Code quiz"],
+   ask:"Teach me Claude Code workflows for CCA-F: CLAUDE.md, slash commands, skills, subagents, hooks (deterministic), and headless claude -p — and when a hook beats a prompt. One example, 3 flashcards."},
+  {id:"t1",lvl:"templates",ic:"🎧",title:"Support-agent system",one:"Agent + tools + escalation rules",tag:{t:"🔴 agentic",c:"weak"},
+   words:"Put the agent loop into a real shape: it checks an order, decides a refund, and escalates anything over a limit. The escalation rule must be enforced in code/hooks (deterministic), not just asked for in the prompt.",
+   chapters:["the loop in a real job","block refund over the limit in a HOOK (deterministic, not a prompt)","prerequisite hook: block process_refund until get_customer returns a verified ID","escalate explicit customer requests immediately","split a multi-issue request, investigate in parallel, merge one resolution","structured handoff fields","handoff = customer ID + root-cause analysis + recommended action","PostToolUse hook normalizes mixed formats (timestamps, status codes) before Claude reads them"],
+   dia:{h:"learning-map.html#m-agentic",l:"Agentic patterns"},
+   vids:[["https://anthropic.skilljar.com/claude-code-101/469798","Claude Code 101 ▶ Hooks"],["article-effective-agents.html","🧩 Effective agents — as pictures"]],
+   quiz:["quiz.html?set=agentic","Agentic quiz"],
+   ask:"Walk me through designing a support-agent system for CCA-F: the loop in context, a refund limit that must escalate, why that rule needs a hook not a prompt, and structured handoff fields. One diagram in words, 3 flashcards."},
+  {id:"t2",lvl:"templates",ic:"🔬",title:"Research multi-agent system",one:"Search then analyze then synthesize then report",tag:{t:"🔴 agentic",c:"weak"},
+   words:"A coordinator runs specialized workers and collects a report where every finding carries its source, date, and confidence (provenance). The classic gap: a worker can't use context the coordinator never passed it.",
+   chapters:["decompose the question","assign distinct subtopics / source types per worker to avoid duplicate coverage","send each worker context","decomposition can adapt mid-research as workers report new findings","gather + dedupe","coordinator can re-delegate a second round to fill synthesis gaps","finding = claim + source + date + confidence"],
+   dia:{h:"learning-map.html#m-agentic",l:"Orchestrator–Workers diagram"},
+   vids:[["https://anthropic.skilljar.com/claude-code-101/469796","Claude Code 101 ▶ Subagents"],["article-multi-agent.html","🕸️ Multi-agent research — as pictures"]],
+   quiz:["quiz.html?set=agentic","Agentic quiz"],
+   ask:"Walk me through a research multi-agent system for CCA-F: decompose, pass context, gather, and attach provenance (source/date/confidence) to every finding. Where does it usually break? One example, 3 flashcards."},
+  {id:"t3",lvl:"templates",ic:"🧪",title:"PR-review / CI pipeline",one:"Real-time vs batch; file pass + integration pass",tag:{t:"reliability",c:"thread"},
+   words:"Decide which checks block a merge (real-time) and which run overnight (batch). Review each file for local issues, then a cross-file integration pass. Use claude -p with JSON output. Reduce false positives.",
+   chapters:["claude -p + JSON output","blocking checks vs overnight reports","file-by-file then integration pass","false-positive reduction","re-running a review: pass prior findings, flag only new / unaddressed issues"],
+   dia:{h:"learning-map.html#m-sysdesign",l:"Real-time vs batch"},
+   vids:[["https://anthropic.skilljar.com/claude-code-101/469794","Claude Code 101 ▶ Code review"],[V+"claude-code-in-action","Claude Code in Action"]],
+   quiz:["quiz.html?set=reliability","Reliability quiz"],
+   ask:"Walk me through a PR-review/CI pipeline for CCA-F: real-time vs batch checks, file-by-file then integration pass, claude -p JSON output, and cutting false positives. One example, 3 flashcards."},
+  {id:"p1",lvl:"pages",ic:"📄",title:"The 6 exam scenarios",one:"Whole systems, real tradeoffs — exam style",tag:null,
+   words:"The exam gives production scenarios. For each: read it, pick which box (prompt? tool? agent? hook?) and WHY, name the tradeoff (cost/latency/safety), and state the reliability angle. Practice by re-taking the pre-test and quizzes under time.",
+   chapters:["read the scenario carefully","pick the box + justify it","name the tradeoff","add the reliability/guardrail angle"],
+   dia:{h:"learning-map.html#m-roadmap",l:"Your roadmap"},
+   vids:[["article-effective-agents.html","🧩 Effective agents — as pictures"]],
+   quiz:["pretest.html","Re-take the Pre-Test (timed)"],
+   ask:"Give me one CCA-F production scenario like the exam. Make me choose the approach and justify it, name the tradeoff, and the reliability angle. Then grade me and explain the best answer."},
+  {id:"p2",lvl:"pages",ic:"🏁",title:"Your capstone build",one:"Build one real thing, end to end",tag:null,
+   words:"Pick one system, design its blueprint, build a tiny working version, add a guardrail, and explain it out loud. This is where everything clicks — and proof you can architect, not just recall.",
+   chapters:["pick a system you care about","design the blueprint","build a tiny version","add one guardrail (hook/validation)","explain it in 60 seconds"],
+   dia:{h:"projects.html",l:"Projects & rubrics"},
+   vids:[[V+"claude-code-in-action","Claude Code in Action — build along (free course)"]],
+   quiz:["projects.html","Projects & rubrics"],
+   ask:"Help me pick and scope a CCA-F capstone project I can actually build as a beginner: the system, a tiny first version, one guardrail to add, and how I'll explain it. Keep it small and real."},
+  {id:"px",lvl:"pages",ic:"⚠️",title:"Anti-patterns & decision frameworks",one:"The wrong answers — and how to pick A vs B",tag:{t:"⭐ exam gold",c:"start"},
+   words:"The exam is mostly scenario multiple-choice, so spotting the classic WRONG answer is half the battle. Drill these 10 traps + the key A-vs-B decisions until they're automatic.",
+   chapters:["1 · parsing text to stop a loop (use stop_reason)","2 · iteration caps as the main stop","3 · prompt-enforcing critical rules (use hooks)","4 · self-reported confidence for escalation","5 · escalating on sentiment, not complexity","6 · generic errors that hide the cause","7 · silently swallowing errors as success","8 · too many tools (~18 vs 4–5)","9 · same-session self-review (biased)","10 · aggregate metrics hiding per-type failures","11 · grabbing a framework before understanding what it hides — start raw (<a href='learning-map.html#m-frameworks'>glass box vs magic box</a>)","Decide: hooks vs prompt · plan vs direct · sync vs batch · multi-pass vs single-pass · raw API vs framework · context always explicit"],
+   dia:{h:"learning-map.html#m-roadmap",l:"Your roadmap"},
+   vids:[["article-multi-agent.html","🕸️ Multi-agent research — as pictures"]],
+   quiz:["pretest.html","Drill with the Pre-Test"],
+   ask:"Drill me on CCA-F anti-patterns (the wrong answers). Give me 8 scenario questions where one option is a classic trap — parsing text to stop a loop, iteration caps, prompt-enforcing critical rules, sentiment-based escalation, swallowing errors as success, too many tools, same-session self-review, aggregate metrics hiding failures. Make me pick AND explain why the others are wrong. Then grade me."},
+  {id:"rel",lvl:"thread",ic:"🛡️",title:"Reliability — the thread through everything",one:"Not a stage — a property at every level",tag:{t:"🔴 weak · 15% · cross-cutting",c:"thread"},
+   words:"Like safety in a real building, reliability shows up at every level. Revisit it inside every Organism, Template and Page: keep context tight, verify with code first, handle and propagate errors with structure (not silence), track sources, and route risk to a human.",
+   chapters:["context window & lost-in-the-middle","case-facts block: pull amounts / dates / IDs into a block outside the summary","what survives /compact (CLAUDE.md, memory) vs what's lost","scratchpad files + a crash-recovery manifest let agents resume after context loss","escalate on COMPLEXITY, not sentiment","multiple customer matches: ask for another identifier, don't guess","verification ladder: code > visual > LLM-judge","structured error context: failure type, what was tried, partial results, alternatives","don't silently return empty as success or abort the whole workflow on one failure","provenance + handling conflicting / temporal data","human review: stratified sampling + field-level confidence","batch vs real-time · retries + prompt caching"],
+   dia:{h:"learning-map.html#m-reliability",l:"Reliability diagrams"},
+   vids:[["https://anthropic.skilljar.com/claude-code-101/469793","Claude Code 101 ▶ Context management"]],
+   quiz:["quiz.html?set=reliability","Reliability quiz"],
+   ask:"This is my weak spot. Teach me Reliability for CCA-F as a thread that touches everything: lost-in-the-middle, the verification ladder (code>visual>LLM-judge), provenance, human-in-the-loop, batch vs real-time, retries + caching. One example each, then quiz me."}
+];
+
+var KEY="ccaf-curriculum";
+var state={done:{}};
+try{var s=JSON.parse(localStorage.getItem(KEY)||"{}");if(s&&s.done)state=s;}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}}
+
+function esc(s){return (s||"").replace(/"/g,"&quot;");}
+function rowVids(v){if(!v||!v.length)return "<span class='hint'>Use the linked diagram + your tutor.</span>";return v.map(function(x){return '<a class="vid" target="_blank" rel="noopener" href="'+x[0]+'">🎥 '+x[1]+'</a>';}).join("");}
+function chapters(c){return "<ul>"+c.map(function(x){return x.charAt(0)==="§"?'<li style="list-style:none;margin:12px 0 2px -18px;font-weight:800">'+x.slice(1).trim()+"</li>":"<li>"+x+"</li>";}).join("")+"</ul>";}
+
+var REPAIR={o1:["r1","r7"],m1:["r2"],rel:["r3","r9"],m3:["r4"],m2:["r5"],o4:["r6"],t1:["r8"],t3:["r10","r11"]};
+function repairLinks(id){
+  var ids=REPAIR[id];
+  if(!ids||!ids.length)return "";
+  var out="";
+  for(var i=0;i<ids.length;i++){
+    var lbl=ids.length>1?"🩹 repair picture "+(i+1):"🩹 repair picture";
+    out+=' · <a href="repair-map.html#'+ids[i]+'">'+lbl+'</a>';
+  }
+  return out;
+}
+var EXLINK={o1:"gate-chain",m3:"gate-chain"};
+function exLink(id){return EXLINK[id]?' · <a href="exercise.html?id='+EXLINK[id]+'">🏋️ build exercise</a>':"";}
+// external second-explanations per unit — every link fetched + double-verified before adding
+var MORELINKS={"o1":[["https://code.claude.com/docs/en/agent-sdk/agent-loop", "📄 how the agent loop works"], ["https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works", "📄 tool use loop & stop_reason"], ["https://platform.claude.com/docs/en/api/handling-stop-reasons", "📄 stop reasons reference (tool_use vs end_turn)"], ["https://anthropic.skilljar.com/claude-platform-101", "🎓 Claude Platform 101 (free, builds agent loop by hand)"]],"o2":[["https://www.anthropic.com/research/building-effective-agents", "📰 Building Effective Agents (orchestrator-workers)"], ["https://claude.com/blog/multi-agent-coordination-patterns", "📰 multi-agent coordination patterns & tradeoffs"], ["https://www.anthropic.com/engineering/multi-agent-research-system", "📰 how we built our multi-agent research system"], ["https://code.claude.com/docs/en/agent-sdk/subagents", "📄 subagents, context isolation & passing"], ["https://anthropic.skilljar.com/introduction-to-subagents", "🎓 Introduction to subagents (free)"], ["https://www.youtube.com/watch?v=D7_ipDqhtwk", "🎥 How We Build Effective Agents (Anthropic, AI Engineer Summit)"]],"t1":[["https://www.anthropic.com/research/building-effective-agents", "📰 agent patterns incl. customer support appendix"], ["https://code.claude.com/docs/en/hooks", "📄 hooks reference (deterministic hard limits)"], ["https://anthropic.skilljar.com/claude-code-101", "🎓 Claude Code 101 - hooks vs CLAUDE.md (free)"], ["https://claude.com/customers/intercom", "📰 Case study: Intercom's Fin support agent on Claude"]],"t2":[["https://www.anthropic.com/engineering/multi-agent-research-system", "📰 multi-agent research - parallel search, synthesis, citations"], ["https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents", "📰 context engineering - subagent summaries & provenance"], ["https://www.anthropic.com/research/building-effective-agents", "📰 orchestrator-workers pattern (decompose + synthesize)"], ["https://code.claude.com/docs/en/agent-sdk/subagents", "📄 parallel subagents & result aggregation"]],"o3":[["https://modelcontextprotocol.io/docs/learn/server-concepts", "📄 MCP tools vs resources vs prompts"], ["https://modelcontextprotocol.io/docs/learn/architecture", "📄 MCP architecture overview"], ["https://anthropic.skilljar.com/introduction-to-model-context-protocol", "🎓 Intro to MCP (free, Anthropic Academy)"], ["https://www.youtube.com/watch?v=T4-BdZQUCSE", "🎥 MCP explained by Anthropic's MCP tech lead"]],"m2":[["https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools", "📄 defining tools, descriptions, tool_choice"], ["https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls", "📄 tool_use blocks, tool_result, is_error"], ["https://www.anthropic.com/engineering/writing-tools-for-agents", "📰 writing effective tool descriptions"]],"m4":[["https://code.claude.com/docs/en/tools-reference", "📄 Claude Code tools reference"], ["https://www.vtrivedy.com/posts/claudecode-tools-reference/", "📰 when to use Read/Write/Edit/Bash/Grep/Glob"], ["https://israynotarray.com/en/ai/2026/04/29/claude-code-built-in-tools-explained/", "📰 how Claude Code picks tools"], ["https://anthropic.skilljar.com/claude-code-101", "🎓 Claude Code 101 (free, Anthropic Academy)"]],"o4":[["https://code.claude.com/docs/en/best-practices", "📄 Claude Code best practices"], ["https://code.claude.com/docs/en/skills", "📄 Skills, SKILL.md, and commands"], ["https://code.claude.com/docs/en/hooks", "📄 Hooks reference (events, config)"], ["https://code.claude.com/docs/en/headless", "📄 Headless mode (claude -p)"], ["https://anthropic.skilljar.com/introduction-to-subagents", "🎓 Intro to Subagents (free, Anthropic Academy)"], ["https://claude.com/blog/steering-claude-code-skills-hooks-rules-subagents-and-more", "📰 Skills, hooks, rules, subagents compared"]],"t3":[["https://code.claude.com/docs/en/code-review", "📄 Claude Code Review (batch vs push-triggered modes)"], ["https://code.claude.com/docs/en/github-actions", "📄 Claude Code GitHub Actions for CI"], ["https://www.coderabbit.ai/blog/how-we-built-our-ai-code-review-tool-for-ides", "📰 Batch (PR) vs real-time (IDE) AI review tradeoffs"], ["https://blog.cloudflare.com/ai-code-review/", "📰 Cloudflare's multi-agent CI review pipeline"]],"m1":[["https://platform.claude.com/docs/en/build-with-claude/structured-outputs", "📄 Structured outputs (JSON schema, strict mode)"], ["https://platform.claude.com/docs/en/agents-and-tools/tool-use/implement-tool-use", "📄 Define tools with JSON schema (enum fields)"], ["https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/increase-consistency", "📄 Increase output consistency (JSON formatting)"], ["https://platform.claude.com/cookbook/tool-use-extracting-structured-json", "📄 Cookbook: Extracting structured JSON with tool use"], ["https://anthropic.skilljar.com/claude-with-the-anthropic-api", "🎓 Building with the Claude API (free, Anthropic Academy)"]],"m3":[["https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/be-clear-and-direct", "📄 Prompting best practices (clarity, examples, chaining)"], ["https://www.promptingguide.ai/techniques/fewshot", "📰 Guide: Few-shot prompting explained (promptingguide.ai)"], ["https://www.promptingguide.ai/techniques/prompt_chaining", "📰 Guide: Prompt chaining explained (promptingguide.ai)"], ["https://www.youtube.com/watch?v=T9aRN5JkmL8", "🎥 AI prompt engineering, a deep dive (Anthropic)"], ["https://www.youtube.com/watch?v=ysPbXH0LpIE", "🎥 Prompting 101, Code w/ Claude (Anthropic)"]],"rel":[["https://platform.claude.com/docs/en/docs/build-with-claude/context-windows", "📄 how context windows work (Claude)"], ["https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents", "📰 context rot & managing long context (Anthropic)"], ["https://www.anthropic.com/news/prompting-long-context", "📰 lost-in-the-middle & long-context prompting tips"], ["https://www.youtube.com/watch?v=Kf3LeaUGwlg", "🎥 Lost in the Middle explained"], ["https://platform.claude.com/docs/en/docs/test-and-evaluate/develop-tests", "📄 define success criteria & build evals"], ["https://platform.claude.com/docs/en/api/errors", "📄 API errors, retries & backoff"], ["https://platform.claude.com/docs/en/docs/test-and-evaluate/strengthen-guardrails/reduce-hallucinations", "📄 reduce hallucinations with citations/provenance"], ["https://www.anthropic.com/research/building-effective-agents", "📰 human-in-the-loop checkpoints in agents"]],"a1":[["https://platform.claude.com/docs/en/get-started", "📄 your first API call"], ["https://json-schema.org/learn/getting-started-step-by-step", "📄 JSON Schema step-by-step"], ["https://www.promptingguide.ai/introduction/basics", "📰 Guide: basics of prompting"], ["https://www.geeksforgeeks.org/artificial-intelligence/tokens-and-context-windows-in-llms/", "📰 tokens & context windows explained"]],"p1":[["https://www.anthropic.com/research/building-effective-agents", "📰 building effective AI agents (Anthropic)"], ["https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents", "📰 context engineering tradeoffs (Anthropic)"], ["https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them", "📰 when to use multi-agent systems"], ["https://www.youtube.com/watch?v=CQywdSdi5iA", "🎥 Model Context Protocol explained (Anthropic)"]],"p2":[["https://github.com/anthropics/claude-quickstarts", "📄 official Claude API quickstart projects"], ["https://github.com/anthropics/claude-cookbooks", "📄 Claude Cookbooks (beginner notebooks)"], ["https://nachoconesa.com/blog/crear-chatbot-python-claude?lang=en", "📰 build a chatbot with Python + Claude in 30 min"], ["https://anthropic.skilljar.com/introduction-to-model-context-protocol", "🎓 build MCP servers/clients (free, Anthropic Academy)"]],"px":[["https://claude.com/blog/building-multi-agent-systems-when-and-how-to-use-them", "📰 multi-agent decision framework & failure modes"], ["https://www.marvelousmlops.io/p/patterns-and-anti-patterns-for-building", "📰 patterns and anti-patterns for building with LLMs"], ["https://www.anthropic.com/research/building-effective-agents", "📰 workflows vs agents - when to add complexity"], ["https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents", "📰 context anti-patterns (prompt/tool bloat)"]]};
+function moreLinks(id){var L=MORELINKS[id];if(!L||!L.length)return "<span class='hint'>see the linked diagram + articles</span>";return L.map(function(x){return '<a class="vid" target="_blank" rel="noopener" href="'+x[0]+'">'+x[1]+' ↗</a>';}).join("");}
+function unitHTML(u){
+  var accent = u.lvl==="atoms"?"#9AA7B2":u.lvl==="molecules"?"var(--yellow)":u.lvl==="organisms"?"var(--red)":u.lvl==="templates"?"var(--purple)":u.lvl==="pages"?"var(--green)":"var(--blue)";
+  var tag = u.tag?'<span class="tag '+u.tag.c+'">'+u.tag.t+'</span>':"";
+  var done = !!state.done[u.id];
+  var opened = !!(state.opened && state.opened[u.id]);
+  var dotStyle = (!done && opened)?' style="background:#E0A106;border-color:#E0A106" title="in progress"':"";
+  return '<details class="unit" id="u-'+u.id+'" style="border-left-color:'+accent+'">'+
+    '<summary>'+
+      '<span class="statusdot'+(done?' done':'')+'" data-dot="'+u.id+'"'+dotStyle+'></span>'+
+      '<span class="ic">'+u.ic+'</span>'+
+      '<span><span class="ttl">'+u.title+'</span></span> '+tag+
+      '<span class="one">'+u.one+'</span>'+
+      '<span class="chev">▸</span>'+
+    '</summary>'+
+    '<div class="ubody">'+
+      '<div class="row"><div class="rl">📐 Diagram</div><div class="rc"><a href="'+u.dia.h+'">'+u.dia.l+' →</a>'+repairLinks(u.id)+'</div></div>'+
+      '<div class="row"><div class="rl">📝 In words</div><div class="rc">'+u.words+'</div></div>'+
+      '<div class="row"><div class="rl">📚 Chapters</div><div class="rc">'+chapters(u.chapters)+'</div></div>'+
+      '<div class="row"><div class="rl">🎥 Videos</div><div class="rc">'+rowVids(u.vids)+'</div></div>'+
+      '<div class="row"><div class="rl">🔎 Go deeper</div><div class="rc">'+moreLinks(u.id)+'</div></div>'+
+      '<div class="row"><div class="rl">🧪 Quiz</div><div class="rc"><a class="qlink" href="'+u.quiz[0]+'">'+u.quiz[1]+' →</a>'+exLink(u.id)+'</div></div>'+
+      '<div class="row" style="border-top:0;padding-top:12px"><div class="rl"></div><div class="rc">'+
+        '<button class="ask" data-q="'+esc(u.ask)+'">💬 Ask my tutor</button> '+
+        '<button class="donebtn'+(done?' is-done':'')+'" data-done="'+u.id+'">'+(done?'✓ Done':'Mark done')+'</button>'+
+      '</div></div>'+
+    '</div>'+
+  '</details>';
+}
+
+var host=document.getElementById("levels");
+var html="";
+LEVELS.forEach(function(L){
+  html+='<div class="levelhead"><span class="dot" style="background:'+L.dot+'"></span><div><h2>'+L.name+'</h2><div class="sub">'+L.sub+'</div></div></div>';
+  UNITS.filter(function(u){return u.lvl===L.key;}).forEach(function(u){html+=unitHTML(u);});
+});
+html+='<div class="levelhead"><span class="dot" style="background:var(--blue)"></span><div><h2>🛡️ Reliability thread</h2><div class="sub">runs through Organisms, Templates &amp; Pages — revisit it everywhere</div></div></div>';
+UNITS.filter(function(u){return u.lvl==="thread";}).forEach(function(u){html+=unitHTML(u);});
+host.innerHTML=html;
+
+host.addEventListener("toggle",function(e){
+  if(e.target.tagName==="DETAILS"){
+    var c=e.target.querySelector(".chev");if(c)c.textContent=e.target.open?"▾":"▸";
+    if(e.target.open && e.target.id && e.target.id.indexOf("u-")===0){
+      var uid=e.target.id.slice(2), unit=null;
+      UNITS.forEach(function(u){if(u.id===uid)unit=u;});
+      // remember it as "in progress" (amber dot) + as the resume point for Today/Home
+      state.opened=state.opened||{}; state.opened[uid]=true; save();
+      var dot=document.querySelector('[data-dot="'+uid+'"]');
+      if(dot && !state.done[uid]){dot.style.background="#E0A106";dot.style.borderColor="#E0A106";dot.title="in progress";}
+      try{localStorage.setItem("ccaf-last",JSON.stringify({href:"curriculum.html#u-"+uid,label:"Unit: "+(unit?unit.title:uid),ts:Date.now()}));}catch(err){}
+    }
+  }
+},true);
+
+// deep links (curriculum.html#u-xx) should OPEN the card, not just scroll to a closed one
+function openHash(){
+  if(!location.hash)return;
+  var el=document.getElementById(location.hash.slice(1));
+  if(!el)return;
+  if(el.tagName==="DETAILS")el.open=true;
+  setTimeout(function(){el.scrollIntoView({block:"start"});},0);
+}
+openHash();
+window.addEventListener("hashchange",openHash);
+
+function progress(){
+  var total=UNITS.length, n=0;
+  UNITS.forEach(function(u){if(state.done[u.id])n++;});
+  document.getElementById("pcount").textContent="Progress: "+n+" / "+total+" units"+(n===total?"  🎉":"");
+  document.getElementById("pbar").style.width=(n/total*100)+"%";
+}
+progress();
+
+var toast=document.getElementById("toast");
+function flash(m){toast.textContent=m||"Copied — paste it to your tutor 👍";toast.classList.add("show");setTimeout(function(){toast.classList.remove("show");},1600);}
+document.addEventListener("click",function(e){
+  var a=e.target.closest(".ask");
+  if(a){var t=a.getAttribute("data-q")||"";if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(function(){flash();}).catch(function(){fb(t);});}else{fb(t);}return;}
+  var d=e.target.closest(".donebtn");
+  if(d){var id=d.getAttribute("data-done");state.done[id]=!state.done[id];save();
+    d.classList.toggle("is-done",state.done[id]);d.textContent=state.done[id]?"✓ Done":"Mark done";
+    var dot=document.querySelector('[data-dot="'+id+'"]');if(dot)dot.classList.toggle("done",state.done[id]);
+    progress();flash(state.done[id]?"Nice — marked done ✓":"Unmarked");}
+});
+function fb(t){var x=document.createElement("textarea");x.value=t;document.body.appendChild(x);x.select();try{document.execCommand("copy");}catch(_){}x.remove();flash();}
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resources — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+  <h1>📚 Learning Resources</h1>
+  <p class="sub">Use in order. Don't try to consume everything at once. All courses verified on official Anthropic sites.</p>
+
+  <h2>🧭 Community study guides (free, open-source)</h2>
+  <div class="card">
+    <p>Independent, community-written CCA-F guides. They <b>match our 5 domains + weights exactly</b> and go deep on exam specifics — great for a second pass once a topic clicks. <span class="hint">(Community-made, not official Anthropic material.)</span></p>
+    <ul class="clean">
+      <li>📘 <a href="https://github.com/dnacenta/claude-certified-architect" target="_blank" rel="noopener">dnacenta / claude-certified-architect</a> — one deep file per domain, plus <b>10 anti-patterns</b> &amp; <b>decision frameworks</b> (folded into our <a href="curriculum.html">Atomic Curriculum</a>).</li>
+      <li>📗 <a href="https://github.com/paullarionov/claude-certified-architect" target="_blank" rel="noopener">paullarionov / claude-certified-architect</a> — a full study guide + practical test, in many languages.</li>
+    </ul>
+  </div>
+
+  <h2>🎓 Course route — Anthropic Academy (free)</h2>
+  <p>Home base: <a href="https://anthropic.skilljar.com/" target="_blank" rel="noopener">Anthropic Academy</a>. Skilljar tracks your progress — use it as your scoreboard.</p>
+
+  <h3>Phase 1 — Warm up (foundations)</h3>
+  <table>
+    <tr><th>Course</th><th>Time</th><th>Builds</th></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/claude-101" target="_blank" rel="noopener">Claude 101</a></td><td>1 hr · 12</td><td>🔵 using Claude</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/ai-fluency-framework-foundations" target="_blank" rel="noopener">AI Fluency: Framework & Foundations</a></td><td>1.1 hr · 14</td><td>🔵 working with AI</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/ai-capabilities-and-limitations" target="_blank" rel="noopener">AI Capabilities and Limitations</a></td><td>15 min · 13</td><td>🟢 model limits</td></tr>
+  </table>
+
+  <h3>Phase 2 — Core exam courses (in this order)</h3>
+  <table>
+    <tr><th>Course</th><th>Time</th><th>Main domain</th></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/claude-platform-101" target="_blank" rel="noopener">Claude Platform 101</a></td><td>1 hr · 12</td><td>🔴 Agentic + 🟣 Tools/MCP</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/claude-code-101" target="_blank" rel="noopener">Claude Code 101</a></td><td>1 hr · 12</td><td>🟠 Claude Code</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/claude-code-in-action" target="_blank" rel="noopener">Claude Code in Action</a></td><td>1 hr · 15</td><td>🟠 Claude Code (deeper)</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/claude-with-the-anthropic-api" target="_blank" rel="noopener">Building with the Claude API</a></td><td><b>8.1 hr · 84</b></td><td>🟠 Prompt/Structured + 🟣 Tools</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/introduction-to-model-context-protocol" target="_blank" rel="noopener">Introduction to MCP</a></td><td>1 hr · 16</td><td>🟣 Tools/MCP (build a server)</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/introduction-to-agent-skills" target="_blank" rel="noopener">Introduction to agent skills</a></td><td>30 min · 6</td><td>🟠 Claude Code (Skills)</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/introduction-to-subagents" target="_blank" rel="noopener">Introduction to subagents</a></td><td>20 min · 4</td><td>🔴 Agentic (subagents)</td></tr>
+    <tr><td><a href="https://anthropic.skilljar.com/model-context-protocol-advanced-topics" target="_blank" rel="noopener">MCP: Advanced Topics</a></td><td>1.1 hr · 15</td><td>🟣 Tools/MCP + 🔵 Reliability</td></tr>
+  </table>
+
+  <div class="callout tip"><b>No standalone "Prompt Engineering" course.</b> That domain lives inside <i>Building with the Claude API</i> and <i>Claude Platform 101</i>.</div>
+
+  <h2>📖 Official docs — by domain</h2>
+  <details><summary>🔴 Agentic Architecture & Orchestration (27%)</summary><div class="body">
+    <ul>
+      <li><a href="article-effective-agents.html">Effective agents — as pictures</a> — workflow vs agent, the 5 patterns <a href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener" class="hint">↗</a></li>
+      <li><a href="article-multi-agent.html">Multi-agent research — as pictures</a> — orchestrator-workers, when NOT to use multi-agent <a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener" class="hint">↗</a></li>
+      <li><a href="https://code.claude.com/docs/en/agent-sdk/agent-loop" target="_blank" rel="noopener">How the agent loop works</a> · <a href="https://code.claude.com/docs/en/agent-sdk/subagents" target="_blank" rel="noopener">Subagents</a></li>
+      <li><a href="https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons" target="_blank" rel="noopener">Handling stop reasons</a> — end_turn vs tool_use</li>
+    </ul></div></details>
+  <details><summary>🟣 Tool Design & MCP (18%)</summary><div class="body">
+    <ul>
+      <li><a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools" target="_blank" rel="noopener">Define tools</a> · <a href="https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls" target="_blank" rel="noopener">Handle tool calls (is_error)</a></li>
+      <li><a href="article-writing-tools.html">Writing tools for agents — as pictures</a> — fewer, namespaced tools <a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener" class="hint">↗</a></li>
+      <li><a href="https://modelcontextprotocol.io/docs/learn/architecture" target="_blank" rel="noopener">MCP architecture</a> · <a href="https://modelcontextprotocol.io/docs/learn/server-concepts" target="_blank" rel="noopener">Tools vs resources vs prompts</a></li>
+    </ul></div></details>
+  <details><summary>🟠 Prompt Engineering & Structured Output (20%)</summary><div class="body">
+    <ul>
+      <li><a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices" target="_blank" rel="noopener">Prompt best practices</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/multishot-prompting" target="_blank" rel="noopener">Multishot (few-shot)</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/chain-prompts" target="_blank" rel="noopener">Chain prompts</a></li>
+      <li><a href="https://platform.claude.com/docs/en/build-with-claude/structured-outputs" target="_blank" rel="noopener">Structured Outputs</a> — guaranteed JSON</li>
+    </ul></div></details>
+  <details><summary>🟠 Claude Code Config & Workflows (20%)</summary><div class="body">
+    <ul>
+      <li><a href="https://code.claude.com/docs/en/memory" target="_blank" rel="noopener">Memory / CLAUDE.md</a> · <a href="https://code.claude.com/docs/en/permissions" target="_blank" rel="noopener">Permissions</a> · <a href="https://code.claude.com/docs/en/headless" target="_blank" rel="noopener">Headless (claude -p)</a> · <a href="https://code.claude.com/docs/en/mcp" target="_blank" rel="noopener">MCP in Claude Code</a></li>
+    </ul></div></details>
+  <details><summary>🔵 Context Management & Reliability (15%)</summary><div class="body">
+    <ul>
+      <li><a href="https://platform.claude.com/docs/en/build-with-claude/context-windows" target="_blank" rel="noopener">Context windows</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/prompt-caching" target="_blank" rel="noopener">Prompt caching</a> · <a href="https://platform.claude.com/docs/en/build-with-claude/batch-processing" target="_blank" rel="noopener">Batch processing</a></li>
+      <li><a href="https://platform.claude.com/docs/en/test-and-evaluate/strengthen-guardrails/reduce-hallucinations" target="_blank" rel="noopener">Reduce hallucinations</a> · <a href="https://platform.claude.com/docs/en/test-and-evaluate/develop-tests" target="_blank" rel="noopener">Define & run evals</a> · <a href="https://github.com/anthropics/claude-cookbooks" target="_blank" rel="noopener">Claude Cookbooks</a></li>
+    </ul></div></details>
+
+  <h2>🎬 Video rules</h2>
+  <div class="card">
+    <ul>
+      <li>Turn captions on; watch at 0.9x–1.1x.</li>
+      <li>Pause every 5 minutes and draw what happened.</li>
+      <li>Stop any video that doesn't show an example in the first 3 minutes.</li>
+      <li>Prefer recent, official videos that build something on screen.</li>
+    </ul>
+    <p class="hint">Official channel: <a href="https://www.youtube.com/@anthropic-ai" target="_blank" rel="noopener">Anthropic on YouTube</a>.</p>
+  </div>
+
+  <footer>A community study course · ask your AI tutor to add resources as you find them.</footer>
+</div>
+</body>
+</html>

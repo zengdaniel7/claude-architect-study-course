@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exam Facts — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+  <h1>✅ Exam Facts — Official vs Reported</h1>
+  <p class="sub">Last checked 2026-06-24 against official Anthropic sources.</p>
+
+  <div class="callout tip">
+    <b>Read this once, then relax.</b> Most of the exact exam numbers online are <b>NOT published by Anthropic</b>. They're repeated on study-prep sites and may be right — treat them as a <b>study target, not gospel</b>. Your learning plan doesn't change.
+  </div>
+
+  <h2>✅ Officially confirmed</h2>
+  <div class="card">
+    <ul>
+      <li>The certification is <b>real</b>: <i>"Claude Certified Architect, Foundations"</i> — Anthropic's <b>first technical certification</b>, for "solution architects building production applications with Claude."</li>
+      <li>It launched with the <b>Claude Partner Network</b> (announced March 2026).</li>
+      <li><b>Registration is partner-gated.</b> Access is through the Partner Network / Partner Portal — <b>not open public sign-up</b> as of mid-2026.</li>
+      <li>It's a <b>paid</b> exam. Partner-company employees get discounts / free early-access seats. Network <i>membership</i> is free; the <i>exam</i> is not free in general.</li>
+      <li><b>Prep = Anthropic Academy</b> (Anthropic's own courses, on Skilljar) — see <a href="resources.html">Resources</a>.</li>
+      <li>Anthropic does <b>not</b> publish a public exam blueprint page.</li>
+    </ul>
+  </div>
+
+  <h2>📣 Reported — consistent, but NOT confirmed</h2>
+  <div class="card">
+    <p><span class="tag rep">📣 reported</span> <span class="hint">— from study-prep sites; use as study targets.</span></p>
+    <ul>
+      <li><b>60</b> multiple-choice questions · <b>120</b> minutes · pass <b>720 / 1000</b></li>
+      <li><b>$99</b> fee · online, <b>proctored</b>, closed-book · <b>6</b> production scenarios</li>
+      <li>Recommended <b>~6+ months</b> hands-on with Claude API / Agent SDK / MCP</li>
+      <li>Domain weights: <b>Agentic 27% · Claude Code 20% · Prompt/Structured 20% · Tool/MCP 18% · Context/Reliability 15%</b></li>
+    </ul>
+  </div>
+
+  <h2>🚪 What this means for YOU</h2>
+  <div class="callout warn">
+    You're a solo beginner, and the exam is currently <b>partner-gated</b>. So:
+    <ol>
+      <li><b>Learning now = 100% worth it.</b> The skills, courses, and projects are real and free to access. That's the prize.</li>
+      <li><b>Sitting the exam = a separate logistics question.</b> Before booking, check: is your (future) employer a Claude Partner? Email <b>academy-support@anthropic.com</b> about individual eligibility + the official exam guide.</li>
+      <li><b>Don't pay third-party sites</b> for "official" practice exams. Get the real guide from Anthropic first.</li>
+    </ol>
+  </div>
+
+  <h2>⚠️ Where exam-prep wording ≠ official docs</h2>
+  <div class="card">
+    <ul>
+      <li><b>"isRetryable" error field</b> (seen in prep quizzes): there is <b>no</b> official <code>isRetryable</code> field. The real mechanism is <code>is_error: true</code> (Anthropic) / <code>isError: true</code> (MCP) plus a clear, instructive error message. Learn the real one; recognise the prep wording.</li>
+      <li><b>Structured output</b> is stronger than older guides say: official <b>Structured Outputs</b> use constrained decoding to <b>guarantee</b> schema-valid JSON.</li>
+    </ul>
+  </div>
+
+  <footer>Sources: anthropic.com/news/claude-partner-network · anthropic.skilljar.com · claude.com/resources/courses · Re-verify when Anthropic publishes a public exam guide.</footer>
+</div>
+</body>
+</html>

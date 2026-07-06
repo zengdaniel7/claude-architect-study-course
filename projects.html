@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Projects & Rubrics — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+  <h1>🔨 Project Ladder & Rubrics</h1>
+  <p class="sub">Each project turns exam vocabulary into something you can see, explain, and defend. Do them in order.</p>
+
+  <h2>📊 Grading levels (use on every project)</h2>
+  <div class="card">
+    <ul>
+      <li><b>Beginner</b> — you can name parts but can't explain tradeoffs yet.</li>
+      <li><b>Developing</b> — you can explain the normal path but miss failures.</li>
+      <li><b>Exam-ready</b> — normal path, failures, <i>and</i> why your design beats alternatives.</li>
+      <li><b>Strong</b> — you can teach it visually and adapt it to a new scenario.</li>
+    </ul>
+  </div>
+
+  <h2>The ladder</h2>
+  <div id="projects"></div>
+
+  <h2>📨 Grade-my-project prompt</h2>
+  <div class="card">
+    <p class="hint">Paste this to your tutor with your work:</p>
+    <pre style="white-space:pre-wrap;background:#F3EBDA;padding:12px 14px;border-radius:10px;font-size:.85rem">Grade this CCA-F project.
+Project name:
+My diagram or design:
+Normal path:
+Failure cases:
+Tradeoffs I considered:
+What I still do not understand:
+
+Use the rubric: beginner, developing, exam-ready, strong.
+Then give me one fix, one visual analogy, and one exam-style question.</pre>
+  </div>
+
+  <footer>A community study course · ask your AI tutor to tailor a project to you.</footer>
+</div>
+
+<script>
+const P=[
+ {n:1,t:"Visual Glossary Wall",build:["30 cards: API, JSON, schema, context, tool, agent, MCP, resource, prompt, hook, retry, provenance, batch, CI/CD, confidence, and more.","Each card: plain-English meaning, one drawing, one example, one danger."],done:"You can shuffle the cards and explain any 10 out loud.",extra:"Rubric: definitions → +examples → +failure cases → can compare similar terms (tool vs resource)."},
+ {n:2,t:"Prompt Clinic",build:["Three prompts: code review, data extraction, customer support.","Add explicit criteria, output format, and two examples for each.","Write one 'bad prompt' and explain why it fails."],done:"Your tutor can grade the prompt and finds fewer ambiguities after revision."},
+ {n:3,t:"Structured Extraction Lab",build:["A JSON schema for invoice or receipt extraction.","Required, optional, nullable fields, enum with 'other_detail'.","Five fake documents with missing or messy fields."],done:"You can separate format errors, missing-source errors, and human-review cases."},
+ {n:4,t:"Tool Card Deck",build:["Six tool cards for a support agent.","Each: name, purpose, input, output, when to use, when NOT to use, error types.","Include two similar tools, then rewrite so they're clearly different."],done:"A reviewer can choose the right tool from only the descriptions."},
+ {n:5,t:"Agentic Loop Board",build:["A board: user request → Claude response → tool_use → app runs tool → tool_result → next step → end_turn.","Add one transient error and one business-rule error."],done:"You can explain the loop without saying 'Claude just knows.'"},
+ {n:6,t:"Customer Support Escalation Agent",build:["Scenario: returns, billing disputes, refunds, account issues.","Tools: get_customer, lookup_order, process_refund, escalate_to_human.","Rule: refund over a threshold must be blocked and escalated.","Handoff summary: customer ID, issue, evidence, attempted actions, recommended next step."],done:"You can explain why prompt-only compliance is not enough."},
+ {n:7,t:"MCP Server Design",build:["A paper design for a study-tracker MCP server.","Tools: add note, grade answer, update progress.","Resources: topic catalog, project rubric, missed-question log.","Prompts: quiz me, explain visually, create flashcards."],done:"You can decide tool vs resource vs prompt for new features."},
+ {n:8,t:"Claude Code Workflow Design",build:["A pretend repo layout.","CLAUDE.md project instructions.","Two path-specific rules.","One slash command.","One custom skill with allowed tools."],done:"You can say when to use plan mode, direct execution, slash command, or skill."},
+ {n:9,t:"Multi-Agent Research Pipeline",build:["Coordinator, search, document-analysis, synthesis, and report agents.","Structured findings: claim, source, date, confidence, conflict flag."],done:"You can explain context passing, provenance, parallel work, and coverage gaps."},
+ {n:10,t:"CI/CD Review Pipeline",build:["Design a PR review workflow.","Blocking checks use real-time calls; overnight debt report uses batch.","Large PRs use file-by-file review + a cross-file integration pass.","Output is structured JSON."],done:"You can defend cost vs latency choices."},
+ {n:"★",t:"Final Capstone: Production Architecture Blueprint",build:["One diagram combining: user input, real-time route, batch route, tool layer, MCP resources, structured output, validation, human review, context pruning, shared memory/scratchpad, final response."],done:"You can point to every part and explain what can fail, how it's detected, and what happens next."}
+];
+var host=document.getElementById("projects");
+P.forEach(function(p){
+  var body='<div class="body"><b>🔨 Build:</b><ul>'+p.build.map(function(b){return '<li>'+b+'</li>';}).join('')+'</ul>'+
+    '<b>✅ Done when:</b> '+p.done+(p.extra?('<br><span class="hint">'+p.extra+'</span>'):'')+'</div>';
+  var d=document.createElement("details");
+  d.innerHTML='<summary><span class="num">'+p.n+'</span>'+p.t+'</summary>'+body;
+  host.appendChild(d);
+});
+</script>
+</body>
+</html>

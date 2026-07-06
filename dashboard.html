@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CCA-F Study Dashboard</title>
+<style>
+  /* Atkinson Hyperlegible — dyslexia-friendly font, vendored locally (fonts/) so it works offline */
+  @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2")}
+  @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Bold.woff2") format("woff2")}
+  @font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Italic.woff2") format("woff2")}
+  @font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:700;font-display:swap;src:url("fonts/AtkinsonHyperlegible-BoldItalic.woff2") format("woff2")}
+  :root{
+    --bg:#FBF6EC; --card:#FFFDF8; --ink:#26303B; --muted:#5C6B7A; --line:#E6DDCB; --accent:#3A6EA5;
+    --red:#D64545; --green:#2F9E63; --blue:#2D7DD2; --purple:#8A4FC4; --orange:#E8740C; --yellow:#E0A106;
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; background:var(--bg); color:var(--ink);
+    font-family:"Atkinson Hyperlegible","Trebuchet MS",Verdana,Tahoma,system-ui,sans-serif;
+    font-size:20px; line-height:1.7; letter-spacing:.2px; padding:0 0 80px;}
+  .wrap{max-width:920px; margin:0 auto; padding:0 22px}
+  header{padding:34px 0 14px}
+  h1{font-size:2.1rem; margin:0 0 6px}
+  h2{font-size:1.5rem; margin:38px 0 14px; padding-bottom:6px; border-bottom:3px solid var(--line)}
+  p{margin:.5em 0}
+  .sub{color:var(--muted); margin-top:0}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:20px 22px; margin:16px 0}
+  .facts{display:grid; grid-template-columns:1fr 1fr; gap:10px 20px}
+  .facts b{color:var(--accent)}
+  .domain{margin:14px 0}
+  .domain .top{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
+  .domain .name{font-weight:bold}
+  .bar{height:18px; border-radius:10px; background:#EFE7D6; overflow:hidden; margin-top:8px}
+  .bar > span{display:block; height:100%; border-radius:10px}
+  .pct{font-variant-numeric:tabular-nums; font-weight:bold}
+  .hint{font-size:.85rem; color:var(--muted)}
+  .dot{display:inline-block; width:.85em; height:.85em; border-radius:50%; vertical-align:middle; margin-right:6px}
+  .key li{list-style:none; margin:8px 0}
+  ul.clean{list-style:none; padding-left:0} ul.clean li{padding:8px 0; border-bottom:1px dashed var(--line)}
+  ul.clean li:last-child{border-bottom:0}
+  ol.loop{padding-left:1.2em} ol.loop li{margin:8px 0; font-weight:600}
+  .ask{border:0; cursor:pointer; background:var(--accent); color:#fff; font:inherit; font-size:.8rem; font-weight:700; padding:6px 12px; border-radius:999px; white-space:nowrap}
+  .ask:hover{filter:brightness(1.08)}
+  .week{display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px dashed var(--line)}
+  .week:last-child{border-bottom:0}
+  .week .n{flex:0 0 auto; width:42px; height:42px; border-radius:12px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800}
+  .week .body{flex:1 1 auto}
+  .week .ttl{font-weight:700}
+  .chip{display:inline-block; font-size:.72rem; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 8px; margin:2px 4px 0 0}
+  a.note{color:var(--accent); text-decoration:none; font-weight:600}
+  a.note:hover{text-decoration:underline}
+  #toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(40px); background:var(--ink); color:#fff; padding:12px 20px; border-radius:12px; font-weight:700; opacity:0; transition:.25s; pointer-events:none; z-index:50}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .banner{border-radius:var(--radius); padding:14px 18px; margin:16px 0; border:1px solid}
+  .banner.tip{background:#FFF4D6; border-color:#E8CE7A}
+  .banner.ok{background:#E8F5EC; border-color:#A9D9BC}
+  .banner.warn{background:#FBE7E5; border-color:#E5A9A4}
+  .tag{display:inline-block; font-size:.72rem; font-weight:700; padding:1px 8px; border-radius:999px; vertical-align:middle}
+  .tag.ok{background:#2F9E63; color:#fff}
+  .tag.rep{background:#E0A106; color:#332700}
+  footer{color:var(--muted); font-size:.85rem; margin-top:40px; text-align:center}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+<div class="wrap">
+
+  <header>
+    <h1>🏠 CCA-F Study Dashboard</h1>
+    <p class="sub">Claude Certified Architect – Foundations · your home base</p>
+  </header>
+
+  <div class="banner ok" style="text-align:center;background:#E8F5EC;border-color:#A9D9BC">
+    <a href="today.html" style="display:inline-block;background:#2F9E63;color:#fff;text-decoration:none;font-weight:800;padding:15px 34px;border-radius:999px;font-size:1.25rem">▶️ Start today →</a>
+    <div class="hint" style="margin-top:8px"><b>The one button to click each day</b> — it shows where you are in the course and your 5 steps for today.</div>
+  </div>
+
+  <div class="banner tip">
+    💬 <b>You can annotate this page.</b> Tap any <span class="ask" style="padding:2px 9px">Ask about this</span>
+    button — it copies a ready-made question. Paste it to your tutor (Codex) to learn exactly that part.
+  </div>
+
+  <div class="banner ok" style="text-align:center">
+    <a href="my-plan.html" style="display:inline-block;background:#2F9E63;color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:999px;font-size:1.1rem">🧭 Your personalized plan →</a>
+    <div class="hint" style="margin-top:8px">A sample plan built from a real beginner's pre-test — <a href="pretest.html">take the Pre-Test</a> and re-tune it to you.</div>
+  </div>
+
+  <div class="banner tip" style="text-align:center">
+    <a href="learning-map.html" style="display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:999px;font-size:1.1rem">🗺️ Your Visual Learning Map →</a>
+    <div class="hint" style="margin-top:8px">The <b>whole plan as diagrams</b> — agent loop, MCP, structured output, reliability — organized around the spots beginners find hardest.</div>
+  </div>
+
+  <h2>📍 Where you are <span class="hint">· live — same tracker as the Today page</span></h2>
+  <div class="card">
+    <p style="margin:0 0 4px"><b id="where-count">0 / 16 units done</b> <span class="hint" id="where-next-wrap">· next up: <b id="where-next">…</b></span></p>
+    <div style="background:#EFE7D8;border-radius:99px;height:12px;overflow:hidden;margin:8px 0 12px"><div id="where-bar" style="background:#2F9E63;height:100%;width:0%;border-radius:99px"></div></div>
+    <p style="margin:0 0 8px">👉 <a href="today.html"><b>Open the Today page →</b></a> <span class="hint">it tees up the exact unit, video and 5 steps.</span></p>
+    <p class="hint" id="where-last" style="display:none;margin:0 0 8px"></p>
+    <p class="hint" style="margin:0">First step: take the <a href="pretest.html">Pre-Test</a> to set your baseline — score AND how much you guessed. (Example: one real learner started at 20/30 with 18 guesses → real base ≈ 12.)</p>
+  </div>
+  <script>
+  (function(){
+    var PATH=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"]; // keep in sync with today.html
+    var TITLES={o1:"The Agent Loop",o2:"Orchestrator–Workers",rel:"Reliability — the thread",o3:"An MCP server",o4:"Claude Code workflows",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",m3:"Prompt techniques",t1:"Support-agent system",t2:"Research multi-agent system",t3:"PR-review / CI pipeline",p1:"The 6 exam scenarios",p2:"Your capstone build",px:"Anti-patterns & decision frameworks",a1:"Core vocabulary (refresh)"};
+    var done={};try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&s.done)done=s.done;}catch(e){}
+    var n=PATH.filter(function(id){return done[id];}).length;
+    document.getElementById("where-count").textContent=n+" / "+PATH.length+" units done";
+    document.getElementById("where-bar").style.width=Math.round(n/PATH.length*100)+"%";
+    var nx=PATH.filter(function(id){return !done[id];})[0];
+    document.getElementById("where-next").textContent=nx?TITLES[nx]:"all done — switch to timed practice 🎉";
+    try{
+      var last=JSON.parse(localStorage.getItem("ccaf-last")||"null");
+      if(last && last.href && last.label && (Date.now()-(last.ts||0)) < 14*24*60*60*1000){
+        var wl=document.getElementById("where-last");
+        var a=document.createElement("a"); a.href=last.href;
+        var b=document.createElement("b"); b.textContent=last.label; a.appendChild(b);
+        wl.appendChild(document.createTextNode("⏪ Continue: "));
+        wl.appendChild(a); wl.appendChild(document.createTextNode(" →"));
+        wl.style.display="block";
+      }
+    }catch(e){}
+  })();
+  </script>
+
+  <!-- EXAM FACTS -->
+  <h2>📌 The exam — what's official vs reported</h2>
+
+  <div class="banner ok">
+    <b>✅ Officially confirmed:</b> The certification is real (Anthropic's first technical cert, for
+    "solution architects building production applications with Claude"). <b>Registration is partner-gated</b>
+    via the Claude Partner Network — <b>not open public sign-up yet.</b> It's a paid exam; prep is Anthropic Academy.
+  </div>
+
+  <div class="card">
+    <p><span class="tag rep">📣 reported</span> &nbsp;<span class="hint">— consistent across study-prep sites, but Anthropic publishes no public blueprint. Use as study targets, not gospel:</span></p>
+    <div class="facts">
+      <div><b>Format</b><br>multiple choice · 1 right + 3 traps</div>
+      <div><b>Pass</b><br>~720 / 1000 · scenario-based</div>
+      <div><b>Questions / time</b><br>~60 Q · ~120 minutes</div>
+      <div><b>Weights</b><br>Agentic 27 · Code 20 · Prompt 20 · MCP 18 · Reliability 15</div>
+    </div>
+    <div class="facts" style="margin-top:12px">
+      <div><b>Cost</b><br>~$99 · online proctored</div>
+      <div><b>Recommended</b><br>~6+ months hands-on</div>
+    </div>
+  </div>
+
+  <div class="banner warn">
+    🚪 <b>For solo learners:</b> learning now is 100% worth it — but sitting the exam is partner-gated.
+    Before booking, check eligibility / email <b>academy-support@anthropic.com</b> and ask for the official exam guide. Don't pay third-party sites for "official" practice exams.
+    Full detail on the <a href="exam-facts.html"><b>Exam Facts</b></a> page.
+  </div>
+
+  <!-- DOMAINS -->
+  <h2>🎯 The 5 domains — share of the exam (NOT your progress)</h2>
+  <p class="hint">⚠️ These bars show each domain's <b>weight in the exam</b> (reported) — they start "full" because that's the exam's shape, not something you've done. Redder = bigger slice = more study time. Track what you've actually completed in the <a href="#pipeline"><b>Daily Pipeline</b></a> below.</p>
+  <div class="card">
+    <div class="domain">
+      <div class="top">
+        <span class="name"><span class="dot" style="background:var(--red)"></span>Agentic Architecture &amp; Orchestration</span>
+        <span><span class="pct">27%</span>
+          <button class="ask" data-q="Teach me the CCA-F domain 'Agentic Architecture & Orchestration' (27%, the biggest). I'm a dyslexic beginner — under 150 words, one boxes-and-arrows sketch, one real example, and 3 flashcards. Cover the agent loop, stop_reason (tool_use vs end_turn), orchestrator-workers, and when NOT to use multi-agent.">Ask about this</button>
+        </span>
+      </div>
+      <div class="bar"><span style="width:100%; background:var(--red)"></span></div>
+      <p class="hint">Agents looping + working together. The largest slice.</p>
+    </div>
+    <div class="domain">
+      <div class="top">
+        <span class="name"><span class="dot" style="background:var(--orange)"></span>Claude Code Configuration &amp; Workflows</span>
+        <span><span class="pct">20%</span>
+          <button class="ask" data-q="Teach me the CCA-F domain 'Claude Code Configuration & Workflows' (20%). I'm a dyslexic beginner — under 150 words, one sketch, one example, 3 flashcards. Cover CLAUDE.md/memory, permissions, slash commands, skills, subagents, hooks, and headless (claude -p).">Ask about this</button>
+        </span>
+      </div>
+      <div class="bar"><span style="width:74%; background:var(--orange)"></span></div>
+      <p class="hint">CLAUDE.md, skills, slash commands, hooks, subagents.</p>
+    </div>
+    <div class="domain">
+      <div class="top">
+        <span class="name"><span class="dot" style="background:var(--yellow)"></span>Prompt Engineering &amp; Structured Output</span>
+        <span><span class="pct">20%</span>
+          <button class="ask" data-q="Teach me the CCA-F domain 'Prompt Engineering & Structured Output' (20%). I'm a dyslexic beginner — under 150 words, one sketch, one example, 3 flashcards. Cover clear instructions, few-shot, prompt chaining, and guaranteed JSON via Structured Outputs (nullable/enum/required).">Ask about this</button>
+        </span>
+      </div>
+      <div class="bar"><span style="width:74%; background:var(--yellow)"></span></div>
+      <p class="hint">Good prompts, clean JSON out.</p>
+    </div>
+    <div class="domain">
+      <div class="top">
+        <span class="name"><span class="dot" style="background:var(--green)"></span>Tool Design &amp; MCP Integration</span>
+        <span><span class="pct">18%</span>
+          <button class="ask" data-q="Teach me the CCA-F domain 'Tool Design & MCP Integration' (18%). I'm a dyslexic beginner — under 150 words, one sketch, one example, 3 flashcards. Cover good tool descriptions, tool_choice, returning errors with is_error, and MCP tools vs resources vs prompts.">Ask about this</button>
+        </span>
+      </div>
+      <div class="bar"><span style="width:67%; background:var(--green)"></span></div>
+      <p class="hint">Giving Claude tools; building MCP servers.</p>
+    </div>
+    <div class="domain">
+      <div class="top">
+        <span class="name"><span class="dot" style="background:var(--blue)"></span>Context Management &amp; Reliability</span>
+        <span><span class="pct">15%</span>
+          <button class="ask" data-q="Teach me the CCA-F domain 'Context Management & Reliability' (15%). I'm a dyslexic beginner — under 150 words, one sketch, one example, 3 flashcards. Cover context windows, lost-in-the-middle, summarising/compaction, prompt caching, retries, batch vs realtime, and evals.">Ask about this</button>
+        </span>
+      </div>
+      <div class="bar"><span style="width:56%; background:var(--blue)"></span></div>
+      <p class="hint">Evals, retries, guardrails, cost, not breaking in production.</p>
+    </div>
+  </div>
+
+  <!-- COURSES -->
+  <h2>📚 Free official courses (Anthropic Academy)</h2>
+  <p class="hint">Verified on claude.com. Do them in this order. Times = official length.</p>
+  <div class="card">
+    <ul class="clean" id="courses"></ul>
+  </div>
+
+  <!-- COLOR KEY -->
+  <h2>🎨 Color key (use these in every note &amp; sketch)</h2>
+  <div class="card">
+    <ul class="key">
+      <li><span class="dot" style="background:var(--red)"></span><b>Red</b> — failure, risk, policy, escalation</li>
+      <li><span class="dot" style="background:var(--green)"></span><b>Green</b> — validated output, success, safe automation</li>
+      <li><span class="dot" style="background:var(--blue)"></span><b>Blue</b> — context, memory, source material</li>
+      <li><span class="dot" style="background:var(--purple)"></span><b>Purple</b> — tools, MCP, API calls</li>
+      <li><span class="dot" style="background:var(--orange)"></span><b>Orange</b> — human review, judgment, handoff</li>
+    </ul>
+  </div>
+
+  <!-- DAILY PIPELINE -->
+  <h2>📋 Today's 5 steps — check things off (resets each day)</h2>
+  <div class="card">
+    <p class="hint" id="pipe-date"></p>
+    <p class="hint">👉 Tap a step's <b>name</b> (or the ▸) to see exactly <b>what to do and where</b>.</p>
+    <div id="pipeline"></div>
+    <div class="bar" style="margin-top:14px"><span id="pipe-bar" style="width:0%; background:var(--green)"></span></div>
+    <p class="hint" id="pipe-count">Today: 0 / 5 done</p>
+    <p class="hint">🗓️ See the whole week (and last/next weeks) on the <a href="daily-pipeline.html"><b>Weekly Pipeline</b></a> — long-term milestones live there too.</p>
+  </div>
+  <script>
+  (function(){
+    var PIPE = [
+      { label:"🎥 Watch / listen (15–25 min)",
+        details:`<b>What:</b> watch ONE short lesson on today's topic.<br>
+          <b>Where:</b> <a href="https://anthropic.skilljar.com/" target="_blank" rel="noopener">Anthropic Academy</a> (free). Order: Claude 101 → Claude Platform 101 → Claude Code 101 → Building with the Claude API → MCP. Full mapped list in <a href="resources.html">Resources</a>.<br>
+          <b>How:</b> captions on; pause every 5 min and sketch; skip any video with no example in 3 min.`,
+        ask:"What exactly should I watch today, and where? Give me the course + lesson name, the link, and a one-line focus." },
+      { label:"✏️ Draw it as boxes + arrows",
+        details:`<b>What:</b> from memory, redraw the idea you just watched as boxes + arrows.<br>
+          <b>How:</b> use the color key (🔴 risk, 🟢 success, 🔵 context, 🟣 tools, 🟠 human). Rough is fine — understanding beats neat.<br>
+          <b>Where:</b> paper, or <a href="https://excalidraw.com" target="_blank" rel="noopener">Excalidraw</a>.`,
+        ask:"What should I draw today? Describe the ONE boxes-and-arrows diagram that captures today's topic so I can copy it." },
+      { label:"🔨 Build one tiny example (real code)",
+        details:`<b>What:</b> the smallest working version of today's concept — real code, not notes.<br>
+          <b>Where:</b> VS Code or a scratch file. Use your Anthropic API key, or run <code>claude-cheap</code> for practice.<br>
+          <b>How:</b> tiny is the point — one prompt, one tool, one script.`,
+        ask:"Give me today's tiny build task — the smallest real thing I can code in ~20 min to feel today's concept, with starter steps." },
+      { label:"🗣️ Explain it out loud (60 sec)",
+        details:`<b>What:</b> say today's idea out loud in plain words, 60 seconds, no notes.<br>
+          <b>To whom:</b> yourself in the mirror, or paste your words to your tutor for grading.<br>
+          <b>Why:</b> if you can't say it simply, you don't own it yet.`,
+        ask:"I'll explain today's topic in my own words — quiz and grade my explanation, and tell me exactly what I missed." },
+      { label:"🃏 3 flashcards + 1 mistake card",
+        details:`<b>What:</b> 3 Q→A cards on today's idea + 1 "mistake card" for something you got wrong.<br>
+          <b>Where:</b> <a href="https://apps.ankiweb.net" target="_blank" rel="noopener">Anki</a> (spaced repetition), or the on-site <a href="flashcards.html">Flashcards</a>.`,
+        ask:"Turn today's topic into 3 short flashcards (Q on one line, A on the next) plus 1 mistake card." }
+    ];
+    var KEY = "ccaf-pipeline";
+    var _n = new Date(), today = _n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC — so the checklist resets at YOUR midnight
+    var state = {};
+    try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){}
+    if (state.date !== today || !Array.isArray(state.checks) || state.checks.length !== PIPE.length) {
+      state = { date: today, checks: PIPE.map(function(){return false;}) };
+    }
+    var host = document.getElementById('pipeline');
+    document.getElementById('pipe-date').textContent = "Today is " + today + " — fresh checklist.";
+    function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+    function bar(){
+      var done = state.checks.filter(Boolean).length;
+      document.getElementById('pipe-bar').style.width = (done/PIPE.length*100) + '%';
+      document.getElementById('pipe-count').textContent = "Today: " + done + " / " + PIPE.length + " done" + (done===PIPE.length ? "  🎉" : "");
+    }
+    function makeItem(item, i){
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'border-bottom:1px dashed var(--line)';
+      var head = document.createElement('div');
+      head.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 0';
+      var cb = document.createElement('input');
+      cb.type='checkbox'; cb.checked=!!state.checks[i];
+      cb.style.cssText='width:22px;height:22px;flex:0 0 auto;accent-color:#2F9E63';
+      var name = document.createElement('span');
+      name.textContent=item.label;
+      name.style.cssText='flex:1 1 auto;font-weight:600;cursor:pointer';
+      if(state.checks[i]){ name.style.textDecoration='line-through'; name.style.color='#5C6B7A'; }
+      var chev = document.createElement('span');
+      chev.textContent='▸'; chev.style.cssText='cursor:pointer;color:var(--accent);font-weight:700;font-size:1.15rem';
+      var panel = document.createElement('div');
+      panel.style.cssText='display:none;padding:2px 0 14px 34px;font-size:.92rem;line-height:1.6';
+      panel.innerHTML=item.details+'<br>';
+      var btn=document.createElement('button');
+      btn.className='ask'; btn.textContent='💬 Ask my tutor about this step'; btn.style.marginTop='8px';
+      btn.setAttribute('data-q', item.ask);
+      panel.appendChild(btn);
+      cb.addEventListener('change', function(){
+        state.checks[i]=cb.checked; save();
+        name.style.textDecoration=cb.checked?'line-through':'none';
+        name.style.color=cb.checked?'#5C6B7A':'';
+        bar();
+      });
+      function toggle(){ var open=panel.style.display==='block'; panel.style.display=open?'none':'block'; chev.textContent=open?'▸':'▾'; }
+      name.addEventListener('click', toggle);
+      chev.addEventListener('click', toggle);
+      head.appendChild(cb); head.appendChild(name); head.appendChild(chev);
+      wrap.appendChild(head); wrap.appendChild(panel);
+      return wrap;
+    }
+    function render(){ host.innerHTML=''; PIPE.forEach(function(item,i){ host.appendChild(makeItem(item,i)); }); }
+    render(); bar();
+  })();
+  </script>
+
+  <!-- WEEKLY REVIEW -->
+  <h2>🗓️ Weekly Review &amp; Correction</h2>
+  <div class="card">
+    <p>You won't finish everything every day — <b>that's planned for.</b> Once a week you re-plan instead of falling behind. The 12 weeks <b>flex to your real pace.</b></p>
+    <p class="hint">Tap to run it with your tutor — it updates your Daily Pipeline (ticks what's done, carries the rest, sets next week's top 3).</p>
+    <button class="ask" data-q="Run my weekly review and correction. I'm a dyslexic beginner and I didn't finish everything this week — that's expected. Ask me 3 short questions: what I finished, what slipped, and how I felt (1–5). Then update Daily Pipeline.md: tick what's done, carry the rest into next week, set my top 3 priorities, and re-estimate my finish week. Keep it short and encouraging — no guilt.">🗓️ Run my weekly review</button>
+  </div>
+
+  <!-- CURRICULUM -->
+  <h2>📅 The 12-week plan</h2>
+  <div class="card" id="weeks"></div>
+
+  <!-- QUICK LINKS -->
+  <h2>📖 Study pages</h2>
+  <div class="card">
+    <ul class="clean">
+      <li>🗺️ <a class="note" href="learning-map.html">Visual Learning Map</a> — the whole plan as diagrams, tailored to you <span class="hint">(new)</span></li>
+      <li>🧭 <a class="note" href="my-plan.html">My Plan</a> — a worked-example path; take the pre-test and tune it to you</li>
+      <li>📊 <a class="note" href="quizzes.html">Quizzes</a> — checkpoint quizzes that track your progress</li>
+      <li>🃏 <a class="note" href="flashcards.html">Flashcards</a> — browse freely, or 🧠 Learn (real quiz rounds, Quizlet-style)
+        &nbsp;·&nbsp; 🖼️ <a class="note" href="CCA-F%20Foundations%20Flashcards.pdf" target="_blank" rel="noopener">Printable deck (PDF) ↗</a>
+        <span class="hint">— diagrams, one card per page, dyslexia-friendly</span></li>
+      <li>🧪 <a class="note" href="pretest.html">Pre-Test</a> — clickable, auto-graded</li>
+      <li>✅ <a class="note" href="exam-facts.html">Exam Facts</a> — official vs reported + how to register</li>
+      <li>⚛️ <a class="note" href="curriculum.html">The Atomic Curriculum</a> — the whole path from building blocks → production systems, each unit with diagram·words·chapters·videos·quiz <span class="hint">(new)</span></li>
+      <li>🔨 <a class="note" href="projects.html">Projects &amp; Rubrics</a> — the build ladder + grading</li>
+      <li>📚 <a class="note" href="resources.html">Resources</a> — free courses + docs by domain</li>
+      <li>📋 <a class="note" href="daily-pipeline.html">Weekly Pipeline</a> — week view (◀ last · this · next ▶) + review + milestones</li>
+    </ul>
+    <p class="hint">✍️ Tip: keep your own notes next to the site (Obsidian or any markdown editor works great) — a Glossary, a Mistake Log, and a Build-Hours log are the three that pay off most.</p>
+  </div>
+
+  <footer>A community study course · not affiliated with Anthropic · run it locally and make it yours — see the README.</footer>
+</div>
+
+<div id="toast">Copied — paste it to Codex 👍</div>
+
+<script>
+  const COURSES = [
+    {t:"Claude 101", time:"1 hr", dot:"--blue", q:"I'm starting the 'Claude 101' Anthropic Academy course as a dyslexic beginner. Give me the 5 most important takeaways in plain words, one example each, then quiz me with 3 questions."},
+    {t:"Claude Platform 101", time:"1 hr", dot:"--red", q:"I'm taking 'Claude Platform 101'. Explain the agent loop, context window, and tool permissions for a dyslexic beginner — one sketch, one example, 3 flashcards."},
+    {t:"Claude Code 101", time:"1 hr", dot:"--orange", q:"I'm taking 'Claude Code 101'. Explain CLAUDE.md, the agentic loop, tools and permissions for a dyslexic beginner — one sketch, one example, 3 flashcards."},
+    {t:"Claude Code in Action", time:"1 hr", dot:"--orange", q:"I'm taking 'Claude Code in Action'. Walk me through custom commands, MCP integration, and GitHub code-review workflows for a dyslexic beginner — short chunks, one example each."},
+    {t:"Building with the Claude API", time:"8.1 hr", dot:"--yellow", q:"I'm taking 'Building with the Claude API' (the big course). Give me a study map of its main parts (prompts, structured output, tools, RAG, agents) and which CCA-F domain each part serves. Short and visual."},
+    {t:"Introduction to Model Context Protocol", time:"1 hr", dot:"--green", q:"I'm taking 'Introduction to Model Context Protocol'. Explain tools vs resources vs prompts and who controls each, for a dyslexic beginner — one sketch, one example, 3 flashcards."},
+    {t:"Introduction to agent skills", time:"30 min", dot:"--orange", q:"I'm taking 'Introduction to agent skills'. Explain what a Skill is, SKILL.md, and how Skills differ from CLAUDE.md and hooks — short, one example, 3 flashcards."},
+    {t:"Introduction to subagents", time:"20 min", dot:"--red", q:"I'm taking 'Introduction to subagents'. Explain isolated context windows, delegation, and limiting tool access for a dyslexic beginner — one sketch, one example, 3 flashcards."},
+    {t:"MCP: Advanced Topics", time:"1.1 hr", dot:"--green", q:"I'm taking 'MCP: Advanced Topics'. Explain transports (stdio vs Streamable HTTP) and stateless vs stateful for a dyslexic beginner — keep it simple, one example, 3 flashcards."},
+  ];
+  const ch = document.getElementById('courses');
+  COURSES.forEach(c=>{
+    const li=document.createElement('li');
+    li.innerHTML = `<span class="dot" style="background:var(${c.dot})"></span><b>${c.t}</b>
+      <span class="chip">${c.time}</span>
+      <button class="ask" style="float:right" data-q="${c.q.replace(/"/g,'&quot;')}">Ask about this</button>`;
+    ch.appendChild(li);
+  });
+
+  const WEEKS = [
+    {n:1, t:"Absolute Foundations", tags:["Foundations"], dot:"--blue",
+      goal:"Understand the basic building blocks before any Claude-specific stuff.",
+      learn:"API, JSON, schema, command line, Git, and what a model / prompt / context window / tool call are.",
+      doit:"Build a 25-term visual glossary; draw User → Claude → Tool → Result → Answer.",
+      done:"You can explain API, JSON, schema, tool, context, and agent with no notes."},
+    {n:2, t:"Claude Ecosystem Map", tags:["Foundations"], dot:"--blue",
+      goal:"Know the difference between Claude chat, Claude Code, the API, the Agent SDK, and MCP.",
+      learn:"What each surface is for and when to use it.",
+      doit:"Draw a one-page ecosystem map; watch Claude 101 + Platform 101 + Code 101.",
+      done:"You can pick the right Claude surface for 5 scenarios."},
+    {n:3, t:"Prompt Engineering for Architects", tags:["Prompting 20%"], dot:"--yellow",
+      goal:"Move from 'make the answer good' to 'make the system reliable.'",
+      learn:"Explicit criteria, few-shot examples, output format, false positives/negatives, prompt chaining.",
+      doit:"Write prompts for code review, extraction, and support — each with one good + one bad example.",
+      done:"You can explain why examples help and when a prompt is not enough."},
+    {n:4, t:"Structured Output", tags:["Prompting 20%"], dot:"--yellow",
+      goal:"Get clean, reliable JSON out of Claude.",
+      learn:"Required vs optional, nullable (stops hallucination), enums, validation vs missing data, confidence + human review.",
+      doit:"Build a fake invoice-extraction schema; pull fields from 5 docs; mark retry vs human-review.",
+      done:"You can design a schema that handles missing data without inventing facts."},
+    {n:5, t:"Tool Use", tags:["Tools & MCP 18%"], dot:"--green",
+      goal:"Understand how Claude chooses and uses tools.",
+      learn:"Tool names/descriptions, inputs/outputs, tool_choice, stop_reason, the tool-result loop, structured errors.",
+      doit:"Make 6 tool cards; write 2 confusing tools then fix them; draw the tool loop.",
+      done:"You can explain why vague tool descriptions cause wrong tool calls."},
+    {n:6, t:"MCP Basics", tags:["Tools & MCP 18%"], dot:"--green",
+      goal:"Understand MCP as the standard way to connect tools, resources, and prompts.",
+      learn:"Tools = actions, resources = readable context, prompts = workflows; project vs user scope; env vars for secrets.",
+      doit:"Design an MCP study-tracker server on paper (3 tools, 2 resources, 2 prompts).",
+      done:"You can decide whether something should be a tool, a resource, or a prompt."},
+    {n:7, t:"Claude Code Workflows", tags:["Claude Code 20%"], dot:"--orange",
+      goal:"Learn the Claude Code features the exam tests.",
+      learn:"CLAUDE.md, rules, slash commands, skills, plan mode, and headless (claude -p).",
+      doit:"Sketch a repo; write a CLAUDE.md; design one slash command + one skill.",
+      done:"You can explain when plan mode beats just doing it."},
+    {n:8, t:"Agentic Loops & Escalation", tags:["Agentic 27%"], dot:"--red",
+      goal:"Understand autonomous task execution — and when to stop it.",
+      learn:"Agent loop, tool_use vs end_turn, programmatic vs prompt enforcement, hooks, human handoff.",
+      doit:"Design a refund agent; add a rule: refunds over a limit must escalate; add structured handoff fields.",
+      done:"You can explain why safety rules need hooks/code, not just a prompt."},
+    {n:9, t:"Multi-Agent Systems", tags:["Agentic 27%"], dot:"--red",
+      goal:"Understand coordinator + subagent patterns.",
+      learn:"Coordinator role, specialized subagents, explicit context passing, parallel work, provenance, coverage gaps.",
+      doit:"Design a research system (search → analyze → synthesize → report); every finding has claim, source, date, confidence.",
+      done:"You can explain why subagents do not automatically know what the coordinator knows."},
+    {n:10, t:"Context Management & Reliability", tags:["Reliability 15%"], dot:"--blue",
+      goal:"Avoid token bloat, lost context, and stale results.",
+      learn:"Pruning, scratchpads, summaries, session resume, forking, lost-in-the-middle, tool-context filtering.",
+      doit:"Compress a long fake conversation into structured facts; decide keep / summarize / discard / human.",
+      done:"You can keep the important facts without pasting everything back in."},
+    {n:11, t:"CI/CD, Batch & Review Architecture", tags:["Reliability 15%","Claude Code"], dot:"--orange",
+      goal:"Understand real-time vs batch, and code-review pipelines.",
+      learn:"claude -p, JSON output, the Batches API, custom IDs, blocking checks vs overnight reports, file-by-file + integration passes.",
+      doit:"Design a PR-review pipeline; decide which steps are real-time vs batch; add false-positive reduction.",
+      done:"You can choose real-time vs batch based on latency and cost."},
+    {n:12, t:"Capstone & Exam Readiness", tags:["All domains"], dot:"--purple",
+      goal:"Tie it all together and test under pressure.",
+      learn:"Everything — applied as tradeoffs, not memorized keywords.",
+      doit:"Build the final architecture blueprint; take 2 timed mocks; redraw all 5 domains from memory; do an oral exam.",
+      done:"You score 85%+ twice and can explain every wrong answer."},
+  ];
+  const host = document.getElementById('weeks');
+  WEEKS.forEach(w=>{
+    const wrap = document.createElement('div');
+    const row = document.createElement('div'); row.className='week'; row.style.borderBottom='none';
+    const q = `I'm on Week ${w.n}: ${w.t}. I'm a dyslexic beginner. Give me today's first 25-minute lesson: one idea, one example, one boxes-and-arrows sketch, then 3 flashcards and one tiny build task. Say which CCA-F domain this serves.`;
+    row.innerHTML = `
+      <div class="n">${w.n}</div>
+      <div class="body">
+        <div class="ttl" style="cursor:pointer">${w.t} <span style="color:var(--accent);font-weight:700">▸</span></div>
+        <div>${w.tags.map(t=>`<span class="chip"><span class="dot" style="background:var(${w.dot})"></span>${t}</span>`).join('')}</div>
+      </div>
+      <button class="ask" data-q="${q.replace(/"/g,'&quot;')}">Ask about this</button>`;
+    const panel = document.createElement('div');
+    panel.style.cssText = 'display:none;padding:2px 0 16px 54px;font-size:.92rem;line-height:1.65';
+    panel.innerHTML = `<b>🎯 Goal:</b> ${w.goal}<br><b>📚 Learn:</b> ${w.learn}<br><b>🔨 Do:</b> ${w.doit}<br><b>✅ Done when:</b> ${w.done}`;
+    const ttl = row.querySelector('.ttl');
+    ttl.addEventListener('click', ()=>{
+      const open = panel.style.display==='block';
+      panel.style.display = open?'none':'block';
+      ttl.querySelector('span').textContent = open?'▸':'▾';
+    });
+    wrap.style.borderBottom = '1px dashed var(--line)';
+    wrap.appendChild(row); wrap.appendChild(panel);
+    host.appendChild(wrap);
+  });
+
+  const toast = document.getElementById('toast');
+  function flash(){ toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1600); }
+  document.addEventListener('click', e=>{
+    const b = e.target.closest('.ask'); if(!b) return;
+    const text = b.getAttribute('data-q') || '';
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(flash).catch(()=>fallback(text));
+    } else { fallback(text); }
+  });
+  function fallback(text){
+    const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta);
+    ta.select(); try{document.execCommand('copy');}catch(_){} ta.remove(); flash();
+  }
+</script>
+</body>
+</html>

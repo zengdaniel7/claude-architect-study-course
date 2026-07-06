@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How Anthropic Built a Multi-Agent Research System — Visual Guide</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .lead{font-size:1.05rem;color:var(--muted)}
+  .dia{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;margin:16px 0;scroll-margin-top:70px}
+  .dia h3{margin:0 0 4px;font-size:1.15rem}
+  .dia .cap{font-size:.9rem;color:var(--muted);margin:2px 0 12px}
+  .dia .note{font-size:.92rem;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+  .dia .mem{background:#FFF8E7;border:1.5px dashed var(--yellow);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:.92rem}
+  .svgwrap{width:100%;overflow-x:auto}
+  svg{display:block;max-width:100%;height:auto;font-family:inherit}
+  svg text{font-family:"Atkinson Hyperlegible","Trebuchet MS",system-ui,sans-serif}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;margin:8px 0 0}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:.85em;height:.85em;border-radius:3px;display:inline-block}
+  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:999px}
+  .ask:hover{filter:brightness(1.08)}
+  .golearn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;font-weight:800;padding:10px 20px;border-radius:999px}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- shared arrowheads for all diagrams -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ar"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5C6B7A"/></marker>
+  <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D64545"/></marker>
+  <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2F9E63"/></marker>
+  <marker id="arB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2D7DD2"/></marker>
+  <marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A4FC4"/></marker>
+  <marker id="arO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8740C"/></marker>
+</defs></svg>
+
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+
+  <header style="padding:30px 0 6px">
+    <h1>🕸️ How Anthropic Built a Multi-Agent Research System — as pictures</h1>
+    <p class="lead">This article explains <b>why</b> and <b>how</b> Anthropic built a lead-agent + subagents research system — the exact "Research multi-agent system" pattern tested on CCA-F. Read the pictures, then say each one out loud.</p>
+    <p><a href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener" class="note">🔗 read the original on anthropic.com ↗</a></p>
+  </header>
+
+  <div class="legend" style="margin-bottom:10px">
+    <b style="font-size:.85rem">Color key:</b>
+    <span><i style="background:var(--red)"></i>risk / failure</span>
+    <span><i style="background:var(--green)"></i>success / safe</span>
+    <span><i style="background:var(--blue)"></i>context / data</span>
+    <span><i style="background:var(--purple)"></i>tools / API</span>
+    <span><i style="background:var(--orange)"></i>human review</span>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <div class="dia" id="s1">
+    <h3>1 · Why use MULTIPLE agents for research instead of one?</h3>
+    <p class="cap">Answer: separate agents can explore <b>in parallel</b>, each with its <b>own context window</b> — and it beat a single agent by <b>90.2%</b>.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="230" height="80" rx="14" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="135" y="60" text-anchor="middle" font-size="13" font-weight="800">1 agent, 1 context 🧍</text>
+      <text x="135" y="82" text-anchor="middle" font-size="11" fill="#5C6B7A">must explore topics ONE at a time</text>
+      <text x="135" y="100" text-anchor="middle" font-size="11" fill="var(--red)" font-weight="700">slower, single view</text>
+      <text x="290" y="75" text-anchor="middle" font-size="24" font-weight="800" fill="#5C6B7A">vs</text>
+      <rect x="345" y="18" width="530" height="195" rx="14" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="610" y="42" text-anchor="middle" font-size="13" font-weight="800">multi-agent — parallel exploration 🕸️</text>
+      <rect x="370" y="60" width="140" height="55" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="440" y="90" text-anchor="middle" font-size="11.5" font-weight="700">subagent A</text>
+      <text x="440" y="107" text-anchor="middle" font-size="10" fill="#5C6B7A">own context 📄</text>
+      <rect x="530" y="60" width="140" height="55" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="600" y="90" text-anchor="middle" font-size="11.5" font-weight="700">subagent B</text>
+      <text x="600" y="107" text-anchor="middle" font-size="10" fill="#5C6B7A">own context 📄</text>
+      <rect x="690" y="60" width="140" height="55" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="760" y="90" text-anchor="middle" font-size="11.5" font-weight="700">subagent C</text>
+      <text x="760" y="107" text-anchor="middle" font-size="10" fill="#5C6B7A">own context 📄</text>
+      <text x="610" y="140" text-anchor="middle" font-size="11" fill="#5C6B7A">all three search AT THE SAME TIME</text>
+      <rect x="450" y="155" width="320" height="42" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="610" y="181" text-anchor="middle" font-size="13" font-weight="900" fill="var(--green)">✅ beat 1 agent by 90.2%</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> one agent has to explore ideas one after another. Give each subagent its <b>own separate context window</b> and let them search at the same time, and you cover far more ground, far faster.</p>
+    <div class="mem">💡 <b>Remember it as:</b> many small notebooks beat one crowded notebook.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain why a multi-agent research system (separate context windows, parallel exploration) beat a single agent by 90.2% on Anthropic's internal evals. Plain words, one tiny example, then 2 check questions for me.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 2 ============ -->
+  <div class="dia" id="s2">
+    <h3>2 · What is the orchestrator-worker pattern?</h3>
+    <p class="cap">Answer: a <b>lead agent</b> plans and delegates; <b>subagents</b> do the actual searching and report back.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="330" y="20" width="240" height="65" rx="14" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="450" y="48" text-anchor="middle" font-size="13" font-weight="800">🧑‍✈️ Lead agent</text>
+      <text x="450" y="68" text-anchor="middle" font-size="10.5" fill="#5C6B7A">plans + delegates + synthesizes</text>
+      <line x1="400" y1="85" x2="160" y2="135" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <line x1="450" y1="85" x2="450" y2="135" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <line x1="500" y1="85" x2="740" y2="135" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <rect x="60" y="140" width="200" height="55" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="160" y="164" text-anchor="middle" font-size="11.5" font-weight="700">subagent 1 🔍</text>
+      <text x="160" y="182" text-anchor="middle" font-size="10" fill="#5C6B7A">researches part A</text>
+      <rect x="350" y="140" width="200" height="55" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="450" y="164" text-anchor="middle" font-size="11.5" font-weight="700">subagent 2 🔍</text>
+      <text x="450" y="182" text-anchor="middle" font-size="10" fill="#5C6B7A">researches part B</text>
+      <rect x="640" y="140" width="200" height="55" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="740" y="164" text-anchor="middle" font-size="11.5" font-weight="700">subagent 3 🔍</text>
+      <text x="740" y="182" text-anchor="middle" font-size="10" fill="#5C6B7A">researches part C</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> the lead agent never searches the web itself. It breaks the question into pieces, hands each piece to a subagent, then reads what comes back and stitches the findings into one answer.</p>
+    <div class="mem">💡 <b>Remember it as:</b> the lead agent is the editor, not the reporter.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the orchestrator-worker pattern in Anthropic's multi-agent research system: what the lead agent does vs what subagents do. Plain words, then 2 check questions for me.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 3 ============ -->
+  <div class="dia" id="s3">
+    <h3>3 · How does the lead agent hand off work well?</h3>
+    <p class="cap">Answer: every subagent gets an <b>objective</b>, an <b>output format</b>, <b>tool guidance</b>, and <b>clear boundaries</b> — vague tasks cause duplicated work.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="20" width="260" height="70" rx="12" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="150" y="48" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--red)">❌ "research semiconductors"</text>
+      <text x="150" y="70" text-anchor="middle" font-size="10.5" fill="#5C6B7A">vague → agents duplicate work</text>
+      <text x="450" y="112" text-anchor="middle" font-size="22" font-weight="800" fill="#5C6B7A">→</text>
+      <rect x="560" y="15" width="320" height="190" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="720" y="40" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ a real task description:</text>
+      <text x="720" y="65" text-anchor="middle" font-size="11" font-weight="700">🎯 objective — what to find out</text>
+      <text x="720" y="90" text-anchor="middle" font-size="11" font-weight="700">📋 output format — how to report back</text>
+      <text x="720" y="115" text-anchor="middle" font-size="11" font-weight="700">🔧 tool guidance — which tools/sources</text>
+      <text x="720" y="140" text-anchor="middle" font-size="11" font-weight="700">🚧 task boundaries — stay in your lane</text>
+      <text x="720" y="170" text-anchor="middle" font-size="10.5" fill="#5C6B7A" font-style="italic">"an objective, an output format,</text>
+      <text x="720" y="187" text-anchor="middle" font-size="10.5" fill="#5C6B7A" font-style="italic">guidance on tools, and clear boundaries"</text>
+      <rect x="20" y="120" width="260" height="70" rx="12" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2"/>
+      <text x="150" y="148" text-anchor="middle" font-size="11.5" font-weight="700">2 subagents both</text>
+      <text x="150" y="168" text-anchor="middle" font-size="11.5" font-weight="700">search the SAME thing 😵</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a fuzzy instruction lets two subagents wander into the same search. Spelling out the goal, the format, the tools, and where NOT to go keeps every subagent on its own patch of ground.</p>
+    <div class="mem">💡 <b>Remember it as:</b> a good delegation is a mini-contract, not a hint.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain why vague task descriptions to subagents (like 'research semiconductors') caused duplicated work, and the 4 parts of a good task description: objective, output format, tool guidance, task boundaries. Then 2 check questions.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 4 ============ -->
+  <div class="dia" id="s4">
+    <h3>4 · Should every query get the same number of subagents?</h3>
+    <p class="cap">Answer: no — <b>scale effort to complexity</b>. Simple facts get 1 agent; complex research gets 10+.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="260" height="75" rx="12" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="150" y="55" text-anchor="middle" font-size="12.5" font-weight="800">"What year was X founded?"</text>
+      <text x="150" y="76" text-anchor="middle" font-size="11" fill="#5C6B7A">simple fact-finding 🔎</text>
+      <text x="150" y="95" text-anchor="middle" font-size="11" fill="var(--green)" font-weight="700">→ 1 agent, 3-10 tool calls</text>
+      <rect x="20" y="120" width="260" height="75" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="150" y="145" text-anchor="middle" font-size="12.5" font-weight="800">"Compare 5 companies' AI strategy"</text>
+      <text x="150" y="166" text-anchor="middle" font-size="11" fill="#5C6B7A">complex, multi-part 🧩</text>
+      <text x="150" y="185" text-anchor="middle" font-size="11" fill="var(--purple)" font-weight="700">→ 10+ subagents, split up</text>
+      <line x1="290" y1="65" x2="380" y2="65" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <line x1="290" y1="155" x2="380" y2="155" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <rect x="385" y="30" width="90" height="55" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="430" y="63" text-anchor="middle" font-size="20">🤖</text>
+      <text x="490" y="61" font-size="11" fill="#5C6B7A">bigger question = bigger team,</text>
+      <text x="490" y="76" font-size="11" fill="#5C6B7A">not one overloaded agent</text>
+      <rect x="385" y="115" width="490" height="85" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2"/>
+      <text x="630" y="150" text-anchor="middle" font-size="22" letter-spacing="9">🤖🤖🤖🤖🤖🤖🤖</text>
+      <text x="630" y="180" text-anchor="middle" font-size="10.5" fill="#5C6B7A">each subagent owns one company/angle</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> spinning up ten subagents for a one-fact question wastes tokens. The system embeds simple rules-of-thumb so effort scales up only when the question actually has many independent parts.</p>
+    <div class="mem">💡 <b>Remember it as:</b> match the team size to the job size.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain how Anthropic's multi-agent research system scales effort to query complexity: 1 agent for simple fact-finding vs 10+ subagents for complex research. Then 2 check questions.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 5 ============ -->
+  <div class="dia" id="s5">
+    <h3>5 · How did they figure out delegation was broken?</h3>
+    <p class="cap">Answer: they <b>watched agents think, step by step</b>, in the Console — that revealed failure modes like over-searching or quitting too soon.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="55" width="210" height="80" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="125" y="85" text-anchor="middle" font-size="13" font-weight="800">🖥️ Console</text>
+      <text x="125" y="107" text-anchor="middle" font-size="10.5" fill="#5C6B7A">watch agent step-by-step</text>
+      <line x1="240" y1="95" x2="320" y2="95" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="325" y="20" width="250" height="60" rx="10" fill="#FBEAEA" stroke="var(--red)" stroke-width="2"/>
+      <text x="450" y="45" text-anchor="middle" font-size="12" font-weight="700" fill="var(--red)">found: excessive verbosity 📢</text>
+      <text x="450" y="65" text-anchor="middle" font-size="10.5" fill="#5C6B7A">rambling instead of searching</text>
+      <rect x="325" y="90" width="250" height="60" rx="10" fill="#FBEAEA" stroke="var(--red)" stroke-width="2"/>
+      <text x="450" y="115" text-anchor="middle" font-size="12" font-weight="700" fill="var(--red)">found: quits too early ⏹️</text>
+      <text x="450" y="135" text-anchor="middle" font-size="10.5" fill="#5C6B7A">calls it "done" mid-research</text>
+      <line x1="580" y1="60" x2="660" y2="70" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <line x1="580" y1="115" x2="660" y2="105" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="665" y="45" width="215" height="80" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="772" y="75" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ fix the prompt</text>
+      <text x="772" y="97" text-anchor="middle" font-size="10.5" fill="#5C6B7A">now behavior is visible,</text>
+      <text x="772" y="113" text-anchor="middle" font-size="10.5" fill="#5C6B7A">not a black box</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> you can't fix what you can't see. Watching an agent's actual thinking and tool calls, turn by turn, showed exactly where it went wrong — so the fix targeted the real problem, not a guess.</p>
+    <div class="mem">💡 <b>Remember it as:</b> debug the agent like you'd debug a person — watch it work.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain why simulating/watching agent behavior step-by-step in the Console was a key prompt-engineering technique for Anthropic's research system, with the verbosity and premature-stop failure modes as examples. Then 2 check questions.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 6 ============ -->
+  <div class="dia" id="s6">
+    <h3>6 · Can the AGENT improve its own tools?</h3>
+    <p class="cap">Answer: yes — a tool-testing agent rewrote tool descriptions, cutting later agents' task time by <b>40%</b>.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="60" width="220" height="80" rx="12" fill="#FDF1E4" stroke="var(--orange)" stroke-width="2.5"/>
+      <text x="130" y="90" text-anchor="middle" font-size="13" font-weight="800">🔧 messy tool docs</text>
+      <text x="130" y="112" text-anchor="middle" font-size="10.5" fill="#5C6B7A">agents misuse the tool,</text>
+      <text x="130" y="128" text-anchor="middle" font-size="10.5" fill="#5C6B7A">try dozens of times 🔁</text>
+      <line x1="250" y1="100" x2="330" y2="100" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="335" y="55" width="230" height="90" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="450" y="82" text-anchor="middle" font-size="12.5" font-weight="800">🤖 tool-testing agent</text>
+      <text x="450" y="105" text-anchor="middle" font-size="10.5" fill="#5C6B7A">tries the tool itself,</text>
+      <text x="450" y="122" text-anchor="middle" font-size="10.5" fill="#5C6B7A">rewrites the description ✍️</text>
+      <line x1="575" y1="100" x2="655" y2="100" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="660" y="55" width="220" height="90" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="770" y="82" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ next agents</text>
+      <text x="770" y="104" text-anchor="middle" font-size="13" font-weight="900" fill="var(--green)">40% faster</text>
+      <text x="770" y="124" text-anchor="middle" font-size="10.5" fill="#5C6B7A">clear docs, first try 🎯</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a model that struggles with a badly-worded tool can also explain WHY it struggled. Anthropic let an agent test the tool and rewrite its own instructions — future agents never hit that same wall.</p>
+    <div class="mem">💡 <b>Remember it as:</b> let the model write its own user manual.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the 'model self-improves tools' lesson: a tool-testing agent rewrote tool descriptions and cut task completion time 40% for later agents. Why does this work? Then 2 check questions.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 7 ============ -->
+  <div class="dia" id="s7">
+    <h3>7 · Why is multi-agent so much more expensive?</h3>
+    <p class="cap">Answer: multi-agent uses about <b>15× the tokens</b> of a plain chat — only worth it for <b>high-value</b> tasks.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="140" width="40" height="24" rx="6" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="72" y="157" text-anchor="start" font-size="11" font-weight="700">💬 chat = 1×</text>
+      <rect x="20" y="90" width="160" height="38" rx="6" fill="#FDF1E4" stroke="var(--orange)" stroke-width="2"/>
+      <text x="192" y="114" text-anchor="start" font-size="11.5" font-weight="700">🤖 single agent = ~4×</text>
+      <rect x="20" y="25" width="600" height="52" rx="8" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="612" y="57" text-anchor="start" font-size="14" font-weight="900" fill="var(--red)">🕸️ multi-agent = ~15× tokens of a chat</text>
+      <text x="450" y="185" text-anchor="middle" font-size="11.5" font-weight="700" fill="#5C6B7A">worth it only when the task's VALUE clearly beats the token bill 💰</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> every subagent reads, thinks, and writes its own tokens — the costs add up fast. Fifteen times the tokens is fine for a decision worth thousands of dollars, but wasteful for a quick lookup.</p>
+    <div class="mem">💡 <b>Remember it as:</b> multi-agent is a sports car — great for the big race, overkill for a grocery run.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the token economics of multi-agent systems: agents use ~4x tokens of chat, multi-agent uses ~15x. Why is that trade-off only worth it for high-value tasks? Then 2 check questions.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 8 ============ -->
+  <div class="dia" id="s8">
+    <h3>8 · How do you SCORE whether a research answer is good?</h3>
+    <p class="cap">Answer: an <b>LLM judge</b> grades against a rubric — accuracy, citations, completeness, source quality, tool efficiency — on <b>small samples first</b>.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="230" height="70" rx="12" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="135" y="55" text-anchor="middle" font-size="12.5" font-weight="800">🧪 ~20 test cases</text>
+      <text x="135" y="76" text-anchor="middle" font-size="10.5" fill="#5C6B7A">small sample, real usage</text>
+      <text x="135" y="93" text-anchor="middle" font-size="10.5" fill="var(--blue)" font-weight="700">30% → 80% jumps show up fast</text>
+      <line x1="255" y1="65" x2="335" y2="65" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="340" y="15" width="290" height="115" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="485" y="40" text-anchor="middle" font-size="12.5" font-weight="800">⚖️ LLM-judge rubric</text>
+      <text x="485" y="62" text-anchor="middle" font-size="10.5">✓ factual accuracy</text>
+      <text x="485" y="80" text-anchor="middle" font-size="10.5">✓ citation accuracy</text>
+      <text x="485" y="98" text-anchor="middle" font-size="10.5">✓ completeness · source quality</text>
+      <text x="485" y="116" text-anchor="middle" font-size="10.5">✓ tool efficiency → 0.0-1.0 score</text>
+      <line x1="635" y1="70" x2="710" y2="70" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="715" y="35" width="165" height="70" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="797" y="63" text-anchor="middle" font-size="12" font-weight="800" fill="var(--green)">pass / fail</text>
+      <text x="797" y="83" text-anchor="middle" font-size="10.5" fill="#5C6B7A">+ human spot-check 🧑</text>
+      <text x="450" y="165" text-anchor="middle" font-size="10.5" fill="#5C6B7A">humans still catch things the judge misses —</text>
+      <text x="450" y="183" text-anchor="middle" font-size="10.5" fill="#5C6B7A">e.g. preferring SEO content farms over real sources</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> testing starts small (20 cases is enough to see big swings). An LLM grades outputs against a checklist for speed and consistency, but a human still reviews — the judge can share the same blind spots as the model.</p>
+    <div class="mem">💡 <b>Remember it as:</b> small samples first, a rubric-judge for scale, a human for the blind spots.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the 3-part evaluation approach for Anthropic's research system: small test samples (~20 cases), LLM-as-judge with a rubric, and human evaluation for blind spots like SEO content-farm bias. Then 2 check questions.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 9 ============ -->
+  <div class="dia" id="s9">
+    <h3>9 · Why do small bugs become BIG problems in agents that run a long time?</h3>
+    <p class="cap">Answer: agents are <b>stateful</b> — one small failure early on <b>compounds</b> across many later steps.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="70" cy="90" r="26" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="70" y="96" text-anchor="middle" font-size="16">✅</text>
+      <line x1="96" y1="90" x2="160" y2="90" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <circle cx="190" cy="90" r="26" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="190" y="96" text-anchor="middle" font-size="16">💥</text>
+      <text x="190" y="135" text-anchor="middle" font-size="10.5" fill="var(--red)" font-weight="700">one small slip</text>
+      <line x1="216" y1="90" x2="290" y2="90" stroke="#D64545" stroke-width="2.5" marker-end="url(#arR)"/>
+      <circle cx="330" cy="90" r="30" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="330" y="97" text-anchor="middle" font-size="18">⚠️</text>
+      <line x1="362" y1="90" x2="440" y2="90" stroke="#D64545" stroke-width="2.5" marker-end="url(#arR)"/>
+      <circle cx="490" cy="90" r="36" fill="#FBEAEA" stroke="var(--red)" stroke-width="3"/>
+      <text x="490" y="98" text-anchor="middle" font-size="22">🔥</text>
+      <text x="330" y="150" text-anchor="middle" font-size="11" fill="var(--red)" font-weight="700">grows with every later step it touches</text>
+      <line x1="525" y1="83" x2="650" y2="55" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="655" y="20" width="225" height="150" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="767" y="45" text-anchor="middle" font-size="12" font-weight="800" fill="var(--green)">the fixes:</text>
+      <text x="767" y="70" text-anchor="middle" font-size="11" font-weight="700">💾 durable execution</text>
+      <text x="767" y="93" text-anchor="middle" font-size="11" font-weight="700">🤝 graceful error handling</text>
+      <text x="767" y="116" text-anchor="middle" font-size="11" font-weight="700">📍 resume from checkpoint</text>
+      <text x="767" y="139" text-anchor="middle" font-size="10.5" fill="#5C6B7A">(not a full restart)</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a stateless script that fails just fails once. An agent carries its state forward — a tiny early mistake shapes every decision after it, snowballing. So save checkpoints and resume, don't just retry from zero.</p>
+    <div class="mem">💡 <b>Remember it as:</b> a snowball starts small.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain why statefulness makes small errors compound into big failures in long-running agents, and why 'resume from checkpoint' beats 'restart from scratch.' Then 2 check questions.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 10 ============ -->
+  <div class="dia" id="s10">
+    <h3>10 · How do you deploy a NEW agent version without breaking agents mid-task?</h3>
+    <p class="cap">Answer: <b>rainbow deployments</b> — shift traffic gradually between old and new versions.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="220" height="60" rx="12" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="130" y="55" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--red)">❌ instant switch-over</text>
+      <text x="130" y="76" text-anchor="middle" font-size="10.5" fill="#5C6B7A">running agents cut off mid-task</text>
+      <text x="450" y="65" text-anchor="middle" font-size="22" font-weight="800" fill="#5C6B7A">vs</text>
+      <rect x="560" y="15" width="320" height="90" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="720" y="40" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ 🌈 rainbow deployment</text>
+      <rect x="580" y="55" width="120" height="30" rx="6" fill="#FDF1E4" stroke="var(--orange)" stroke-width="1.5"/>
+      <text x="640" y="75" text-anchor="middle" font-size="10" font-weight="700">old version 🟠</text>
+      <rect x="710" y="55" width="150" height="30" rx="6" fill="#EAF2FB" stroke="var(--blue)" stroke-width="1.5"/>
+      <text x="785" y="75" text-anchor="middle" font-size="10" font-weight="700">new version 🔵</text>
+      <text x="720" y="97" text-anchor="middle" font-size="10" fill="#5C6B7A">both run together, traffic shifts slowly →</text>
+      <rect x="20" y="130" width="860" height="60" rx="12" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="450" y="155" text-anchor="middle" font-size="12" font-weight="700">in-flight agents FINISH on the version they started on</text>
+      <text x="450" y="176" text-anchor="middle" font-size="10.5" fill="#5C6B7A">nobody's long research task gets yanked away mid-run</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> an agent might be mid-research for minutes. Flip the whole system to a new version instantly and you can break agents that are already working. Rainbow deploys let both versions run side-by-side while traffic slowly moves over.</p>
+    <div class="mem">💡 <b>Remember it as:</b> don't swap the runway while a plane is landing.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain rainbow deployments for agent systems: why an instant version switch breaks in-flight agents, and how gradually shifting traffic between old and new versions fixes it. Then 2 check questions.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ FOOTER CTA ============ -->
+  <div class="card" style="text-align:center;margin-top:22px">
+    <p style="margin:0 0 10px"><b>Read them all?</b> This maps directly onto the CCA-F "Research multi-agent system" template.</p>
+    <a class="golearn" href="curriculum.html#u-t2">📚 Go to the Research multi-agent unit →</a>
+    <p class="hint" style="margin:12px 0 0">Want to read the source? <a class="note" href="https://www.anthropic.com/engineering/multi-agent-research-system" target="_blank" rel="noopener">How we built our multi-agent research system (Anthropic) ↗</a></p>
+  </div>
+
+  <footer>
+    Same color key as the <a class="note" href="learning-map.html">Visual Learning Map</a> · 2026-07-02
+  </footer>
+</div>
+
+<div id="toast">Copied — paste it to your tutor 👍</div>
+<script>
+(function(){
+  try{localStorage.setItem("ccaf-last",JSON.stringify({href:"article-multi-agent.html",label:"Article: Multi-Agent Research System",ts:Date.now()}))}catch(e){}
+  var toast=document.getElementById('toast');
+  function flash(){toast.classList.add('show');setTimeout(function(){toast.classList.remove('show');},1600);}
+  function fb(t){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);flash();}
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('.ask'); if(!b||!b.getAttribute('data-q')) return;
+    var t=b.getAttribute('data-q');
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(flash).catch(function(){fb(t);});}else{fb(t);}
+  });
+})();
+</script>
+</body>
+</html>

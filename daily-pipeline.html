@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Pipeline — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .wknav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .wknav button{border:1px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:.88rem;padding:9px 16px;border-radius:999px;cursor:pointer}
+  .wknav button:hover{border-color:var(--accent);color:var(--accent)}
+  .wknav .wklabel{font-weight:800;font-size:1.05rem;text-align:center;flex:1 1 auto}
+  .wknav .wklabel .hint{display:block;font-weight:400}
+  .dayrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);flex-wrap:wrap}
+  .dayrow:last-child{border-bottom:0}
+  .dayrow .dname{flex:0 0 118px;font-weight:800;font-size:.9rem}
+  .dayrow .dname .hint{display:block;font-weight:400;font-size:.75rem}
+  .dayrow.today{background:#FFF8E7;border-radius:10px;padding-left:8px;padding-right:8px;margin:0 -8px}
+  .dayrow.future{opacity:.45}
+  .stepbox{display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-size:.8rem}
+  .stepbox input{width:20px;height:20px;accent-color:#2F9E63;cursor:pointer}
+  .dayrow .dsum{margin-left:auto;font-size:.78rem;color:var(--muted);font-weight:700}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+  <h1>📋 Weekly Pipeline & Progress</h1>
+  <p class="sub" id="today"></p>
+
+  <div class="callout info"><b>Didn't finish a day?</b> That's planned for. Unfinished items carry forward — you re-plan once a week (below), so a slow day never means "behind."</div>
+
+  <!-- WEEK VIEW -->
+  <h2>🗓️ Your week <span class="hint" id="wcount"></span></h2>
+  <div class="card">
+    <div class="wknav">
+      <button id="wprev">◀ last week</button>
+      <div class="wklabel"><span id="wtitle">This week</span><span class="hint" id="wrange"></span></div>
+      <button id="wnext">next week ▶</button>
+    </div>
+    <div class="bar" style="margin:12px 0"><span id="wbar" style="width:0%"></span></div>
+    <div id="week"></div>
+    <p class="hint" style="margin:.6em 0 0">Steps: 🎥 watch · ✏️ draw · 🔨 build · 🗣️ explain · 🃏 flashcards — tick them on any day (backfill is fine). Today's row syncs with the Today page.</p>
+    <p style="margin:.4em 0 0"><button id="wtoday" style="border:0;background:var(--accent);color:#fff;font:inherit;font-weight:700;font-size:.8rem;padding:6px 14px;border-radius:999px;cursor:pointer">↩ jump back to this week</button></p>
+  </div>
+
+  <!-- TODAY DETAIL -->
+  <h2>🔁 Today's routine, step by step <span class="hint" id="dcount"></span></h2>
+  <p class="hint">Tap a step's name (or ▸) for exactly what to do. This is the same 5 steps as today's row above.</p>
+  <div class="card"><div id="daily"></div>
+    <div class="bar"><span id="dbar" style="width:0%"></span></div>
+  </div>
+
+  <h2>🗓️ Weekly Review & Correction</h2>
+  <div class="card">
+    <p>You won't finish everything every day — <b>that's planned for.</b> Once a week, re-plan instead of falling behind. <b>The plan bends, you don't break.</b></p>
+    <p class="hint">Copy each week and fill in (or ask your tutor: "run my weekly review"):</p>
+    <ol>
+      <li>✅ What I finished (tick it on the Master checklist below)</li>
+      <li>↪️ What slipped → carry into next week</li>
+      <li>🎯 Next week's top 3 priorities</li>
+      <li>🧱 Blockers / what made it hard</li>
+      <li>🙂 How I felt / energy (1–5)</li>
+      <li>📆 Adjusted finish estimate: Week ___ of plan</li>
+    </ol>
+    <p class="hint">📊 At the end of a phase, take its <a href="quizzes.html">checkpoint quiz</a> — retake until you pass <b>with no guessing</b>.</p>
+  </div>
+
+  <h2>🏁 Master checklist <span class="hint" id="mcount"></span></h2>
+  <p class="hint">Tick milestones as you finish them — these save in your browser.</p>
+  <div class="card"><div class="bar" style="margin-bottom:12px"><span id="mbar" style="width:0%"></span></div><div id="master"></div></div>
+
+  <div style="margin-top:14px"><a class="btn green" href="pretest.html">🧪 Take the Pre-Test →</a></div>
+
+  <footer>Your checks save in this browser · pair it with your own notes for a written backup.</footer>
+</div>
+<div id="toast" style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;opacity:0;transition:.25s;pointer-events:none">Copied 👍</div>
+
+<script>
+/* ---- shared bits ---- */
+var STEP_ICONS=["🎥","✏️","🔨","🗣️","🃏"];
+var STEP_NAMES=["watch","draw","build","explain","cards"];
+function fmt(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");} // local date
+var todayStr=fmt(new Date());
+document.getElementById("today").textContent="Today is "+todayStr;
+
+/* ---- storage: per-day log (forever) + today's key shared with Today page/dashboard ---- */
+var WKEY="ccaf-week-log", DKEY="ccaf-pipeline";
+var wlog={}; try{wlog=JSON.parse(localStorage.getItem(WKEY)||"{}");}catch(e){}
+var ds={}; try{ds=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
+if(ds.date!==todayStr||!Array.isArray(ds.checks)||ds.checks.length!==5){ds={date:todayStr,checks:[false,false,false,false,false]};}
+// today's shared key is the source of truth for today
+wlog[todayStr]=ds.checks.slice();
+function wsave(){try{localStorage.setItem(WKEY,JSON.stringify(wlog));}catch(e){}}
+function dsave(){try{localStorage.setItem(DKEY,JSON.stringify(ds));}catch(e){}}
+wsave();
+function setStep(dateStr,i,val){
+  wlog[dateStr]=wlog[dateStr]||[false,false,false,false,false];
+  wlog[dateStr][i]=val; wsave();
+  if(dateStr===todayStr){ds={date:todayStr,checks:wlog[todayStr].slice()};dsave();}
+  renderWeek(); dbarSync();
+}
+
+/* ---- week view with last/this/next navigation ---- */
+var offset=0; // 0 = this week, -1 = last week, +1 = next week…
+function monday(d){var x=new Date(d);var day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x;}
+var DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+function renderWeek(){
+  var start=monday(new Date()); start.setDate(start.getDate()+offset*7);
+  var end=new Date(start); end.setDate(end.getDate()+6);
+  document.getElementById("wtitle").textContent = offset===0?"This week":(offset===-1?"Last week":(offset===1?"Next week":(offset<0?(-offset)+" weeks ago":offset+" weeks ahead")));
+  document.getElementById("wrange").textContent = fmt(start)+"  →  "+fmt(end);
+  var host=document.getElementById("week"); host.innerHTML="";
+  var weekDone=0;
+  for(var d=0;d<7;d++){
+    (function(){
+      var day=new Date(start); day.setDate(day.getDate()+d);
+      var dstr=fmt(day);
+      var checks=wlog[dstr]||[false,false,false,false,false];
+      var isToday=dstr===todayStr, isFuture=dstr>todayStr;
+      var row=document.createElement("div");
+      row.className="dayrow"+(isToday?" today":"")+(isFuture?" future":"");
+      var nm=document.createElement("div");nm.className="dname";
+      nm.innerHTML=(isToday?"⭐ ":"")+DOW[d]+"<span class='hint'>"+dstr.slice(5)+"</span>";
+      row.appendChild(nm);
+      var n=0;
+      for(var i=0;i<5;i++){
+        (function(i){
+          var box=document.createElement("label");box.className="stepbox";box.title=STEP_NAMES[i];
+          var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!checks[i];
+          if(checks[i])n++;
+          cb.addEventListener("change",function(){setStep(dstr,i,cb.checked);});
+          var ic=document.createElement("span");ic.textContent=STEP_ICONS[i];
+          box.appendChild(ic);box.appendChild(cb);row.appendChild(box);
+        })(i);
+      }
+      weekDone+=n;
+      var sum=document.createElement("span");sum.className="dsum";sum.textContent=n+"/5";
+      row.appendChild(sum);
+      host.appendChild(row);
+    })();
+  }
+  document.getElementById("wbar").style.width=(weekDone/35*100)+"%";
+  document.getElementById("wcount").textContent="("+weekDone+"/35 steps)";
+}
+document.getElementById("wprev").addEventListener("click",function(){offset--;renderWeek();});
+document.getElementById("wnext").addEventListener("click",function(){offset++;renderWeek();});
+document.getElementById("wtoday").addEventListener("click",function(){offset=0;renderWeek();});
+
+/* ---- today's routine, detailed (edits the same today entry) ---- */
+var DAILY=[
+ {label:"🎥 Watch / listen (15–25 min)",details:"<b>What:</b> watch ONE short lesson on today's topic.<br><b>Where:</b> <a href='resources.html'>Resources</a> → Anthropic Academy, in order.<br><b>How:</b> captions on; pause every 5 min and sketch.",ask:"What exactly should I watch today, and where? Course + lesson + a one-line focus."},
+ {label:"✏️ Draw it as boxes + arrows",details:"<b>What:</b> redraw the idea from memory.<br><b>How:</b> use the color key. Rough is fine.",ask:"What should I draw today? Describe the ONE diagram that captures today's topic."},
+ {label:"🔨 Build one tiny example (real code)",details:"<b>What:</b> smallest working version — real code or an on-site <a href='exercise.html'>build exercise</a>.<br><b>Where:</b> VS Code, or run <code>claude-cheap</code> to practice cheaply.",ask:"Give me today's tiny build task — smallest real thing I can code in ~20 min, with steps."},
+ {label:"🗣️ Explain it out loud (60 sec)",details:"<b>What:</b> say today's idea in plain words, no notes.<br><b>Why:</b> if you can't say it simply, you don't own it yet.",ask:"I'll explain today's topic in my own words — quiz and grade my explanation."},
+ {label:"🃏 3 flashcards + 1 mistake card",details:"<b>What:</b> 3 Q→A cards + 1 'mistake card'.<br><b>Where:</b> <a href='https://apps.ankiweb.net' target='_blank' rel='noopener'>Anki</a>, or the on-site <a href='flashcards.html'>Flashcards</a>.",ask:"Turn today's topic into 3 short flashcards plus 1 mistake card."}
+];
+var dEls=[];
+function dbarSync(){
+  var checks=wlog[todayStr]||[false,false,false,false,false];
+  var done=checks.filter(Boolean).length;
+  document.getElementById("dbar").style.width=(done/5*100)+"%";
+  document.getElementById("dcount").textContent="("+done+"/5)";
+  dEls.forEach(function(el,i){
+    el.cb.checked=!!checks[i];
+    el.nm.style.textDecoration=checks[i]?"line-through":"none";
+    el.nm.style.color=checks[i]?"#5C6B7A":"";
+  });
+}
+var dhost=document.getElementById("daily");
+DAILY.forEach(function(it,i){
+  var wrap=document.createElement("div");wrap.style.borderBottom="1px dashed var(--line)";
+  var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:11px;padding:9px 0";
+  var cb=document.createElement("input");cb.type="checkbox";cb.style.cssText="width:21px;height:21px;flex:0 0 auto;accent-color:#2F9E63";
+  var nm=document.createElement("span");nm.textContent=it.label;nm.style.cssText="flex:1 1 auto;font-weight:600;cursor:pointer";
+  var ch=document.createElement("span");ch.textContent="▸";ch.style.cssText="cursor:pointer;color:var(--accent);font-weight:800;font-size:1.1rem";
+  var pan=document.createElement("div");pan.style.cssText="display:none;padding:0 0 12px 32px;font-size:.9rem";
+  pan.innerHTML=it.details+"<br>";
+  var b=document.createElement("button");b.className="ask2";b.textContent="💬 Ask my tutor about this step";b.setAttribute("data-q",it.ask);
+  b.style.cssText="margin-top:8px;background:var(--accent);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:.8rem;padding:6px 12px;cursor:pointer";
+  pan.appendChild(b);
+  cb.addEventListener("change",function(){setStep(todayStr,i,cb.checked);});
+  function tog(){var o=pan.style.display==="block";pan.style.display=o?"none":"block";ch.textContent=o?"▸":"▾";}
+  nm.addEventListener("click",tog);ch.addEventListener("click",tog);
+  row.appendChild(cb);row.appendChild(nm);row.appendChild(ch);wrap.appendChild(row);wrap.appendChild(pan);dhost.appendChild(wrap);
+  dEls.push({cb:cb,nm:nm});
+});
+renderWeek();
+dbarSync();
+
+/* ---- master checklist (persistent) ---- */
+var MASTER=[
+ {h:"Phase 0 — Start",items:["Take the Pre-Test, paste my score to the tutor","Set my Week 1 plan from the results"]},
+ {h:"📚 Free courses",items:["Claude 101","Claude Platform 101","Claude Code 101","Claude Code in Action","Building with the Claude API","Introduction to MCP","Introduction to agent skills","Introduction to subagents","MCP: Advanced Topics"]},
+ {h:"📅 The 12 weeks",items:["Week 1 — Absolute Foundations","Week 2 — Claude Ecosystem Map","Week 3 — Prompt Engineering","Week 4 — Structured Output","Week 5 — Tool Use","Week 6 — MCP Basics","Week 7 — Claude Code Workflows","Week 8 — Agentic Loops & Escalation","Week 9 — Multi-Agent Systems","Week 10 — Context & Reliability","Week 11 — CI/CD, Batch & Review","Week 12 — Capstone & Exam Readiness"]},
+ {h:"🔨 Projects",items:["Visual glossary wall","Prompt clinic","JSON extraction lab","Tool card deck","Agentic loop board","Support escalation agent","MCP server design","Claude Code workflow design","Multi-agent research pipeline","CI/CD review pipeline","Final architecture blueprint"]}
+];
+var MKEY="ccaf-milestones";
+var ms={}; try{ms=JSON.parse(localStorage.getItem(MKEY)||"{}");}catch(e){}
+function msave(){try{localStorage.setItem(MKEY,JSON.stringify(ms));}catch(e){}}
+var total=0,mhost=document.getElementById("master");
+MASTER.forEach(function(grp){
+  var h=document.createElement("h3");h.textContent=grp.h;mhost.appendChild(h);
+  grp.items.forEach(function(label){
+    total++;var id=label;
+    var row=document.createElement("label");row.className="check";
+    var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!ms[id];
+    var sp=document.createElement("span");sp.textContent=label;if(ms[id]){sp.style.textDecoration="line-through";sp.style.color="#5C6B7A";}
+    cb.addEventListener("change",function(){ms[id]=cb.checked;msave();sp.style.textDecoration=cb.checked?"line-through":"none";sp.style.color=cb.checked?"#5C6B7A":"";mbar();});
+    row.appendChild(cb);row.appendChild(sp);mhost.appendChild(row);
+  });
+});
+function mbar(){var done=Object.keys(ms).filter(function(k){return ms[k];}).length;document.getElementById("mbar").style.width=(done/total*100)+"%";document.getElementById("mcount").textContent="("+done+"/"+total+")";}
+mbar();
+
+/* ---- copy handler for ask buttons ---- */
+var tEl=document.getElementById("toast");
+document.addEventListener("click",function(e){
+  var b=e.target.closest(".ask2");if(!b)return;
+  var t=b.getAttribute("data-q")||"";
+  function ok(){tEl.style.opacity="1";tEl.style.transform="translateX(-50%) translateY(0)";setTimeout(function(){tEl.style.opacity="0";tEl.style.transform="translateX(-50%) translateY(30px)";},1500);}
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(ok).catch(function(){var ta=document.createElement("textarea");ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand("copy");}catch(e){}ta.remove();ok();});}
+});
+</script>
+</body>
+</html>

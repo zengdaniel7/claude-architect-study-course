@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pre-Test Repair — Visual Guide</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .lead{font-size:1.05rem;color:var(--muted)}
+  .dia{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;margin:16px 0;scroll-margin-top:70px}
+  .dia h3{margin:0 0 4px;font-size:1.15rem}
+  .dia .cap{font-size:.9rem;color:var(--muted);margin:2px 0 12px}
+  .dia .note{font-size:.92rem;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+  .dia .mem{background:#FFF8E7;border:1.5px dashed var(--yellow);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:.92rem}
+  .svgwrap{width:100%;overflow-x:auto}
+  svg{display:block;max-width:100%;height:auto;font-family:inherit}
+  svg text{font-family:"Atkinson Hyperlegible","Trebuchet MS",system-ui,sans-serif}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;margin:8px 0 0}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:.85em;height:.85em;border-radius:3px;display:inline-block}
+  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:999px}
+  .ask:hover{filter:brightness(1.08)}
+  .golearn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;font-weight:800;padding:10px 20px;border-radius:999px}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- shared arrowheads for all diagrams -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ar"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5C6B7A"/></marker>
+  <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D64545"/></marker>
+  <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2F9E63"/></marker>
+  <marker id="arB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2D7DD2"/></marker>
+  <marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A4FC4"/></marker>
+  <marker id="arO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8740C"/></marker>
+</defs></svg>
+
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+
+  <header style="padding:30px 0 6px">
+    <h1>🩹 Pre-Test Repair — the Visual Guide</h1>
+    <p class="lead">These are the <b>11 pre-test questions beginners most often miss or guess</b> — each one as a <b>picture + plain words</b>. How to use it: read ONE section → say it out loud → then test yourself.</p>
+    <p><a class="golearn" href="flashcards.html?deck=pretest-repair&mode=learn">🧠 Test me on these (Learn mode) →</a></p>
+  </header>
+
+  <div class="legend" style="margin-bottom:10px">
+    <b style="font-size:.85rem">Color key:</b>
+    <span><i style="background:var(--red)"></i>risk / failure</span>
+    <span><i style="background:var(--green)"></i>success / safe</span>
+    <span><i style="background:var(--blue)"></i>context / data</span>
+    <span><i style="background:var(--purple)"></i>tools / API</span>
+    <span><i style="background:var(--orange)"></i>human review</span>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <div class="dia" id="r1">
+    <h3>1 · What turns a chat model into an agent?</h3>
+    <p class="cap">Answer: <b>tools + a LOOP</b>. (JSON output is just data — it doesn't make anything an agent.)</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="60" width="200" height="90" rx="14" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="120" y="95" text-anchor="middle" font-size="14" font-weight="800">Chat model</text>
+      <text x="120" y="116" text-anchor="middle" font-size="11" fill="#5C6B7A">words in → words out</text>
+      <text x="120" y="134" text-anchor="middle" font-size="11" fill="#5C6B7A">then it STOPS</text>
+      <text x="255" y="112" text-anchor="middle" font-size="26" font-weight="800" fill="#5C6B7A">+</text>
+      <rect x="290" y="60" width="150" height="90" rx="14" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="365" y="98" text-anchor="middle" font-size="14" font-weight="800">Tools</text>
+      <text x="365" y="119" text-anchor="middle" font-size="11" fill="#5C6B7A">real actions</text>
+      <text x="475" y="112" text-anchor="middle" font-size="26" font-weight="800" fill="#5C6B7A">+</text>
+      <circle cx="640" cy="105" r="62" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="8 6"/>
+      <text x="640" y="88" text-anchor="middle" font-size="12" font-weight="800">think → act</text>
+      <text x="640" y="106" text-anchor="middle" font-size="12" font-weight="800">→ read result</text>
+      <text x="640" y="124" text-anchor="middle" font-size="12" font-weight="800">→ repeat</text>
+      <text x="640" y="185" text-anchor="middle" font-size="11" fill="#5C6B7A">the LOOP — until stop_reason says done</text>
+      <text x="760" y="112" text-anchor="middle" font-size="22" font-weight="800" fill="var(--green)">=</text>
+      <text x="830" y="105" text-anchor="middle" font-size="16" font-weight="900" fill="var(--green)">AGENT</text>
+      <text x="830" y="124" text-anchor="middle" font-size="11" fill="#5C6B7A">acts until done</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a chat model answers once and stops. Give it <b>tools</b> (things it can do) and a <b>loop</b> (act → look at the result → act again), and now it can keep working until the job is done. That's an agent.</p>
+    <div class="mem">💡 <b>Remember it as:</b> model + tools + loop = agent. JSON is just paper — paper doesn't do things.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain in plain words why tools + a loop turn a chat model into an agent, and why JSON output alone doesn't. One tiny example, then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ 2 ============ -->
+  <div class="dia" id="r2">
+    <h3>2 · Why are nullable fields useful in extraction?</h3>
+    <p class="cap">Answer: they let the model say <b>"not present"</b> instead of <b>making something up</b>.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="45" width="190" height="140" rx="12" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="115" y="75" text-anchor="middle" font-size="13" font-weight="800">Invoice 📄</text>
+      <text x="115" y="100" text-anchor="middle" font-size="11.5">total: $310 ✓</text>
+      <text x="115" y="122" text-anchor="middle" font-size="11.5">date: 06-30 ✓</text>
+      <text x="115" y="144" text-anchor="middle" font-size="11.5" fill="var(--red)">PO number: (not on it!)</text>
+      <line x1="220" y1="115" x2="300" y2="115" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <text x="260" y="103" text-anchor="middle" font-size="10.5" fill="#5C6B7A">extract</text>
+      <rect x="305" y="70" width="220" height="90" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="415" y="100" text-anchor="middle" font-size="12.5" font-weight="800">schema says:</text>
+      <text x="415" y="124" text-anchor="middle" font-size="12" font-family="monospace">po_number: text OR null</text>
+      <text x="415" y="145" text-anchor="middle" font-size="10.5" fill="#5C6B7A">null is ALLOWED</text>
+      <line x1="530" y1="90" x2="640" y2="70" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="645" y="40" width="230" height="60" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="760" y="65" text-anchor="middle" font-size="13" font-weight="800" fill="var(--green)">✅ po_number: null</text>
+      <text x="760" y="86" text-anchor="middle" font-size="10.5" fill="#5C6B7A">honest: "it isn't there"</text>
+      <line x1="530" y1="140" x2="640" y2="165" stroke="#D64545" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arR)"/>
+      <rect x="645" y="135" width="230" height="60" rx="12" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="760" y="160" text-anchor="middle" font-size="13" font-weight="800" fill="var(--red)">❌ po_number: "PO-4471"</text>
+      <text x="760" y="181" text-anchor="middle" font-size="10.5" fill="#5C6B7A">invented — a hallucination</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> if a field <b>must</b> be filled, the model will fill it — even by inventing. Making the field <b>nullable</b> (allowed to be empty) gives the model a truthful way out.</p>
+    <div class="mem">💡 <b>Remember it as:</b> null is an escape hatch for honesty. No hatch → the model invents.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain nullable fields in extraction schemas in plain words: why they stop hallucination, with one tiny invoice example. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m1">deep-dive: Structured-output unit →</a></p>
+  </div>
+
+  <!-- ============ 3 ============ -->
+  <div class="dia" id="r3">
+    <h3>3 · A required fact is missing from the source — what should happen?</h3>
+    <p class="cap">Answer: <b>mark it missing</b> or <b>send it to a human</b>. Never invent it.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="75" width="170" height="60" rx="12" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="105" y="100" text-anchor="middle" font-size="13" font-weight="800">source doc 📄</text>
+      <text x="105" y="120" text-anchor="middle" font-size="10.5" fill="#5C6B7A">fact isn't in it</text>
+      <line x1="200" y1="105" x2="285" y2="105" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="290" y="75" width="180" height="60" rx="12" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2.5"/>
+      <text x="380" y="100" text-anchor="middle" font-size="13" font-weight="800">required fact</text>
+      <text x="380" y="120" text-anchor="middle" font-size="13" font-weight="800">MISSING ⚠️</text>
+      <line x1="480" y1="90" x2="580" y2="55" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="585" y="28" width="290" height="52" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="730" y="50" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ flag it: "missing" / null</text>
+      <text x="730" y="69" text-anchor="middle" font-size="10.5" fill="#5C6B7A">missing IS an answer</text>
+      <line x1="480" y1="105" x2="580" y2="105" stroke="#E8740C" stroke-width="2.5" marker-end="url(#arO)"/>
+      <rect x="585" y="88" width="290" height="42" rx="12" fill="#FDF1E4" stroke="var(--orange)" stroke-width="2.5"/>
+      <text x="730" y="114" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--orange)">✅ or route to a human 🧑</text>
+      <line x1="480" y1="122" x2="580" y2="165" stroke="#D64545" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arR)"/>
+      <rect x="585" y="145" width="290" height="42" rx="12" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="730" y="171" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--red)">❌ never: fill in a guess</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> "I couldn't find it" is <b>useful information</b> — a human can go look. A confident made-up value is <b>poison</b>: it looks real and nobody checks it.</p>
+    <div class="mem">💡 <b>Remember it as:</b> an honest blank beats a confident lie.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="A required fact is missing from a source document during extraction. Walk me through what a good system does (flag missing, route to human) and why inventing is the worst option. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-rel">deep-dive: Reliability thread →</a></p>
+  </div>
+
+  <!-- ============ 4 ============ -->
+  <div class="dia" id="r4">
+    <h3>4 · What is prompt chaining?</h3>
+    <p class="cap">Answer: breaking a task into <b>sequential steps</b> — each step uses the previous step's output.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 170" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="45" width="220" height="70" rx="14" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="140" y="74" text-anchor="middle" font-size="13" font-weight="800">Step 1</text>
+      <text x="140" y="96" text-anchor="middle" font-size="11.5">pull the raw facts out</text>
+      <line x1="255" y1="80" x2="330" y2="80" stroke="#2D7DD2" stroke-width="3" marker-end="url(#arB)"/>
+      <text x="292" y="66" text-anchor="middle" font-size="10.5" fill="#2D7DD2" font-weight="700">output →</text>
+      <rect x="335" y="45" width="220" height="70" rx="14" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="445" y="74" text-anchor="middle" font-size="13" font-weight="800">Step 2</text>
+      <text x="445" y="96" text-anchor="middle" font-size="11.5">summarize those facts</text>
+      <line x1="560" y1="80" x2="635" y2="80" stroke="#2D7DD2" stroke-width="3" marker-end="url(#arB)"/>
+      <text x="597" y="66" text-anchor="middle" font-size="10.5" fill="#2D7DD2" font-weight="700">output →</text>
+      <rect x="640" y="45" width="220" height="70" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="750" y="74" text-anchor="middle" font-size="13" font-weight="800">Step 3</text>
+      <text x="750" y="96" text-anchor="middle" font-size="11.5">format as clean JSON ✅</text>
+      <text x="450" y="148" text-anchor="middle" font-size="11" fill="#5C6B7A">each step gets ONE simple job — the baton (output) passes to the next runner</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> instead of one giant prompt doing everything (and messing some of it up), you run <b>small prompts in a row</b>. Each one does one clear job and hands its result to the next.</p>
+    <div class="mem">💡 <b>Remember it as:</b> a relay race — the baton is the output.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain prompt chaining in plain words with a 3-step example (extract → summarize → format). When is chaining better than one big prompt? Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m3">deep-dive: Prompt techniques →</a></p>
+  </div>
+
+  <!-- ============ 5 ============ -->
+  <div class="dia" id="r5">
+    <h3>5 · A tool times out — what's the BEST error info to send back?</h3>
+    <p class="cap">Answer: <b>is_error: true</b> + a message that <b>tells the model what to try instead</b>. (⚠️ "isRetryable" is NOT a real API field — classic exam trap.)</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="80" width="150" height="60" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="95" y="105" text-anchor="middle" font-size="13" font-weight="800">tool call 🔧</text>
+      <text x="95" y="125" text-anchor="middle" font-size="10.5" fill="#5C6B7A">search_orders(…)</text>
+      <line x1="180" y1="110" x2="255" y2="110" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <text x="290" y="117" text-anchor="middle" font-size="26">💥</text>
+      <text x="290" y="145" text-anchor="middle" font-size="10.5" fill="#5C6B7A">timeout</text>
+      <line x1="330" y1="90" x2="420" y2="55" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="425" y="20" width="450" height="78" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="650" y="45" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ is_error: true +</text>
+      <text x="650" y="66" text-anchor="middle" font-size="11.5" font-family="monospace">"Timed out after 5s — try a smaller date range"</text>
+      <text x="650" y="87" text-anchor="middle" font-size="10.5" fill="#5C6B7A">the model READS this and retries smarter</text>
+      <line x1="330" y1="130" x2="420" y2="165" stroke="#D64545" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arR)"/>
+      <rect x="425" y="135" width="450" height="62" rx="12" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="650" y="158" text-anchor="middle" font-size="12" font-weight="800" fill="var(--red)">❌ just "Error" (nothing to work with)</text>
+      <text x="650" y="180" text-anchor="middle" font-size="12" font-weight="800" fill="var(--red)">❌ "isRetryable: true" — not a real field</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> the model can only fix what it can <b>read</b>. A good error says what failed <i>and</i> hints what to do next — so the next loop turn goes better.</p>
+    <div class="mem">💡 <b>Remember it as:</b> an error message is an instruction for the NEXT try.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain how tool errors should be returned to Claude (is_error true + instructive message) and why 'isRetryable' is an exam trap. One tiny example, then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m2">deep-dive: One tool call →</a></p>
+  </div>
+
+  <!-- ============ 6 ============ -->
+  <div class="dia" id="r6">
+    <h3>6 · What are path-specific rules for?</h3>
+    <p class="cap">Answer: loading <b>different conventions for different parts</b> of a project — automatically, by file path.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="20" width="260" height="170" rx="14" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="150" y="46" text-anchor="middle" font-size="13" font-weight="800">your project 📁</text>
+      <text x="55" y="80" font-size="12" font-family="monospace">src/ui/*.tsx</text>
+      <text x="55" y="120" font-size="12" font-family="monospace">api/*.py</text>
+      <text x="55" y="160" font-size="12" font-family="monospace">*.test.ts</text>
+      <line x1="290" y1="76" x2="400" y2="60" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <line x1="290" y1="116" x2="400" y2="115" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <line x1="290" y1="156" x2="400" y2="170" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="405" y="38" width="330" height="44" rx="10" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2"/>
+      <text x="570" y="65" text-anchor="middle" font-size="12" font-weight="700">🎨 React rules — "use our Button component"</text>
+      <rect x="405" y="93" width="330" height="44" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="570" y="120" text-anchor="middle" font-size="12" font-weight="700">🔌 API rules — "always validate inputs"</text>
+      <rect x="405" y="148" width="330" height="44" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="570" y="175" text-anchor="middle" font-size="12" font-weight="700">🧪 Test rules — "no mocks of real APIs"</text>
+      <text x="450" y="205" font-size="10.5" fill="#5C6B7A">the right rules load only when Claude touches that part — no giant rulebook in every prompt</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a project isn't one neighborhood. UI code, API code and tests each have their own house rules. Path-specific rules attach the right rulebook to the right folder — automatically.</p>
+    <div class="mem">💡 <b>Remember it as:</b> different neighborhoods, different rules.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain path-specific rules in Claude Code (rules matched by file globs) in plain words, with one example of UI vs API vs test rules. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o4">deep-dive: Claude Code workflows →</a></p>
+  </div>
+
+  <!-- ============ 7 ============ -->
+  <div class="dia" id="r7">
+    <h3>7 · Why are fixed iteration caps a weak PRIMARY stop method?</h3>
+    <p class="cap">Answer: a cap doesn't understand the task — it can stop <b>too early or too late</b>. Check <b>stop_reason</b> instead; keep the cap only as a backstop.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="30" width="240" height="70" rx="14" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="140" y="58" text-anchor="middle" font-size="13" font-weight="800" fill="var(--red)">"stop after 10 loops"</text>
+      <text x="140" y="82" text-anchor="middle" font-size="10.5" fill="#5C6B7A">a blind counter 🔢</text>
+      <line x1="270" y1="50" x2="518" y2="40" stroke="#D64545" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arR)"/>
+      <text x="530" y="42" font-size="12" fill="var(--red)" font-weight="700">task done at 3 → it kept looping (waste 💸)</text>
+      <line x1="270" y1="80" x2="518" y2="88" stroke="#D64545" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arR)"/>
+      <text x="530" y="92" font-size="12" fill="var(--red)" font-weight="700">task needs 14 → cut off mid-work ✂️</text>
+      <rect x="20" y="130" width="240" height="70" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="140" y="158" text-anchor="middle" font-size="13" font-weight="800" fill="var(--green)">check stop_reason</text>
+      <text x="140" y="182" text-anchor="middle" font-size="10.5" fill="#5C6B7A">every single turn ✅</text>
+      <line x1="270" y1="150" x2="508" y2="145" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <text x="520" y="148" font-size="12" fill="var(--green)" font-weight="700">"tool_use" → keep going, it's mid-job</text>
+      <line x1="270" y1="180" x2="508" y2="188" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <text x="520" y="192" font-size="12" fill="var(--green)" font-weight="700">"end_turn" → actually finished. Stop.</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> the counter can't see whether the work is done. <code>stop_reason</code> is the model literally <b>telling you</b> its state. A cap is still fine as a safety backstop — just never as the main brake.</p>
+    <div class="mem">💡 <b>Remember it as:</b> the cap is a smoke alarm, not the off switch.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Why are fixed iteration caps a weak primary stopping method for agent loops, and how does stop_reason (tool_use vs end_turn) do it right? Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop →</a></p>
+  </div>
+
+  <!-- ============ 8 ============ -->
+  <div class="dia" id="r8">
+    <h3>8 · When do you enforce a rule in CODE, not just the prompt?</h3>
+    <p class="cap">Answer: when the rule <b>MUST hold every time</b> (safety-critical) — use hooks / code gates.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="85" width="200" height="60" rx="12" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="120" y="110" text-anchor="middle" font-size="13" font-weight="800">agent wants to:</text>
+      <text x="120" y="130" text-anchor="middle" font-size="12" fill="var(--red)" font-weight="700">refund $800 💸</text>
+      <line x1="230" y1="100" x2="330" y2="65" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="335" y="25" width="290" height="70" rx="12" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2" stroke-dasharray="7 5"/>
+      <text x="480" y="52" text-anchor="middle" font-size="12.5" font-weight="800">prompt: "please don't refund &gt; $500"</text>
+      <text x="480" y="76" text-anchor="middle" font-size="10.5" fill="#5C6B7A">a polite sign 🪧 — usually works…</text>
+      <line x1="630" y1="60" x2="730" y2="60" stroke="#D64545" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arR)"/>
+      <text x="800" y="55" text-anchor="middle" font-size="12" font-weight="800" fill="var(--red)">…can slip</text>
+      <text x="800" y="73" text-anchor="middle" font-size="12" font-weight="800" fill="var(--red)">through ❌</text>
+      <line x1="230" y1="130" x2="330" y2="165" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <rect x="335" y="135" width="290" height="70" rx="12" fill="#FBEAEA" stroke="var(--red)" stroke-width="3.5"/>
+      <text x="480" y="162" text-anchor="middle" font-size="12.5" font-weight="800">HOOK (code): if amount &gt; 500 → BLOCK</text>
+      <text x="480" y="186" text-anchor="middle" font-size="10.5" fill="#5C6B7A">a wall 🧱 — cannot be talked past</text>
+      <line x1="630" y1="170" x2="730" y2="170" stroke="#E8740C" stroke-width="2.5" marker-end="url(#arO)"/>
+      <text x="800" y="165" text-anchor="middle" font-size="12" font-weight="800" fill="var(--orange)">→ escalate to</text>
+      <text x="800" y="183" text-anchor="middle" font-size="12" font-weight="800" fill="var(--orange)">a human 🧑 ✅</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a prompt is advice — the model follows it <i>almost</i> always. Code is physics — it happens <b>every</b> time. Money, safety, permissions → the rule goes in a hook, and blocked actions go to a person.</p>
+    <div class="mem">💡 <b>Remember it as:</b> prompts persuade; hooks enforce.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="When must a rule be enforced in code (hooks) instead of the prompt? Use the refund-over-$500 example: prompt as a sign vs hook as a wall. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-t1">deep-dive: Support-agent system →</a></p>
+  </div>
+
+  <!-- ============ 9 ============ -->
+  <div class="dia" id="r9">
+    <h3>9 · What's the risk of long chats full of verbose tool results?</h3>
+    <p class="cap">Answer: important info gets <b>buried in the middle and overlooked</b> — "lost-in-the-middle."</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg">
+      <rect x="60" y="20" width="240" height="50" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="180" y="50" text-anchor="middle" font-size="12" font-weight="700">start of chat — model sees this fine 👀</text>
+      <rect x="60" y="78" width="240" height="74" rx="10" fill="#F6F3EC" stroke="#CFC5AF" stroke-width="2" stroke-dasharray="5 5"/>
+      <text x="180" y="105" text-anchor="middle" font-size="11.5" fill="#9A8C73">walls of tool output…</text>
+      <text x="180" y="126" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--red)">⭐ the KEY fact is in here</text>
+      <text x="180" y="144" text-anchor="middle" font-size="11.5" fill="#9A8C73">…more walls of output…</text>
+      <rect x="60" y="160" width="240" height="50" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="180" y="190" text-anchor="middle" font-size="12" font-weight="700">end of chat — model sees this fine 👀</text>
+      <text x="390" y="120" text-anchor="middle" font-size="13" font-weight="800" fill="var(--red)">← the middle fades away</text>
+      <line x1="500" y1="115" x2="580" y2="115" stroke="#2F9E63" stroke-width="3" marker-end="url(#arG)"/>
+      <text x="540" y="102" text-anchor="middle" font-size="10.5" fill="var(--green)" font-weight="700">the fix</text>
+      <rect x="585" y="45" width="290" height="140" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="730" y="75" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✂️ trim tool results (keep 5 of 40 fields)</text>
+      <text x="730" y="103" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">📝 summarize old turns</text>
+      <text x="730" y="131" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">📌 pull key facts into a case-facts block</text>
+      <text x="730" y="159" text-anchor="middle" font-size="10.5" fill="#5C6B7A">amounts · dates · IDs — kept OUT of the blur</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> models pay most attention to the <b>start and end</b> of the context. A fact drowned in the middle of 40-field tool dumps effectively disappears — so keep context tight and restate the facts that matter.</p>
+    <div class="mem">💡 <b>Remember it as:</b> the middle is where facts go to hide.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain lost-in-the-middle in plain words: why verbose tool results bury key facts, and the 3 fixes (trim, summarize, case-facts block). Then 2 check questions.">Ask my tutor</button> · <a class="note" href="learning-map.html#m-reliability">see it on the big map →</a></p>
+  </div>
+
+  <!-- ============ 10 ============ -->
+  <div class="dia" id="r10">
+    <h3>10 · When is batch processing a good fit?</h3>
+    <p class="cap">Answer: when the work can <b>tolerate delayed results</b> — nobody is waiting on the answer.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="25" width="120" height="60" rx="12" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="80" y="50" text-anchor="middle" font-size="12.5" font-weight="800">⚡ live chat</text>
+      <text x="80" y="70" text-anchor="middle" font-size="10.5" fill="#5C6B7A">customer waiting</text>
+      <line x1="150" y1="55" x2="240" y2="55" stroke="#D64545" stroke-width="3" marker-end="url(#arR)"/>
+      <rect x="245" y="25" width="270" height="60" rx="12" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="380" y="50" text-anchor="middle" font-size="12.5" font-weight="800">real-time ⏱ — answer in seconds</text>
+      <text x="380" y="70" text-anchor="middle" font-size="10.5" fill="#5C6B7A">full price, right now</text>
+      <rect x="20" y="120" width="120" height="60" rx="12" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="80" y="145" text-anchor="middle" font-size="12.5" font-weight="800">🗂 10,000</text>
+      <text x="80" y="165" text-anchor="middle" font-size="10.5" fill="#5C6B7A">invoices, due tmrw</text>
+      <line x1="150" y1="150" x2="240" y2="150" stroke="#2F9E63" stroke-width="3" marker-end="url(#arG)"/>
+      <rect x="245" y="120" width="270" height="60" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="380" y="145" text-anchor="middle" font-size="12.5" font-weight="800">🌙 batch — run overnight</text>
+      <text x="380" y="165" text-anchor="middle" font-size="10.5" fill="#5C6B7A">Message Batches API · ~50% cheaper</text>
+      <rect x="560" y="70" width="315" height="80" rx="14" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2"/>
+      <text x="717" y="100" text-anchor="middle" font-size="12.5" font-weight="800">the ONLY question that matters:</text>
+      <text x="717" y="126" text-anchor="middle" font-size="13" font-weight="900">"is someone waiting on this?" 🤔</text>
+      <text x="450" y="200" text-anchor="middle" font-size="10.5" fill="#5C6B7A">waiting = real-time · not waiting = batch (and pocket the 50%)</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a customer in a chat can't wait until 3 AM — that's real-time. A pile of documents due tomorrow doesn't care when it's processed — that's batch, at half the cost.</p>
+    <div class="mem">💡 <b>Remember it as:</b> if nobody's waiting, batch it and save half.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Batch vs real-time processing for Claude: explain the 'is someone waiting?' decision and the Message Batches API discount, with 2 examples. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-t3">deep-dive: PR-review / CI pipeline →</a></p>
+  </div>
+
+  <!-- ============ 11 ============ -->
+  <div class="dia" id="r11">
+    <h3>11 · What's a good multi-pass code-review pattern?</h3>
+    <p class="cap">Answer: review <b>file-by-file first</b> (local bugs), <b>then one integration pass</b> across files.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <text x="160" y="35" text-anchor="middle" font-size="13" font-weight="800">PASS 1 — one file at a time 🔍</text>
+      <rect x="40" y="50" width="90" height="110" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="85" y="105" text-anchor="middle" font-size="11.5" font-weight="700">a.py 🔍</text>
+      <rect x="150" y="50" width="90" height="110" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="195" y="105" text-anchor="middle" font-size="11.5" font-weight="700">b.py 🔍</text>
+      <rect x="260" y="50" width="90" height="110" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="305" y="105" text-anchor="middle" font-size="11.5" font-weight="700">c.py 🔍</text>
+      <text x="195" y="185" text-anchor="middle" font-size="10.5" fill="#5C6B7A">finds LOCAL bugs: typos, logic, edge cases</text>
+      <line x1="380" y1="105" x2="460" y2="105" stroke="#5C6B7A" stroke-width="3" marker-end="url(#ar)"/>
+      <text x="420" y="92" text-anchor="middle" font-size="10.5" fill="#5C6B7A">then</text>
+      <text x="670" y="35" text-anchor="middle" font-size="13" font-weight="800">PASS 2 — all files together 🔭</text>
+      <rect x="490" y="50" width="80" height="100" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="530" y="105" text-anchor="middle" font-size="11" font-weight="700">a.py</text>
+      <rect x="630" y="50" width="80" height="100" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="670" y="105" text-anchor="middle" font-size="11" font-weight="700">b.py</text>
+      <rect x="770" y="50" width="80" height="100" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="810" y="105" text-anchor="middle" font-size="11" font-weight="700">c.py</text>
+      <line x1="570" y1="85" x2="630" y2="85" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)" marker-start="url(#arG)"/>
+      <line x1="710" y1="85" x2="770" y2="85" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)" marker-start="url(#arG)"/>
+      <line x1="570" y1="125" x2="770" y2="125" stroke="#2F9E63" stroke-width="2.5" stroke-dasharray="6 5" marker-end="url(#arG)"/>
+      <text x="670" y="185" text-anchor="middle" font-size="10.5" fill="#5C6B7A">finds CROSS-FILE bugs: mismatched calls, duplicate logic, broken contracts</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a single pass over everything at once misses both kinds of bugs. Look closely at each tree first, then step back and check the forest — how the files talk to each other.</p>
+    <div class="mem">💡 <b>Remember it as:</b> first the trees, then the forest.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the file-by-file then integration-pass code review pattern: what each pass catches and why one giant pass misses things. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-t3">deep-dive: PR-review / CI pipeline →</a></p>
+  </div>
+
+  <!-- ============ FOOTER CTA ============ -->
+  <div class="card" style="text-align:center;margin-top:22px">
+    <p style="margin:0 0 10px"><b>Read them all?</b> Now make it stick — the Learn mode will keep re-asking anything you miss:</p>
+    <a class="golearn" href="flashcards.html?deck=pretest-repair&mode=learn">🧠 Test me on these 11 →</a>
+    <p class="hint" style="margin:12px 0 0">Want to read deeper (real articles)? <a class="note" href="article-effective-agents.html">Effective agents — as pictures</a> · <a class="note" href="https://github.com/dnacenta/claude-certified-architect" target="_blank" rel="noopener">community study guide ↗</a></p>
+  </div>
+
+  <footer>
+    Built from the pre-test questions most often missed · same color key as the <a class="note" href="learning-map.html">Visual Learning Map</a> · 2026-07-02
+  </footer>
+</div>
+
+<div id="toast">Copied — paste it to your tutor 👍</div>
+<script>
+(function(){
+  try{localStorage.setItem("ccaf-last",JSON.stringify({href:"repair-map.html",label:"Visual guide: Pre-Test repair",ts:Date.now()}))}catch(e){}
+  var toast=document.getElementById('toast');
+  function flash(){toast.classList.add('show');setTimeout(function(){toast.classList.remove('show');},1600);}
+  function fb(t){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);flash();}
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('.ask'); if(!b||!b.getAttribute('data-q')) return;
+    var t=b.getAttribute('data-q');
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(flash).catch(function(){fb(t);});}else{fb(t);}
+  });
+})();
+</script>
+</body>
+</html>

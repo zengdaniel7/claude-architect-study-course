@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Building Effective Agents — as pictures</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .lead{font-size:1.05rem;color:var(--muted)}
+  .dia{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;margin:16px 0;scroll-margin-top:70px}
+  .dia h3{margin:0 0 4px;font-size:1.15rem}
+  .dia .cap{font-size:.9rem;color:var(--muted);margin:2px 0 12px}
+  .dia .note{font-size:.92rem;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+  .dia .mem{background:#FFF8E7;border:1.5px dashed var(--yellow);border-radius:10px;padding:8px 12px;margin-top:10px;font-size:.92rem}
+  .svgwrap{width:100%;overflow-x:auto}
+  svg{display:block;max-width:100%;height:auto;font-family:inherit}
+  svg text{font-family:"Atkinson Hyperlegible","Trebuchet MS",system-ui,sans-serif}
+  .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;margin:8px 0 0}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{width:.85em;height:.85em;border-radius:3px;display:inline-block}
+  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:999px}
+  .ask:hover{filter:brightness(1.08)}
+  .golearn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;font-weight:800;padding:10px 20px;border-radius:999px}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<!-- shared arrowheads for all diagrams -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <marker id="ar"  viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5C6B7A"/></marker>
+  <marker id="arR" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#D64545"/></marker>
+  <marker id="arG" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2F9E63"/></marker>
+  <marker id="arB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2D7DD2"/></marker>
+  <marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8A4FC4"/></marker>
+  <marker id="arO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#E8740C"/></marker>
+</defs></svg>
+
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+
+  <header style="padding:30px 0 6px">
+    <h1>🧩 Building Effective Agents — as pictures</h1>
+    <p class="lead">This is Anthropic's own field guide to agents, turned into <b>12 pictures</b>. It's the source behind a big chunk of the CCA-F exam — workflows vs agents, the 5 workflow patterns, and when to (not) use any of it.</p>
+    <p><a class="golearn" href="flashcards.html?deck=effective-agents&mode=learn">🧠 Test me on this article (Learn mode) →</a> &nbsp; <a class="note" href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">🔗 read the original on anthropic.com ↗</a></p>
+    <div class="mem">📝 <b>A real learner's definition, worth keeping:</b> "A framework is a reusable set of code and rules that makes common tasks easier to do in a standard way." The catch: its <b>abstraction layers</b> hide prompts, tool calls and errors — so you must understand them to debug. And the mental model that unlocked the patterns for you: the augmented LLM is the <b>engine</b>; chaining, routing, parallelization, orchestrator-workers and evaluator-optimizer are different <b>circuit designs</b> wired around it.</div>
+  </header>
+
+  <div class="legend" style="margin-bottom:10px">
+    <b style="font-size:.85rem">Color key:</b>
+    <span><i style="background:var(--red)"></i>risk / failure</span>
+    <span><i style="background:var(--green)"></i>success / safe</span>
+    <span><i style="background:var(--blue)"></i>context / data</span>
+    <span><i style="background:var(--purple)"></i>tools / API</span>
+    <span><i style="background:var(--orange)"></i>human review</span>
+  </div>
+
+  <!-- ============ 1 ============ -->
+  <div class="dia" id="s1">
+    <h3>1 · Workflow or agent — what's the real difference?</h3>
+    <p class="cap">Answer: who holds the map. Workflows follow <b>YOUR predefined code path</b>; agents <b>draw their own map</b> as they go.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <text x="205" y="30" text-anchor="middle" font-size="13" font-weight="800">WORKFLOW</text>
+      <rect x="30" y="45" width="120" height="60" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="90" y="80" text-anchor="middle" font-size="12" font-weight="700">Step A</text>
+      <line x1="150" y1="75" x2="205" y2="75" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <rect x="210" y="45" width="120" height="60" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="270" y="80" text-anchor="middle" font-size="12" font-weight="700">Step B</text>
+      <line x1="330" y1="75" x2="385" y2="75" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <rect x="30" y="120" width="475" height="40" rx="8" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="1.5"/>
+      <text x="270" y="145" text-anchor="middle" font-size="11" fill="#5C6B7A">🗺️ YOU drew the map — the path is fixed code, always A→B</text>
+      <line x1="600" y1="105" x2="600" y2="105" stroke="none"/>
+      <text x="700" y="30" text-anchor="middle" font-size="13" font-weight="800">AGENT</text>
+      <circle cx="700" cy="97" r="57" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="8 6"/>
+      <text x="700" y="78" text-anchor="middle" font-size="11.5" font-weight="800">LLM picks its</text>
+      <text x="700" y="96" text-anchor="middle" font-size="11.5" font-weight="800">OWN next step</text>
+      <text x="700" y="114" text-anchor="middle" font-size="10.5" fill="#5C6B7A">loop, tool, loop…</text>
+      <rect x="600" y="170" width="200" height="40" rx="8" fill="#E9F6EF" stroke="var(--green)" stroke-width="1.5"/>
+      <text x="700" y="195" text-anchor="middle" font-size="11" fill="var(--green)" font-weight="700">🧭 the AGENT holds the map</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> in a workflow, you already decided every step ahead of time — the model just fills in the blanks. In an agent, the model itself decides what to do next, turn by turn, based on what it sees.</p>
+    <div class="mem">💡 <b>Remember it as:</b> workflow = you hold the map. Agent = it holds the map.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the difference between a workflow (predefined code paths) and an agent (LLM dynamically directs its own process) in plain words, with one tiny example of each. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ 2 ============ -->
+  <div class="dia" id="s2">
+    <h3>2 · When should you NOT reach for an agent?</h3>
+    <p class="cap">Answer: when a <b>single optimized LLM call</b> (+ retrieval + examples) is already enough — agents cost more and take longer.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="30" width="260" height="150" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="160" y="58" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--green)">✅ well-defined task</text>
+      <text x="160" y="84" text-anchor="middle" font-size="11.5">"classify this ticket"</text>
+      <text x="160" y="108" text-anchor="middle" font-size="11.5">predictable steps</text>
+      <text x="160" y="140" text-anchor="middle" font-size="12" font-weight="800">→ ONE good prompt</text>
+      <text x="160" y="160" text-anchor="middle" font-size="10.5" fill="#5C6B7A">+ retrieval + examples. Done.</text>
+      <line x1="450" y1="105" x2="450" y2="105" stroke="none"/>
+      <text x="450" y="35" text-anchor="middle" font-size="26" font-weight="800" fill="#5C6B7A">vs</text>
+      <rect x="610" y="30" width="260" height="150" rx="14" fill="#FDF1E4" stroke="var(--orange)" stroke-width="2.5"/>
+      <text x="740" y="58" text-anchor="middle" font-size="12.5" font-weight="800" fill="var(--orange)">⚠️ open-ended task</text>
+      <text x="740" y="84" text-anchor="middle" font-size="11.5">"fix this codebase"</text>
+      <text x="740" y="108" text-anchor="middle" font-size="11.5">steps unpredictable</text>
+      <text x="740" y="140" text-anchor="middle" font-size="12" font-weight="800">→ maybe an AGENT</text>
+      <text x="740" y="160" text-anchor="middle" font-size="10.5" fill="#5C6B7A">pay the cost only if needed</text>
+      <rect x="330" y="95" width="90" height="30" rx="15" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="1.5"/>
+      <text x="375" y="115" text-anchor="middle" font-size="10" font-weight="700">try this FIRST</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> agents cost more money and more time than a single call. Before reaching for one, ask: could one well-crafted prompt with a bit of retrieval and a few examples already solve this? If yes — stop there.</p>
+    <div class="mem">💡 <b>Remember it as:</b> find the simplest solution first; agents are a LAST resort, not a first instinct.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain when NOT to use an agent: why a single optimized LLM call + retrieval + examples is often enough, and the latency/cost trade-off agents make. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ 3 (SHORT — frameworks recap + link) ============ -->
+  <div class="dia" id="s3">
+    <h3>3 · Should you use a framework (LangGraph, etc.)?</h3>
+    <p class="cap">Answer: frameworks are a <b>glass box vs magic box</b> trade — easy to start, but they can hide the prompts and errors underneath. Start raw; add a framework only once you understand what it's hiding.</p>
+    <p class="note" style="border-top:none;padding-top:0"><b>Quick recap:</b> frameworks like the <b>Claude Agent SDK</b>, Strands (AWS), Rivet, and Vellum make simple agents easy to build — but the abstraction layer can obscure the underlying prompts, tool calls, and errors, which makes debugging harder when things go wrong. Many agent patterns are only a <b>few lines of raw API code</b> — Anthropic's own advice is to start there, and if you do use a framework, read enough of its source to know what it's really doing underneath.</p>
+    <p style="margin:.8em 0 0"><a class="golearn" href="learning-map.html#m-frameworks">🔍 See the full glass-box-vs-magic-box diagram →</a></p>
+    <div class="mem">💡 <b>Remember it as:</b> glass box first, magic box later — never trust a magic box you haven't opened.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the 'glass box vs magic box' framework caution from Building Effective Agents: why start with the raw API, and what risk frameworks like LangGraph or the Claude Agent SDK introduce. Then 2 check questions for me.">Ask my tutor</button></p>
+  </div>
+
+  <!-- ============ 4 ============ -->
+  <div class="dia" id="s4">
+    <h3>4 · What is "the augmented LLM"?</h3>
+    <p class="cap">Answer: a plain LLM <b>plus retrieval + tools + memory</b> — the basic building block every workflow and agent is made of.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="450" cy="100" r="70" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2.5"/>
+      <text x="450" y="92" text-anchor="middle" font-size="14" font-weight="800">LLM 🧠</text>
+      <text x="450" y="114" text-anchor="middle" font-size="10.5" fill="#5C6B7A">picks its own</text>
+      <text x="450" y="130" text-anchor="middle" font-size="10.5" fill="#5C6B7A">queries &amp; tools</text>
+      <line x1="450" y1="30" x2="450" y2="10" stroke="none"/>
+      <rect x="20" y="20" width="180" height="60" rx="12" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="110" y="45" text-anchor="middle" font-size="12.5" font-weight="800">🔎 retrieval</text>
+      <text x="110" y="65" text-anchor="middle" font-size="10" fill="#5C6B7A">pulls in fresh data</text>
+      <line x1="200" y1="55" x2="385" y2="80" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <rect x="20" y="150" width="180" height="60" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="110" y="175" text-anchor="middle" font-size="12.5" font-weight="800">🔧 tools</text>
+      <text x="110" y="195" text-anchor="middle" font-size="10" fill="#5C6B7A">takes real actions</text>
+      <line x1="200" y1="175" x2="385" y2="130" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <rect x="700" y="20" width="180" height="60" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="790" y="45" text-anchor="middle" font-size="12.5" font-weight="800">💾 memory</text>
+      <text x="790" y="65" text-anchor="middle" font-size="10" fill="#5C6B7A">keeps what matters</text>
+      <line x1="700" y1="55" x2="515" y2="80" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="640" y="150" width="240" height="45" rx="10" fill="#FDF1E4" stroke="var(--orange)" stroke-width="2"/>
+      <text x="760" y="177" text-anchor="middle" font-size="11" font-weight="700">🔌 MCP — one way to plug these in</text>
+      <line x1="700" y1="160" x2="515" y2="125" stroke="#E8740C" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arO)"/>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> on its own, an LLM only knows what's in its training and what you typed. Give it retrieval (look things up), tools (do things), and memory (remember things) and it becomes the building block every pattern in this article is made from.</p>
+    <div class="mem">💡 <b>Remember it as:</b> LLM + retrieval + tools + memory = the augmented LLM, the Lego brick of every pattern below.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain 'the augmented LLM' (LLM + retrieval + tools + memory) as the basic building block of agent systems, and how MCP fits in. Then 2 check questions for me.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ 5 — CHAINING ============ -->
+  <div class="dia" id="s5">
+    <h3>5 · Workflow pattern: Prompt Chaining</h3>
+    <p class="cap">Answer: a <b>sequence of calls</b>, each one processing the previous step's output — with an optional check ("gate") in between.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 190" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="50" width="170" height="65" rx="12" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="105" y="78" text-anchor="middle" font-size="12.5" font-weight="800">write outline</text>
+      <text x="105" y="98" text-anchor="middle" font-size="10" fill="#5C6B7A">LLM call 1</text>
+      <line x1="190" y1="82" x2="255" y2="82" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <polygon points="260,55 320,55 335,82 320,110 260,110 245,82" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="2.5"/>
+      <text x="290" y="78" text-anchor="middle" font-size="10.5" font-weight="800">gate</text>
+      <text x="290" y="94" text-anchor="middle" font-size="9.5" fill="#5C6B7A">ok?</text>
+      <line x1="335" y1="82" x2="400" y2="82" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <rect x="405" y="50" width="170" height="65" rx="12" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="490" y="78" text-anchor="middle" font-size="12.5" font-weight="800">check outline</text>
+      <text x="490" y="98" text-anchor="middle" font-size="10" fill="#5C6B7A">LLM call 2</text>
+      <line x1="575" y1="82" x2="640" y2="82" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <rect x="645" y="50" width="170" height="65" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="730" y="78" text-anchor="middle" font-size="12.5" font-weight="800">write doc ✅</text>
+      <text x="730" y="98" text-anchor="middle" font-size="10" fill="#5C6B7A">LLM call 3</text>
+      <text x="450" y="158" text-anchor="middle" font-size="11" fill="#5C6B7A">use when the task breaks into fixed subtasks — trades a little latency for a lot more accuracy</text>
+      <text x="290" y="141" text-anchor="middle" font-size="9.5" fill="var(--yellow)" font-weight="700">a programmatic check — optional</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> instead of one giant prompt trying to do everything, you run small prompts in a row — each one focused on a single step. You can even insert a code check ("gate") between steps to catch problems early.</p>
+    <div class="mem">💡 <b>Remember it as:</b> a relay race — the baton (output) passes step to step, with an optional referee (gate) checking the handoff.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain prompt chaining as a workflow pattern: sequential LLM calls, each processing the previous output, with an optional programmatic gate. Use the outline→check→doc example. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m3">deep-dive: Prompt techniques →</a></p>
+  </div>
+
+  <!-- ============ 6 — ROUTING ============ -->
+  <div class="dia" id="s6">
+    <h3>6 · Workflow pattern: Routing</h3>
+    <p class="cap">Answer: <b>classify the input first</b>, then send it down a specialized path built for that type.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="20" y="80" width="150" height="55" rx="12" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="95" y="112" text-anchor="middle" font-size="12.5" font-weight="800">incoming query 💬</text>
+      <line x1="170" y1="107" x2="260" y2="107" stroke="#5C6B7A" stroke-width="2.5" marker-end="url(#ar)"/>
+      <polygon points="265,75 340,75 360,107 340,140 265,140 245,107" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="302" y="102" text-anchor="middle" font-size="11" font-weight="800">router</text>
+      <text x="302" y="118" text-anchor="middle" font-size="9.5" fill="#5C6B7A">classify</text>
+      <line x1="360" y1="90" x2="450" y2="35" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="455" y="10" width="230" height="48" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="570" y="39" text-anchor="middle" font-size="11.5" font-weight="700">general → Haiku 🍃 (cheap)</text>
+      <line x1="360" y1="107" x2="450" y2="107" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <rect x="455" y="83" width="230" height="48" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="570" y="112" text-anchor="middle" font-size="11.5" font-weight="700">refund → refund path 💳</text>
+      <line x1="360" y1="125" x2="450" y2="178" stroke="#E8740C" stroke-width="2.5" marker-end="url(#arO)"/>
+      <rect x="455" y="155" width="230" height="48" rx="10" fill="#FDF1E4" stroke="var(--orange)" stroke-width="2"/>
+      <text x="570" y="184" text-anchor="middle" font-size="11.5" font-weight="700">hard tech → Sonnet 🧠 (stronger)</text>
+      <text x="770" y="107" text-anchor="middle" font-size="11" fill="#5C6B7A">each path is tuned for</text>
+      <text x="770" y="125" text-anchor="middle" font-size="11" fill="#5C6B7A">its own kind of question</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> not all questions need the same handling. A router looks at the input first and sends it to the right specialist — a cheap fast model for easy stuff, a stronger model for hard stuff, a dedicated path for refunds.</p>
+    <div class="mem">💡 <b>Remember it as:</b> a receptionist — one look, then the right door.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the routing workflow pattern: classify the input, then send to a specialized handler. Use the support-query example (general/refund/tech, Haiku vs Sonnet). Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m3">deep-dive: Prompt techniques →</a></p>
+  </div>
+
+  <!-- ============ 7 — PARALLELIZATION ============ -->
+  <div class="dia" id="s7">
+    <h3>7 · Workflow pattern: Parallelization</h3>
+    <p class="cap">Answer: run things <b>at the same time</b>, two flavors — <b>sectioning</b> (split the task) and <b>voting</b> (repeat the task).</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <text x="185" y="28" text-anchor="middle" font-size="13" font-weight="800">SECTIONING — split the task</text>
+      <rect x="20" y="45" width="150" height="50" rx="10" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="95" y="75" text-anchor="middle" font-size="11.5" font-weight="700">one query 💬</text>
+      <line x1="170" y1="60" x2="240" y2="55" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <line x1="170" y1="80" x2="240" y2="108" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <rect x="245" y="36" width="150" height="45" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="320" y="63" text-anchor="middle" font-size="11" font-weight="700">answer it ✍️</text>
+      <rect x="245" y="88" width="150" height="45" rx="10" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2"/>
+      <text x="320" y="115" text-anchor="middle" font-size="11" font-weight="700">screen for 🚫</text>
+      <text x="450" y="70" text-anchor="middle" font-size="10.5" fill="#5C6B7A">2 different jobs,</text>
+      <text x="450" y="86" text-anchor="middle" font-size="10.5" fill="#5C6B7A">both at once</text>
+      <text x="740" y="28" text-anchor="middle" font-size="13" font-weight="800">VOTING — repeat the task</text>
+      <rect x="585" y="55" width="120" height="50" rx="10" fill="#F1EDE4" stroke="#5C6B7A" stroke-width="2"/>
+      <text x="645" y="85" text-anchor="middle" font-size="11" font-weight="700">code file 📄</text>
+      <line x1="705" y1="65" x2="760" y2="45" stroke="#2F9E63" stroke-width="2" marker-end="url(#arG)"/>
+      <line x1="705" y1="80" x2="760" y2="80" stroke="#2F9E63" stroke-width="2" marker-end="url(#arG)"/>
+      <line x1="705" y1="95" x2="760" y2="115" stroke="#2F9E63" stroke-width="2" marker-end="url(#arG)"/>
+      <text x="800" y="49" text-anchor="middle" font-size="10.5" font-weight="700">reviewer 1 🔍</text>
+      <text x="800" y="84" text-anchor="middle" font-size="10.5" font-weight="700">reviewer 2 🔍</text>
+      <text x="800" y="119" text-anchor="middle" font-size="10.5" font-weight="700">reviewer 3 🔍</text>
+      <text x="185" y="150" text-anchor="middle" font-size="10.5" fill="#5C6B7A">ex: one call writes the answer, another checks for unsafe content</text>
+      <text x="740" y="150" text-anchor="middle" font-size="10.5" fill="#5C6B7A">ex: 3 reviewers flag vulnerabilities, compare results</text>
+      <rect x="20" y="175" width="860" height="35" rx="10" fill="#FFF8E7" stroke="var(--yellow)" stroke-width="1.5"/>
+      <text x="450" y="198" text-anchor="middle" font-size="11" font-weight="700">both run in PARALLEL — faster than doing them one after another</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> sectioning splits ONE task into independent pieces done at once (e.g. write the reply while a separate call screens it for policy issues). Voting runs the SAME task several times and compares the results for confidence. The <b>aggregator</b> is the plain-code step that merges the parallel answers into ONE result — e.g. "flag it if at least 2 of 3 reviewers say unsafe."</p>
+    <div class="mem">💡 <b>Remember it as:</b> sectioning = divide the work; voting = repeat the work and compare notes — and the aggregator is the vote-counter.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the parallelization workflow pattern's two flavors — sectioning (independent subtasks) and voting (same task multiple times, compare) — with one example each. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-m3">deep-dive: Prompt techniques →</a></p>
+  </div>
+
+  <!-- ============ 8 — ORCHESTRATOR-WORKERS ============ -->
+  <div class="dia" id="s8">
+    <h3>8 · Workflow pattern: Orchestrator-Workers</h3>
+    <p class="cap">Answer: a central LLM <b>dynamically breaks down</b> the task and delegates — subtasks are <b>NOT</b> predefined like in parallelization.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="360" y="20" width="180" height="60" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="450" y="48" text-anchor="middle" font-size="12.5" font-weight="800">orchestrator 🧠</text>
+      <text x="450" y="68" text-anchor="middle" font-size="10" fill="#5C6B7A">decides the split per input</text>
+      <line x1="410" y1="80" x2="150" y2="120" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <line x1="450" y1="80" x2="450" y2="120" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <line x1="490" y1="80" x2="750" y2="120" stroke="#8A4FC4" stroke-width="2.5" marker-end="url(#arP)"/>
+      <rect x="60" y="125" width="180" height="55" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="150" y="150" text-anchor="middle" font-size="11.5" font-weight="700">worker: file A 🔧</text>
+      <text x="150" y="168" text-anchor="middle" font-size="9.5" fill="#5C6B7A">assigned on the fly</text>
+      <rect x="360" y="125" width="180" height="55" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="450" y="150" text-anchor="middle" font-size="11.5" font-weight="700">worker: file B 🔧</text>
+      <text x="450" y="168" text-anchor="middle" font-size="9.5" fill="#5C6B7A">assigned on the fly</text>
+      <rect x="660" y="125" width="180" height="55" rx="10" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2"/>
+      <text x="750" y="150" text-anchor="middle" font-size="11.5" font-weight="700">worker: file C 🔧</text>
+      <text x="750" y="168" text-anchor="middle" font-size="9.5" fill="#5C6B7A">assigned on the fly</text>
+      <line x1="150" y1="180" x2="410" y2="205" stroke="#2F9E63" stroke-width="2" marker-end="url(#arG)"/>
+      <line x1="450" y1="180" x2="450" y2="200" stroke="#2F9E63" stroke-width="2" marker-end="url(#arG)"/>
+      <line x1="750" y1="180" x2="490" y2="205" stroke="#2F9E63" stroke-width="2" marker-end="url(#arG)"/>
+      <text x="450" y="215" text-anchor="middle" font-size="10" fill="var(--green)" font-weight="700">→ orchestrator synthesizes the results</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> in parallelization, YOU decided the subtasks ahead of time. Here, the orchestrator LOOKS at each input and decides on the spot how to split it up — good for coding across many files or research that needs different sources each time.</p>
+    <div class="mem">💡 <b>Remember it as:</b> a foreman who plans the job site fresh each morning, not from a fixed blueprint.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the orchestrator-workers workflow pattern: a central LLM dynamically breaks down tasks and delegates to workers, then synthesizes. Contrast with parallelization's predefined subtasks. Use the multi-file coding example. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ 9 — EVALUATOR-OPTIMIZER ============ -->
+  <div class="dia" id="s9">
+    <h3>9 · Workflow pattern: Evaluator-Optimizer</h3>
+    <p class="cap">Answer: one LLM <b>generates</b>, another LLM <b>critiques</b> — loop until the critic says it's good.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 210" xmlns="http://www.w3.org/2000/svg">
+      <rect x="60" y="70" width="220" height="70" rx="14" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="170" y="100" text-anchor="middle" font-size="13" font-weight="800">generator ✍️</text>
+      <text x="170" y="122" text-anchor="middle" font-size="10.5" fill="#5C6B7A">writes / translates a draft</text>
+      <line x1="280" y1="93" x2="450" y2="93" stroke="#2D7DD2" stroke-width="2.5" marker-end="url(#arB)"/>
+      <text x="365" y="80" text-anchor="middle" font-size="10" fill="#2D7DD2" font-weight="700">draft →</text>
+      <rect x="455" y="70" width="220" height="70" rx="14" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="565" y="100" text-anchor="middle" font-size="13" font-weight="800">evaluator 🔍</text>
+      <text x="565" y="122" text-anchor="middle" font-size="10.5" fill="#5C6B7A">critiques against criteria</text>
+      <path d="M455,125 C 380,175 280,175 285,140" fill="none" stroke="var(--orange)" stroke-width="2.5" marker-end="url(#arO)"/>
+      <text x="365" y="180" text-anchor="middle" font-size="10.5" fill="var(--orange)" font-weight="700">"needs work" — feedback loop ↩</text>
+      <line x1="675" y1="93" x2="770" y2="93" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="775" y="65" width="105" height="55" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="827" y="88" text-anchor="middle" font-size="11" font-weight="800" fill="var(--green)">"good" ✅</text>
+      <text x="827" y="106" text-anchor="middle" font-size="9.5" fill="#5C6B7A">stop the loop</text>
+      <text x="450" y="30" text-anchor="middle" font-size="11" fill="#5C6B7A">use when there are CLEAR criteria and iteration measurably helps</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> like a writer and an editor going back and forth. The generator produces a draft, the evaluator judges it against clear criteria, and if it's not good enough the feedback goes back for another round — until it passes.</p>
+    <div class="mem">💡 <b>Remember it as:</b> writer + editor on repeat, until the editor says "ship it."</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the evaluator-optimizer workflow pattern: one LLM generates, another critiques, loop until criteria are met. Use the literary translation example. When does this pattern help most? Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ 10 — AGENTS (autonomous) ============ -->
+  <div class="dia" id="s10">
+    <h3>10 · What does a full autonomous agent loop look like?</h3>
+    <p class="cap">Answer: <b>plan → act with tools → read ground truth → repeat</b> — with checkpoints for a human and a max-iteration backstop.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 230" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="330" cy="115" r="95" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="8 6"/>
+      <text x="330" y="70" text-anchor="middle" font-size="12" font-weight="800">1 · plan 🧭</text>
+      <text x="255" y="150" text-anchor="middle" font-size="12" font-weight="800">2 · act 🔧</text>
+      <text x="410" y="150" text-anchor="middle" font-size="12" font-weight="800">3 · read env 🌍</text>
+      <text x="330" y="185" text-anchor="middle" font-size="10" fill="#5C6B7A">repeat until done</text>
+      <line x1="172" y1="52" x2="238" y2="74" stroke="#E8740C" stroke-width="2.5" marker-end="url(#arO)"/>
+      <rect x="20" y="15" width="150" height="45" rx="10" fill="#FDF1E4" stroke="var(--orange)" stroke-width="2"/>
+      <text x="95" y="43" text-anchor="middle" font-size="10.5" font-weight="700">🧑 human checkpoint</text>
+      <line x1="172" y1="188" x2="238" y2="160" stroke="#D64545" stroke-width="2.5" marker-end="url(#arR)"/>
+      <rect x="20" y="175" width="150" height="45" rx="10" fill="#FBEAEA" stroke="var(--red)" stroke-width="2"/>
+      <text x="95" y="203" text-anchor="middle" font-size="10.5" font-weight="700">🛑 stopping conditions</text>
+      <line x1="670" y1="115" x2="432" y2="115" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <rect x="675" y="90" width="200" height="50" rx="10" fill="#E9F6EF" stroke="var(--green)" stroke-width="2"/>
+      <text x="775" y="112" text-anchor="middle" font-size="11" font-weight="700">ideal for OPEN-ENDED work</text>
+      <text x="775" y="130" text-anchor="middle" font-size="9.5" fill="#5C6B7A">SWE-bench, computer use</text>
+      <text x="775" y="165" text-anchor="middle" font-size="10.5" fill="var(--red)" font-weight="700">↑ cost + errors compound</text>
+      <text x="775" y="183" text-anchor="middle" font-size="10.5" fill="var(--red)" font-weight="700">→ sandbox + guardrails</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> a true agent keeps looping on its own — plan, act, check what actually happened in the real world, plan again — until the job is done. Because step count is unpredictable, you need human checkpoints, stopping conditions, and a safe sandbox since mistakes can compound.</p>
+    <div class="mem">💡 <b>Remember it as:</b> plan, act, look, repeat — with a leash (checkpoints) and a fence (sandbox).</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the autonomous agent loop: plan, act with tools, read ground truth from the environment, repeat — plus human checkpoints and stopping conditions. Why do errors compound and why sandbox agents? Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ 11 — THREE CORE PRINCIPLES ============ -->
+  <div class="dia" id="s11">
+    <h3>11 · What are the three core principles for building agents?</h3>
+    <p class="cap">Answer: keep it <b>simple</b>, keep it <b>transparent</b>, and design the <b>agent-computer interface</b> with real care.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="35" width="260" height="130" rx="14" fill="#EAF2FB" stroke="var(--blue)" stroke-width="2.5"/>
+      <text x="160" y="65" text-anchor="middle" font-size="13" font-weight="800">1 · SIMPLE 🧘</text>
+      <text x="160" y="92" text-anchor="middle" font-size="11" fill="#5C6B7A">don't add complexity</text>
+      <text x="160" y="112" text-anchor="middle" font-size="11" fill="#5C6B7A">the task doesn't need</text>
+      <rect x="320" y="35" width="260" height="130" rx="14" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2.5"/>
+      <text x="450" y="65" text-anchor="middle" font-size="13" font-weight="800">2 · TRANSPARENT 👀</text>
+      <text x="450" y="92" text-anchor="middle" font-size="11" fill="#5C6B7A">show the planning</text>
+      <text x="450" y="112" text-anchor="middle" font-size="11" fill="#5C6B7A">steps, don't hide them</text>
+      <rect x="610" y="35" width="260" height="130" rx="14" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="740" y="65" text-anchor="middle" font-size="13" font-weight="800">3 · THE ACI 🔧</text>
+      <text x="740" y="92" text-anchor="middle" font-size="11" fill="#5C6B7A">tool docs matter as</text>
+      <text x="740" y="112" text-anchor="middle" font-size="11" fill="#5C6B7A">much as the prompt</text>
+      <text x="160" y="140" text-anchor="middle" font-size="10" fill="var(--blue)" font-weight="700">"could a workflow do this?"</text>
+      <text x="450" y="140" text-anchor="middle" font-size="10" fill="var(--purple)" font-weight="700">so humans can catch problems</text>
+      <text x="740" y="140" text-anchor="middle" font-size="10" fill="var(--green)" font-weight="700">ACI = Agent-Computer Interface</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> the best agents aren't the most clever — they're the ones kept as simple as the task allows, that show their work so a human can follow along, and where the tools themselves are designed as carefully as the prompts.</p>
+    <div class="mem">💡 <b>Remember it as:</b> simple, see-through, and speak clearly to your tools.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the three core principles for building agents from Anthropic's guide: keep design simple, prioritize transparency (show planning steps), and craft the agent-computer interface (ACI). Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ 12 — APPENDIX: ACI / tool docs ============ -->
+  <div class="dia" id="s12">
+    <h3>12 · Appendix: how do you "prompt-engineer" your tools?</h3>
+    <p class="cap">Answer: write tool docs like a <b>docstring for a junior dev</b>, test them for real, and make mistakes <b>impossible</b> (poka-yoke) — like requiring absolute file paths.</p>
+    <div class="svgwrap"><svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="65" width="230" height="60" rx="12" fill="#FBEAEA" stroke="var(--red)" stroke-width="2.5"/>
+      <text x="145" y="90" text-anchor="middle" font-size="12" font-weight="800" fill="var(--red)">❌ tool takes relative paths</text>
+      <text x="145" y="110" text-anchor="middle" font-size="10.5" fill="#5C6B7A">agent fumbles after cd 🌀</text>
+      <line x1="260" y1="95" x2="360" y2="95" stroke="#2F9E63" stroke-width="2.5" marker-end="url(#arG)"/>
+      <text x="310" y="82" text-anchor="middle" font-size="10" fill="var(--green)" font-weight="700">poka-yoke fix</text>
+      <rect x="365" y="65" width="250" height="60" rx="12" fill="#E9F6EF" stroke="var(--green)" stroke-width="2.5"/>
+      <text x="490" y="90" text-anchor="middle" font-size="12" font-weight="800" fill="var(--green)">✅ tool REQUIRES absolute paths</text>
+      <text x="490" y="110" text-anchor="middle" font-size="10.5" fill="#5C6B7A">mistake made impossible ⚡</text>
+      <line x1="490" y1="125" x2="490" y2="150" stroke="#2F9E63" stroke-width="2" marker-end="url(#arG)"/>
+      <text x="490" y="170" text-anchor="middle" font-size="11" font-weight="700" fill="var(--green)">→ flawless runs after the change</text>
+      <rect x="655" y="55" width="220" height="120" rx="12" fill="#F3E9FB" stroke="var(--purple)" stroke-width="2"/>
+      <text x="765" y="78" text-anchor="middle" font-size="11.5" font-weight="800">good tool docs:</text>
+      <text x="765" y="100" text-anchor="middle" font-size="10" fill="#5C6B7A">📝 docstring for a junior dev</text>
+      <text x="765" y="120" text-anchor="middle" font-size="10" fill="#5C6B7A">🧪 test in the workbench</text>
+      <text x="765" y="140" text-anchor="middle" font-size="10" fill="#5C6B7A">🎯 give tokens to think</text>
+      <text x="765" y="160" text-anchor="middle" font-size="10" fill="#5C6B7A">🚫 avoid escaping/overhead</text>
+    </svg></div>
+    <p class="note"><b>Plain words:</b> tool descriptions are prompts too — write them as clearly as you'd explain a task to a new hire, and test them. Best of all: redesign the tool so the mistake literally can't happen, like Anthropic's real fix of forcing absolute file paths instead of relative ones.</p>
+    <div class="mem">💡 <b>Remember it as:</b> poka-yoke your tools — don't warn against mistakes, make them impossible.</div>
+    <p style="margin:.6em 0 0"><button class="ask" data-q="Explain the agent-computer interface (ACI) appendix: writing tool docs like a docstring for a junior dev, testing in the workbench, and poka-yoke (mistake-proofing) using the real absolute-filepath story. Then 2 check questions.">Ask my tutor</button> · <a class="note" href="curriculum.html#u-o1">deep-dive: The Agent Loop unit →</a></p>
+  </div>
+
+  <!-- ============ FOOTER CTA ============ -->
+  <div class="card" style="text-align:center;margin-top:22px">
+    <p style="margin:0 0 10px"><b>Want the source, unfiltered?</b> This whole page is a distillation of one Anthropic engineering post:</p>
+    <p class="hint" style="margin:0"><a class="note" href="https://www.anthropic.com/engineering/building-effective-agents" target="_blank" rel="noopener">Building effective agents (Anthropic) ↗</a> · <a class="note" href="curriculum.html#u-o1">back to the Agent Loop unit →</a></p>
+  </div>
+
+  <footer>
+    Distilled from Anthropic's "Building Effective Agents" (Dec 2024) · same color key as the <a class="note" href="learning-map.html">Visual Learning Map</a> · 2026-07-02
+  </footer>
+</div>
+
+<div id="toast">Copied — paste it to your tutor 👍</div>
+<script>
+(function(){
+  try{localStorage.setItem("ccaf-last",JSON.stringify({href:"article-effective-agents.html",label:"Article: Building Effective Agents — as pictures",ts:Date.now()}))}catch(e){}
+  var toast=document.getElementById('toast');
+  function flash(){toast.classList.add('show');setTimeout(function(){toast.classList.remove('show');},1600);}
+  function fb(t){var ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}document.body.removeChild(ta);flash();}
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('.ask'); if(!b||!b.getAttribute('data-q')) return;
+    var t=b.getAttribute('data-q');
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(flash).catch(function(){fb(t);});}else{fb(t);}
+  });
+})();
+</script>
+</body>
+</html>
