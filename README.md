@@ -8,7 +8,7 @@ A complete, self-contained study site for Anthropic's **Claude Certified Archite
 
 - **⚛️ The Atomic Curriculum** — 16 units built like a system (Atoms → Molecules → Organisms → Templates → Pages + a Reliability thread), each with a diagram, plain words, chapters, videos, and a quiz
 - **🛤️ Timeline** — the whole course as one visual path with ✓ done / ⭐ you-are-here tracking
-- **▶️ Today page** — tells you exactly what to do next: your unit, your video, your 5 daily steps
+- **▶️ Lesson page** — tells you exactly what to do next: your current lesson, its video, and its 5 steps (they stay with the lesson until you finish it)
 - **🗺️ Visual Learning Map** + **3 engineering articles retold as ~30 diagrams** (Building Effective Agents, Multi-Agent Research System, Writing Tools for Agents — original links included)
 - **🃏 5 flashcard decks** with two modes: flip-through *and* a Quizlet-style Learn mode that re-asks what you miss
 - **🧪 Pre-test (30 Q) + 6 checkpoint quizzes** that track your score *and how much you guessed*

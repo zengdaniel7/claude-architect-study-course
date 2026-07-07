@@ -72,7 +72,7 @@
 (function(){
   var PRIMARY=[
     {href:"dashboard.html",   label:"🏠 Home",     cls:"home", m:["dashboard.html",""]},
-    {href:"today.html",       label:"▶️ Today",    m:["today.html"]},
+    {href:"today.html",       label:"▶️ Lesson",   m:["today.html"]},
     {href:"curriculum.html",  label:"📚 Learn",    m:["curriculum.html"]},
     {href:"quizzes.html",     label:"🎯 Practice", m:["quizzes.html","quiz.html","pretest.html","flashcards.html","exercise.html","repair-map.html"]},
     {href:"timeline.html",    label:"🛤️ Timeline", m:["timeline.html"]}

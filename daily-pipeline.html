@@ -42,7 +42,7 @@
     </div>
     <div class="bar" style="margin:12px 0"><span id="wbar" style="width:0%"></span></div>
     <div id="week"></div>
-    <p class="hint" style="margin:.6em 0 0">Steps: 🎥 watch · ✏️ draw · 🔨 build · 🗣️ explain · 🃏 flashcards — tick them on any day (backfill is fine). Today's row syncs with the Today page.</p>
+    <p class="hint" style="margin:.6em 0 0">Steps: 🎥 watch · ✏️ draw · 🔨 build · 🗣️ explain · 🃏 flashcards — tick them on any day (backfill is fine). Today's row syncs with the Lesson page.</p>
     <p style="margin:.4em 0 0"><button id="wtoday" style="border:0;background:var(--accent);color:#fff;font:inherit;font-weight:700;font-size:.8rem;padding:6px 14px;border-radius:999px;cursor:pointer">↩ jump back to this week</button></p>
   </div>
 
@@ -84,39 +84,38 @@ var STEP_ICONS=["🎥","✏️","🔨","🗣️","🃏"];
 var STEP_NAMES=["watch","draw","build","explain","cards"];
 function fmt(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");} // local date
 var todayStr=fmt(new Date());
-document.getElementById("today").textContent="Today is "+todayStr;
+document.getElementById("today").textContent="Today is "+todayStr+" · steps follow your lesson — unfinished ones carry over.";
 
 /* ---- storage: per-day log (forever) + today's key shared with Today page/dashboard ---- */
 var WKEY="ccaf-week-log", DKEY="ccaf-pipeline";
 var wlog={}; try{wlog=JSON.parse(localStorage.getItem(WKEY)||"{}");}catch(e){}
 var ds={}; try{ds=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
-if(ds.date!==todayStr||!Array.isArray(ds.checks)||ds.checks.length!==5){ds={date:todayStr,checks:[false,false,false,false,false]};}
-// today's shared key is the source of truth for today
-(function(){var _o=wlog[todayStr]||[false,false,false,false,false];
- wlog[todayStr]=ds.checks.map(function(v,i){return v||_o[i];});})(); // OR-merge: a new-unit reset must not erase today's history
+if(!Array.isArray(ds.checks)||ds.checks.length!==5){ds={date:todayStr,checks:[false,false,false,false,false]};}
+else if(ds.date!==todayStr){ds.date=todayStr;} // steps belong to the current lesson — they carry over past midnight
+// The week log is its own record: every tick is written into it the moment it
+// happens (on whichever page) — it is never inferred from the lesson-steps state,
+// so steps carried over from yesterday can't be stamped onto today's history.
 function wsave(){try{localStorage.setItem(WKEY,JSON.stringify(wlog));}catch(e){}}
 function dsave(){try{localStorage.setItem(DKEY,JSON.stringify(ds));}catch(e){}}
-wsave();
 function refreshFromStorage(){
-  // always re-read saved state before using it — ticks made on Today/Home/an exercise must never be lost
+  // always re-read saved history before using it — ticks made on other pages arrive here
   try{wlog=JSON.parse(localStorage.getItem(WKEY)||"{}");}catch(e){wlog={};}
-  var p={};try{p=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
-  if(p.date===todayStr&&Array.isArray(p.checks)&&p.checks.length===5){
-    var _old=wlog[todayStr]||[false,false,false,false,false];
-    wlog[todayStr]=p.checks.map(function(v,i){return v||_old[i];}); // OR-merge: starting a new unit resets the steps, but must not erase what you already did today
-  }
 }
 function setStep(dateStr,i,val){
   refreshFromStorage();
   wlog[dateStr]=wlog[dateStr]||[false,false,false,false,false];
   wlog[dateStr][i]=val; wsave();
-  if(dateStr===todayStr){ds={date:todayStr,checks:wlog[todayStr].slice()};dsave();}
+  if(dateStr===todayStr){ // mirror ONLY this one step into the lesson checklist — never the whole day row
+    var _p={};try{_p=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
+    if(!Array.isArray(_p.checks)||_p.checks.length!==5){_p={date:todayStr,checks:[false,false,false,false,false]};}
+    _p.date=todayStr;_p.checks[i]=val;ds=_p;dsave();
+  }
   renderWeek(); dbarSync();
 }
 // live cross-tab sync
 window.addEventListener("storage",function(e){
   if(e.key!==DKEY&&e.key!==WKEY)return;
-  refreshFromStorage(); wsave(); renderWeek(); dbarSync();
+  refreshFromStorage(); renderWeek(); dbarSync();
 });
 
 /* ---- week view with last/this/next navigation ---- */

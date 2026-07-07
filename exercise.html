@@ -184,8 +184,16 @@
       try{
         var today=localDate(),p={};
         try{p=JSON.parse(localStorage.getItem("ccaf-pipeline")||"{}");}catch(_){}
-        if(p.date!==today||!Array.isArray(p.checks)||p.checks.length!==5){p={date:today,checks:[false,false,false,false,false]};}
-        p.checks[2]=true;localStorage.setItem("ccaf-pipeline",JSON.stringify(p));
+        if(!Array.isArray(p.checks)||p.checks.length!==5){p={date:today,checks:[false,false,false,false,false]};}
+        if(p.unit===undefined){ // tag the current lesson so a later lesson change resets correctly
+          var UIDS=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"]; // same order as today.html PATH
+          try{var _d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
+            p.unit="end";for(var _i=0;_i<UIDS.length;_i++){if(!_d[UIDS[_i]]){p.unit=UIDS[_i];break;}}}catch(_){}
+        }
+        p.date=today;p.checks[2]=true;localStorage.setItem("ccaf-pipeline",JSON.stringify(p)); // steps follow the lesson — never wipe them here
+        try{var _wl=JSON.parse(localStorage.getItem("ccaf-week-log")||"{}"); // the build tick also lands in today's history
+          _wl[today]=(Array.isArray(_wl[today])&&_wl[today].length===5)?_wl[today]:[false,false,false,false,false];
+          _wl[today][2]=true;localStorage.setItem("ccaf-week-log",JSON.stringify(_wl));}catch(_){}
       }catch(_){}
       flash("Done! 🔨 Build step ticked — now 📤 send the report to Claude");
     }

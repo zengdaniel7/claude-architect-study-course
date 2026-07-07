@@ -74,7 +74,7 @@
   </header>
 
   <div class="banner ok" style="text-align:center;background:#E8F5EC;border-color:#A9D9BC">
-    <a href="today.html" style="display:inline-block;background:#2F9E63;color:#fff;text-decoration:none;font-weight:800;padding:15px 34px;border-radius:999px;font-size:1.25rem">▶️ Start today →</a>
+    <a href="today.html" style="display:inline-block;background:#2F9E63;color:#fff;text-decoration:none;font-weight:800;padding:15px 34px;border-radius:999px;font-size:1.25rem">▶️ Start your lesson →</a>
     <div class="hint" style="margin-top:8px"><b>The one button to click each day</b> — it shows where you are in the course and your 5 steps for today.</div>
   </div>
 
@@ -93,11 +93,11 @@
     <div class="hint" style="margin-top:8px">The <b>whole plan as diagrams</b> — agent loop, MCP, structured output, reliability — organized around the spots beginners find hardest.</div>
   </div>
 
-  <h2>📍 Where you are <span class="hint">· live — same tracker as the Today page</span></h2>
+  <h2>📍 Where you are <span class="hint">· live — same tracker as the Lesson page</span></h2>
   <div class="card">
     <p style="margin:0 0 4px"><b id="where-count">0 / 16 units done</b> <span class="hint" id="where-next-wrap">· next up: <b id="where-next">…</b></span></p>
     <div style="background:#EFE7D8;border-radius:99px;height:12px;overflow:hidden;margin:8px 0 12px"><div id="where-bar" style="background:#2F9E63;height:100%;width:0%;border-radius:99px"></div></div>
-    <p style="margin:0 0 8px">👉 <a href="today.html"><b>Open the Today page →</b></a> <span class="hint">it tees up the exact unit, video and 5 steps.</span></p>
+    <p style="margin:0 0 8px">👉 <a href="today.html"><b>Open your lesson page →</b></a> <span class="hint">it tees up the exact lesson, video and 5 steps.</span></p>
     <p class="hint" id="where-last" style="display:none;margin:0 0 8px"></p>
     <p class="hint" style="margin:0">First step: take the <a href="pretest.html">Pre-Test</a> to set your baseline — score AND how much you guessed. (Example: one real learner started at 20/30 with 18 guesses → real base ≈ 12.)</p>
   </div>
@@ -160,7 +160,7 @@
 
   <!-- DOMAINS -->
   <h2>🎯 The 5 domains — share of the exam (NOT your progress)</h2>
-  <p class="hint">⚠️ These bars show each domain's <b>weight in the exam</b> (reported) — they start "full" because that's the exam's shape, not something you've done. Redder = bigger slice = more study time. Track today's steps in <a href="#pipeline"><b>Today's 5 steps</b></a> below — overall progress lives on the <a href="timeline.html"><b>timeline</b></a>.</p>
+  <p class="hint">⚠️ These bars show each domain's <b>weight in the exam</b> (reported) — they start "full" because that's the exam's shape, not something you've done. Redder = bigger slice = more study time. Track your lesson's steps in <a href="#pipeline"><b>Your lesson's 5 steps</b></a> below — overall progress lives on the <a href="timeline.html"><b>timeline</b></a>.</p>
   <div class="card">
     <div class="domain">
       <div class="top">
@@ -234,7 +234,7 @@
   </div>
 
   <!-- DAILY PIPELINE -->
-  <h2>📋 Today's 5 steps — check things off (resets each day)</h2>
+  <h2>📋 Your lesson's 5 steps — check things off (fresh steps with each new lesson)</h2>
   <div class="card">
     <p class="hint" id="pipe-date"></p>
     <p class="hint">👉 Tap a step's <b>name</b> (or the ▸) to see exactly <b>what to do and where</b>.</p>
@@ -317,24 +317,44 @@
         ask:"Turn today's topic into 3 short flashcards (Q on one line, A on the next) plus 1 mistake card." }
     ];
     var KEY = "ccaf-pipeline";
-    var _n = new Date(), today = _n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC — so the checklist resets at YOUR midnight
+    var _n = new Date(), today = _n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC
+    // The 5 steps belong to the CURRENT LESSON (same rule as the lesson page):
+    // they carry over past midnight and reset only when the lesson changes.
+    var UIDS=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"]; // same order as today.html PATH
+    function curLesson(){
+      try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
+        for(var i=0;i<UIDS.length;i++){ if(!d[UIDS[i]]) return UIDS[i]; } return "end";
+      }catch(e){ return UIDS[0]; }
+    }
+    function stashPipe(p){try{if(p.checks.some(Boolean))localStorage.setItem("ccaf-pipeline-stash",JSON.stringify({unit:p.unit,checks:p.checks}));}catch(e){}}
+    function unstashPipe(f){try{var s=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"null");
+      if(s&&s.unit===f.unit&&Array.isArray(s.checks)&&s.checks.length===f.checks.length){f.checks=s.checks;localStorage.removeItem("ccaf-pipeline-stash");}}catch(e){}
+      return f;}
+    function adoptPipe(p){
+      var CURID=curLesson();
+      if(!p||!Array.isArray(p.checks)||p.checks.length!==PIPE.length)return unstashPipe({date:today,unit:CURID,checks:PIPE.map(function(){return false;})});
+      if(p.unit===undefined){p.unit=CURID;p.date=today;return p;} // older save without a lesson tag — keep the ticks
+      if(p.unit!==CURID){stashPipe(p);return unstashPipe({date:today,unit:CURID,checks:PIPE.map(function(){return false;})});} // new lesson = fresh steps (old ones stashed)
+      p.date=today;return p;
+    }
     var state = {};
     try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){}
-    if (state.date !== today || !Array.isArray(state.checks) || state.checks.length !== PIPE.length) {
-      state = { date: today, checks: PIPE.map(function(){return false;}) };
-    }
+    state = adoptPipe(state);
     var host = document.getElementById('pipeline');
-    document.getElementById('pipe-date').textContent = "Today is " + today + " — fresh checklist.";
+    document.getElementById('pipe-date').textContent = "Today is " + today + " — your steps stay with the lesson until you close it.";
     function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
+    function wlogTick(i,val){ // the day-by-day history gets the tick the moment it happens
+      try{var wl=JSON.parse(localStorage.getItem("ccaf-week-log")||"{}");
+      wl[today]=(Array.isArray(wl[today])&&wl[today].length===5)?wl[today]:[false,false,false,false,false];
+      wl[today][i]=val;localStorage.setItem("ccaf-week-log",JSON.stringify(wl));}catch(e){}}
     // always re-read the saved state before changing it — ticks made on Today/Weekly/an exercise must never be lost
     function fresh(){ var s={}; try{s=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
-      if(s.date!==today||!Array.isArray(s.checks)||s.checks.length!==PIPE.length){s={date:today,checks:PIPE.map(function(){return false;})};}
-      return s; }
+      return adoptPipe(s); }
     var CBS=[], NAMES=[];
     function bar(){
       var done = state.checks.filter(Boolean).length;
       document.getElementById('pipe-bar').style.width = (done/PIPE.length*100) + '%';
-      document.getElementById('pipe-count').textContent = "Today: " + done + " / " + PIPE.length + " done" + (done===PIPE.length ? "  🎉" : "");
+      document.getElementById('pipe-count').textContent = "This lesson: " + done + " / " + PIPE.length + " done" + (done===PIPE.length ? "  🎉" : "");
     }
     function makeItem(item, i){
       var wrap = document.createElement('div');
@@ -359,7 +379,7 @@
       panel.appendChild(btn);
       CBS[i]=cb; NAMES[i]=name;
       cb.addEventListener('change', function(){
-        state=fresh(); state.checks[i]=cb.checked; save();
+        state=fresh(); state.checks[i]=cb.checked; save(); wlogTick(i,cb.checked);
         name.style.textDecoration=cb.checked?'line-through':'none';
         name.style.color=cb.checked?'#5C6B7A':'';
         bar();
@@ -373,7 +393,13 @@
     }
     function render(){ host.innerHTML=''; PIPE.forEach(function(item,i){ host.appendChild(makeItem(item,i)); }); }
     render(); bar();
-    // live cross-tab sync: a tick saved on Today / Weekly Pipeline / an exercise shows up here instantly
+    // a lesson closed/re-opened in another tab changes which lesson the steps belong to — re-tee the page
+    var _rl=null;
+    window.addEventListener('storage', function(e){
+      if(e.key!=='ccaf-curriculum')return;
+      clearTimeout(_rl); _rl=setTimeout(function(){location.reload();},600);
+    });
+    // live cross-tab sync: a tick saved on the Lesson page / Weekly Pipeline / an exercise shows up here instantly
     window.addEventListener('storage', function(e){
       if(e.key!==KEY)return;
       state=fresh();
