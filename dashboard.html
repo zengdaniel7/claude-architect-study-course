@@ -105,12 +105,16 @@
   (function(){
     var PATH=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"]; // keep in sync with today.html
     var TITLES={o1:"The Agent Loop",o2:"Orchestrator–Workers",rel:"Reliability — the thread",o3:"An MCP server",o4:"Claude Code workflows",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",m3:"Prompt techniques",t1:"Support-agent system",t2:"Research multi-agent system",t3:"PR-review / CI pipeline",p1:"The 6 exam scenarios",p2:"Your capstone build",px:"Anti-patterns & decision frameworks",a1:"Core vocabulary (refresh)"};
-    var done={};try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&s.done)done=s.done;}catch(e){}
-    var n=PATH.filter(function(id){return done[id];}).length;
-    document.getElementById("where-count").textContent=n+" / "+PATH.length+" units done";
-    document.getElementById("where-bar").style.width=Math.round(n/PATH.length*100)+"%";
-    var nx=PATH.filter(function(id){return !done[id];})[0];
-    document.getElementById("where-next").textContent=nx?TITLES[nx]:"all done — switch to timed practice 🎉";
+    function drawWhere(){
+      var done={};try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&s.done)done=s.done;}catch(e){}
+      var n=PATH.filter(function(id){return done[id];}).length;
+      document.getElementById("where-count").textContent=n+" / "+PATH.length+" units done";
+      document.getElementById("where-bar").style.width=Math.round(n/PATH.length*100)+"%";
+      var nx=PATH.filter(function(id){return !done[id];})[0];
+      document.getElementById("where-next").textContent=nx?TITLES[nx]:"all done — switch to timed practice 🎉";
+    }
+    drawWhere();
+    window.addEventListener("storage",function(e){ if(e.key==="ccaf-curriculum") drawWhere(); });
     try{
       var last=JSON.parse(localStorage.getItem("ccaf-last")||"null");
       if(last && last.href && last.label && (Date.now()-(last.ts||0)) < 14*24*60*60*1000){
@@ -156,7 +160,7 @@
 
   <!-- DOMAINS -->
   <h2>🎯 The 5 domains — share of the exam (NOT your progress)</h2>
-  <p class="hint">⚠️ These bars show each domain's <b>weight in the exam</b> (reported) — they start "full" because that's the exam's shape, not something you've done. Redder = bigger slice = more study time. Track what you've actually completed in the <a href="#pipeline"><b>Daily Pipeline</b></a> below.</p>
+  <p class="hint">⚠️ These bars show each domain's <b>weight in the exam</b> (reported) — they start "full" because that's the exam's shape, not something you've done. Redder = bigger slice = more study time. Track today's steps in <a href="#pipeline"><b>Today's 5 steps</b></a> below — overall progress lives on the <a href="timeline.html"><b>timeline</b></a>.</p>
   <div class="card">
     <div class="domain">
       <div class="top">
@@ -387,8 +391,8 @@
   <h2>🗓️ Weekly Review &amp; Correction</h2>
   <div class="card">
     <p>You won't finish everything every day — <b>that's planned for.</b> Once a week you re-plan instead of falling behind. The 12 weeks <b>flex to your real pace.</b></p>
-    <p class="hint">Tap to run it with your tutor — it updates your Daily Pipeline (ticks what's done, carries the rest, sets next week's top 3).</p>
-    <button class="ask" data-q="Run my weekly review and correction. I'm a dyslexic beginner and I didn't finish everything this week — that's expected. Ask me 3 short questions: what I finished, what slipped, and how I felt (1–5). Then update Daily Pipeline.md: tick what's done, carry the rest into next week, set my top 3 priorities, and re-estimate my finish week. Keep it short and encouraging — no guilt.">🗓️ Run my weekly review</button>
+    <p class="hint">Tap to run it with your tutor — a short honest review: what you finished, what slipped, your top 3 for next week. (Tick the boxes yourself on the <a href="daily-pipeline.html">Weekly Pipeline</a>.)</p>
+    <button class="ask" data-q="Run my weekly review and correction. I'm a dyslexic beginner and I didn't finish everything this week — that's expected. Ask me 3 short questions: what I finished, what slipped, and how I felt (1–5). Then tell me: what to carry into next week, my top 3 priorities, and a re-estimated finish week. Keep it short and encouraging — no guilt.">🗓️ Run my weekly review</button>
   </div>
 
   <!-- CURRICULUM -->

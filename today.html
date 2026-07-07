@@ -62,7 +62,7 @@
       <a class="b quiz" id="nextquiz" href="quizzes.html">🧪 Its quiz</a>
       <button class="b ask" id="nextask">💬 Ask my tutor to teach it</button>
     </div>
-    <p class="hint" style="margin:.7em 0 0">Tip: open it, watch/draw/build, then mark it done on the curriculum — this page updates automatically.</p>
+    <p class="hint" style="margin:.7em 0 0">Tip: open it, watch/draw/build, then mark it done (quiz, curriculum, or the green card below) — this page follows along.</p>
   </div>
   <p class="hint" id="lastseen" style="display:none"></p>
 
@@ -197,6 +197,7 @@ if(!next){
   document.getElementById("nextone").textContent=next.one;
   document.getElementById("nextgo").href="curriculum.html#u-"+next.id;
   document.getElementById("nextquiz").href=window.withUnit(next.quiz,next.id);
+  if(next.quiz.indexOf("projects.html")===0){document.getElementById("nextquiz").textContent="🔨 Its project";}
   document.getElementById("nextask").setAttribute("data-q",next.ask);
 }
 document.getElementById("encourage").textContent = pct===0
@@ -293,20 +294,32 @@ function pbar(){
   if(de){
     if(n===PIPE.length){
       var idx=next?PATH.indexOf(next):-1, up=(idx>=0)?PATH[idx+1]:null;
+      var advToday=false; try{var av=JSON.parse(localStorage.getItem("ccaf-advanced")||"{}");advToday=!!(av&&av.date===today);}catch(e){}
       de.innerHTML="<b>🎉 All 5 steps done — finished early?</b>"+
         (next?'<p class="hint" style="margin:.4em 0 .5em">Your 5 daily steps are done ✓. The <b>unit</b> ("'+next.t+'") closes when you mark it done — quiz first (best), or skip straight ahead.</p>':"")+
         '<div class="btnrow">'+
-        (next?'<a class="b quiz" href="'+window.withUnit(next.quiz,next.id)+'">🧪 Take the quiz → mark "'+next.t+'" done</a>':"")+
-        (next?'<button type="button" class="b go" id="nextUnitBtn" style="border:0;cursor:pointer;font:inherit">⏭️ Mark done & start '+(up?('the next unit: '+up.t):'— that was the LAST unit! 🏁')+' →</button>':"")+
-        '</div><p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day; the <a href="timeline.html">timeline</a> keeps your place'+(up?', or just <a href="curriculum.html#u-'+up.id+'">👀 peek at '+up.t+'</a>':'')+'.</p>';
+        (next?(next.quiz.indexOf("projects.html")===0
+          ?'<a class="b quiz" href="'+next.quiz+'">🔨 Open your capstone project →</a>'
+          :'<a class="b quiz" href="'+window.withUnit(next.quiz,next.id)+'">🧪 Take the quiz → mark "'+next.t+'" done</a>'):"")+
+        (next&&!advToday?'<button type="button" class="b go" id="nextUnitBtn" style="border:0;cursor:pointer;font:inherit">⏭️ Mark done & start '+(up?('the next unit: '+up.t):'— that was the LAST unit! 🏁')+' →</button>':"")+
+        '</div>'+
+        (next&&advToday?'<p class="hint" style="margin:.4em 0 0">🎉 You already closed a unit today — close this one with the green button above, or mark it done on the <a href="curriculum.html#u-'+next.id+'">curriculum →</a></p>':"")+
+        '<p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day; the <a href="timeline.html">timeline</a> keeps your place'+(up?', or just <a href="curriculum.html#u-'+up.id+'">👀 peek at '+up.t+'</a>':'')+'.</p>';
       var nb=document.getElementById("nextUnitBtn");
       if(nb){nb.addEventListener("click",function(){
-        // close the current unit (fresh read-modify-write) and re-tee Today to the next one
+        nb.disabled=true; // double-clicks do nothing
+        // close the current unit (fresh read-modify-write)
         var s={done:{},opened:{}};
         try{var j=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(j&&typeof j==="object"){s=j;s.done=s.done||{};s.opened=s.opened||{};}}catch(e){}
         s.done[next.id]=true;
         try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s));}catch(e){}
-        location.reload();
+        // keep today's finished 5/5 in the weekly history, THEN reset for the new unit
+        try{var wl0=JSON.parse(localStorage.getItem("ccaf-week-log")||"{}");wl0[today]=[true,true,true,true,true];localStorage.setItem("ccaf-week-log",JSON.stringify(wl0));}catch(e){}
+        // a NEW unit gets FRESH daily steps; only one instant-advance per day (stops accidental chain-clicks)
+        pst=freshPipe(); pst.checks=PIPE.map(function(){return false;}); psave();
+        try{localStorage.setItem("ccaf-advanced",JSON.stringify({date:today}));}catch(e){}
+        // real page switch: land at the TOP of Today with the next unit teed up
+        location.href="today.html?started="+encodeURIComponent(up?up.id:"end");
       });}
       de.style.display="block";
     } else { de.style.display="none"; }
@@ -353,6 +366,22 @@ document.addEventListener("click",function(e){
 function fb(t){var x=document.createElement("textarea");x.value=t;document.body.appendChild(x);x.select();try{document.execCommand("copy");}catch(_){}x.remove();flash();}
 </script>
 <script>
+(function(){ // arriving right after closing a unit? say so, then clean the URL
+  if(/[?&]started=/.test(location.search)){
+    var t=document.getElementById("toast");
+    if(t){t.textContent="🎉 Unit closed! Your next unit is teed up 👇";
+      setTimeout(function(){t.classList.add("show");},150);
+      setTimeout(function(){t.classList.remove("show");},3000);}
+    try{history.replaceState(null,"",location.pathname);}catch(e){}
+  }
+})();
+(function(){ // a unit closed in another tab (e.g. the quiz page)? re-tee this page
+  var t=null;
+  window.addEventListener("storage",function(e){
+    if(e.key!=="ccaf-curriculum")return;
+    clearTimeout(t); t=setTimeout(function(){location.reload();},600);
+  });
+})();
 (function(){ // course-wide progress next to the timeline links (updates live cross-tab)
   var IDS=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"];
   function draw(){

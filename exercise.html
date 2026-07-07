@@ -121,7 +121,7 @@
 
   h+='<h2>✅ When you\'re done</h2><div class="card">'+
     '<p style="margin:0"><b>1 · Instant check:</b> the green button copies ALL your answers <b>+ the hidden grading rubric</b> as one message — paste it into any AI chat (Comet sidebar, claude.ai) and it grades you on the spot.</p>'+
-    '<p><b>2 · Make it count:</b> the purple button copies a report — paste it to <b>Claude (your course tutor, in Claude Code)</b>. Claude grades it, logs mistakes, updates your flashcards and marks your 🔨 Build step.</p>'+
+    '<p><b>2 · Make it count:</b> the purple button copies a report — paste it to <b>Claude (your course tutor, in Claude Code)</b>. Claude grades it, logs mistakes, updates your flashcards. (Your 🔨 Build step ticks itself when you hit Mark done here.)</p>'+
     '<div class="actions">'+
       '<button class="bigbtn check" id="btncheck">🧠 Copy answers + rubric → paste to any AI</button>'+
       '<button class="bigbtn report" id="btnreport">📤 Copy report → paste to Claude</button>'+
@@ -170,7 +170,7 @@
       "Exercise: "+ex.id+" — "+ex.title+"\nUnit(s): "+ex.units.join(", ")+" · Date: "+localDate()+"\n\n"+
       "MY ANSWERS\n"+answersBlock()+"\n\n"+
       "TUTOR FEEDBACK SO FAR (I can paste an instant-check grade here):\n(none yet)\n\n"+
-      "Claude, as my tutor: grade this against the exercise rubric, add anything I got wrong to the Mistake Log (plus a mistake flashcard if it deserves one), update the course if a lesson needs it, and mark my 🔨 Build step done for today.";
+      "Claude, as my tutor: grade this against the exercise rubric, add anything I got wrong to the Mistake Log (plus a mistake flashcard if it deserves one), and update the course if a lesson needs it.";
     copy(t,"Copied — paste it to Claude 📤");
   });
 

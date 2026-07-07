@@ -92,7 +92,8 @@ var wlog={}; try{wlog=JSON.parse(localStorage.getItem(WKEY)||"{}");}catch(e){}
 var ds={}; try{ds=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
 if(ds.date!==todayStr||!Array.isArray(ds.checks)||ds.checks.length!==5){ds={date:todayStr,checks:[false,false,false,false,false]};}
 // today's shared key is the source of truth for today
-wlog[todayStr]=ds.checks.slice();
+(function(){var _o=wlog[todayStr]||[false,false,false,false,false];
+ wlog[todayStr]=ds.checks.map(function(v,i){return v||_o[i];});})(); // OR-merge: a new-unit reset must not erase today's history
 function wsave(){try{localStorage.setItem(WKEY,JSON.stringify(wlog));}catch(e){}}
 function dsave(){try{localStorage.setItem(DKEY,JSON.stringify(ds));}catch(e){}}
 wsave();
@@ -100,7 +101,10 @@ function refreshFromStorage(){
   // always re-read saved state before using it — ticks made on Today/Home/an exercise must never be lost
   try{wlog=JSON.parse(localStorage.getItem(WKEY)||"{}");}catch(e){wlog={};}
   var p={};try{p=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
-  if(p.date===todayStr&&Array.isArray(p.checks)&&p.checks.length===5){wlog[todayStr]=p.checks.slice();}
+  if(p.date===todayStr&&Array.isArray(p.checks)&&p.checks.length===5){
+    var _old=wlog[todayStr]||[false,false,false,false,false];
+    wlog[todayStr]=p.checks.map(function(v,i){return v||_old[i];}); // OR-merge: starting a new unit resets the steps, but must not erase what you already did today
+  }
 }
 function setStep(dateStr,i,val){
   refreshFromStorage();

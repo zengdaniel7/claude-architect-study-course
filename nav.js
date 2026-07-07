@@ -48,10 +48,23 @@
   try{
     var proto=Object.getPrototypeOf(localStorage);
     var set0=proto.setItem,rm0=proto.removeItem;
+    function touched(){
+      // local state is now the newest truth — an older file must never clobber it on a later load
+      try{set0.call(localStorage,"ccaf-sync-ts",String(Date.now()));}catch(e){}
+      push();
+    }
     proto.setItem=function(k,v){set0.apply(this,arguments);
-      if(this===localStorage&&String(k).indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")push();};
+      if(this===localStorage&&String(k).indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")touched();};
     proto.removeItem=function(k){rm0.apply(this,arguments);
-      if(this===localStorage&&String(k).indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")push();};
+      if(this===localStorage&&String(k).indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")touched();};
+    // navigating right after a click must not lose the click: flush the snapshot as the page unloads
+    window.addEventListener("pagehide",function(){
+      try{
+        var ts=Date.now();
+        var ok=navigator.sendBeacon&&navigator.sendBeacon("/__save",new Blob([JSON.stringify({ts:ts,data:snap()})],{type:"application/json"}));
+        if(ok){try{set0.call(localStorage,"ccaf-sync-ts",String(ts));}catch(e){}}
+      }catch(e){}
+    });
   }catch(e){}
   push();
 })();

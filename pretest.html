@@ -243,7 +243,28 @@ function renderUnitDone(ratio){
     try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s));}catch(e){}
     var n=0; UPATH.forEach(function(id){ if(s.done[id]) n++; });
     host.innerHTML='<b style="font-size:1.1rem">\ud83c\udf89 \u201c'+UTITLES[u]+'\u201d closed! Course progress: '+n+' / 16 units ('+Math.round(n/16*100)+'%).</b><br>'+
-      '<a href="timeline.html#now"><b>\ud83d\udee4\ufe0f Watch your \u2b50 move on the timeline \u2192</b></a> \u00b7 <a href="today.html">\u25b6\ufe0f Back to Today</a>';
+      '<button type="button" id="goNextBtn" style="background:var(--green);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:800;padding:10px 20px;font-size:.95rem;cursor:pointer;margin:8px 8px 0 0">\u25b6\ufe0f Start the next unit now \u2192</button>'+
+      '<a href="timeline.html#now">\ud83d\udee4\ufe0f See your \u2b50 move on the timeline</a>'+
+      '<p style="margin:.5em 0 0;font-size:.85rem;color:#5C6B7A">Marked by mistake? <a href="#" id="unmarkBtn">\u21a9\ufe0f un-mark \u201c'+UTITLES[u]+'\u201d</a></p>';
+    var g=document.getElementById("goNextBtn");
+    if(g){g.addEventListener("click",function(){
+      // keep today's ticked steps in the weekly history, then reset for the new unit
+      try{var pp=JSON.parse(localStorage.getItem("ccaf-pipeline")||"{}");
+        if(pp&&pp.date&&Array.isArray(pp.checks)){
+          var wl=JSON.parse(localStorage.getItem("ccaf-week-log")||"{}");
+          var old=wl[pp.date]||[false,false,false,false,false];
+          wl[pp.date]=pp.checks.map(function(v,i){return v||old[i];});
+          localStorage.setItem("ccaf-week-log",JSON.stringify(wl));
+        }}catch(e){}
+      try{localStorage.removeItem("ccaf-pipeline");}catch(e){} // new unit = fresh 5 daily steps
+      location.href="today.html?started=quiz";
+    });}
+    var um=document.getElementById("unmarkBtn");
+    if(um){um.addEventListener("click",function(ev){ev.preventDefault();
+      var s2=curState(); delete s2.done[u];
+      try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s2));}catch(e){}
+      renderUnitDone(ratio);
+    });}
   });
 }
 function maybeUnitDone(r){ if(!param("unit")) return; renderUnitDone(r.correct/Q.length); }

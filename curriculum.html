@@ -309,7 +309,7 @@ function unitHTML(u){
       '<div class="row"><div class="rl">🎥 Videos</div><div class="rc">'+rowVids(u.vids)+'</div></div>'+
       '<div class="row"><div class="rl">🔎 Go deeper</div><div class="rc">'+moreLinks(u.id)+'</div></div>'+
       (u.prep&&u.prep.length?'<div class="row"><div class="rl">📒 Prep notes</div><div class="rc"><ul>'+u.prep.map(function(x){return "<li>"+x+"</li>";}).join("")+'</ul><p class="hint" style="margin:.3em 0 0">👆 These are the exact ideas the quiz and flashcards will test — read them before quizzing.</p></div></div>':"")+
-      '<div class="row"><div class="rl">🧪 Quiz</div><div class="rc"><a class="qlink" href="'+u.quiz[0]+(u.quiz[0].indexOf("?")>=0?"&":"?")+"unit="+u.id+'">'+u.quiz[1]+' →</a>'+exLink(u.id)+'</div></div>'+
+      '<div class="row"><div class="rl">'+(u.quiz[0].indexOf("projects")===0?"🔨 Project":"🧪 Quiz")+'</div><div class="rc"><a class="qlink" href="'+u.quiz[0]+(u.quiz[0].indexOf("projects")===0?"":(u.quiz[0].indexOf("?")>=0?"&":"?")+"unit="+u.id)+'">'+u.quiz[1]+' →</a>'+exLink(u.id)+'</div></div>'+
       '<div class="row" style="border-top:0;padding-top:12px"><div class="rl"></div><div class="rc">'+
         '<button class="ask" data-q="'+esc(u.ask)+'">💬 Ask my tutor</button> '+
         '<button class="donebtn'+(done?' is-done':'')+'" data-done="'+u.id+'">'+(done?'✓ Done':'Mark done')+'</button>'+

@@ -42,7 +42,7 @@
 <div class="wrap">
   <header style="padding:30px 0 4px">
     <h1>🛤️ Your Course Timeline</h1>
-    <p class="lead">The whole course, top to bottom, in <b>your study order</b>. Green = done · amber = you are here · click any unit to jump back to it.</p>
+    <p class="lead">The whole course, top to bottom, in <b>your study order</b>. Green = done · amber = you are here · click any unit to jump back to it. Marked something by accident? Click its <b>✓ done</b> tag to un-mark it.</p>
   </header>
 
   <div class="card">
@@ -130,18 +130,25 @@ PATH.forEach(function(u,i){
   h+='<li class="node '+cls+'"'+(u.id===nowId?' id="now" style="scroll-margin-top:80px"':'')+'>'+
     '<span class="lvl" style="background:'+LVLC[u.lvl]+'">'+u.lvl+'</span>'+
     '<span class="ttl">'+u.ic+" "+u.t+'</span>'+
-    (st.done[u.id]?'<span class="donetag">✓ done</span>':'')+
+    (st.done[u.id]?'<span class="donetag" data-un="'+u.id+'" role="button" title="Click to un-mark this unit" style="cursor:pointer">✓ done ↩︎</span>':'')+
     (u.id===nowId?'<span class="here">⭐ YOU ARE HERE</span>':'')+
     ((!st.done[u.id]&&u.id!==nowId&&st.opened[u.id])?'<span class="here" style="background:#FFF3D0">started</span>':'')+
     '<div class="one">'+u.one+'</div>'+
     chapBlock(u.id)+
     '<div class="links"><a href="curriculum.html#u-'+u.id+'">📖 Open unit →</a>'+
-    '<a href="'+withUnit(u.quiz,u.id)+'">🧪 Quiz</a>'+
+    '<a href="'+withUnit(u.quiz,u.id)+'">'+(u.quiz.indexOf("projects")===0?"🔨 Project":"🧪 Quiz")+'</a>'+
     (EXLINK[u.id]?'<a href="exercise.html?id='+EXLINK[u.id]+'">🏋️ Exercise</a>':'')+
     '</div></li>';
 });
 if(listOpen)h+="</ul>";
 host.innerHTML=h;
+host.addEventListener("click",function(e){
+  var t=(e.target&&e.target.closest)?e.target.closest(".donetag"):null; if(!t)return;
+  var id=t.getAttribute("data-un"); if(!id)return;
+  if(!confirm("Un-mark this unit as done? (You can re-mark it any time.)"))return;
+  try{var s2=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");s2.done=s2.done||{};delete s2.done[id];localStorage.setItem("ccaf-curriculum",JSON.stringify(s2));}catch(e2){}
+  location.reload();
+});
 })();
 </script>
 </body>
