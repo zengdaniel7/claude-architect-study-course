@@ -80,7 +80,7 @@
 
   <div class="banner tip">
     💬 <b>You can annotate this page.</b> Tap any <span class="ask" style="padding:2px 9px">Ask about this</span>
-    button — it copies a ready-made question. Paste it to your tutor (Codex) to learn exactly that part.
+    button — it copies a ready-made question. Paste it to your AI tutor to learn exactly that part.
   </div>
 
   <div class="banner ok" style="text-align:center">
@@ -239,6 +239,51 @@
     <p class="hint" id="pipe-count">Today: 0 / 5 done</p>
     <p class="hint">🗓️ See the whole week (and last/next weeks) on the <a href="daily-pipeline.html"><b>Weekly Pipeline</b></a> — long-term milestones live there too.</p>
   </div>
+
+  <div class="card" id="savecard">
+    <h2 style="margin:0 0 6px">💾 Your progress</h2>
+    <p class="hint" id="syncstate" style="margin:.3em 0 0">… checking how your progress is being saved …</p>
+    <p style="margin:.7em 0 0">
+      <button type="button" id="expBtn" style="background:var(--accent);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:700;padding:8px 16px;cursor:pointer;margin:0 8px 6px 0;font-size:.88rem">⬇️ Export a backup file</button>
+      <button type="button" id="impBtn" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:999px;font:inherit;font-weight:700;padding:8px 16px;cursor:pointer;margin:0 0 6px;font-size:.88rem">⬆️ Import a backup</button>
+      <input type="file" id="impFile" accept=".json,application/json" style="display:none">
+    </p>
+    <p class="hint" style="margin:.6em 0 0">Everything you tick or type saves itself <b>the moment you do it</b>. Heads-up: progress belongs to the exact address in the bar — <b>localhost:8000</b> and the hosted site each keep their own. Study at the same address every time.</p>
+  </div>
+  <script>
+  (function(){
+    var st=document.getElementById("syncstate");
+    function refresh(){
+      var m=(window.CCAF_SYNC||{}).mode;
+      if(m==="file"){st.innerHTML="🟢 <b>Double-saved:</b> in this browser <b>and</b> to the file <b>my-progress.json</b> in the course folder on your computer. Clearing browser data can't lose it — it restores from the file automatically.";}
+      else if(m==="nofile"){st.innerHTML="🟡 Saving in this browser only. To also save to a real file on your computer, stop the server and start it with <b>python3 serve.py</b> (instead of http.server).";}
+      else if(m==="pages"){st.innerHTML="🟡 You're on the hosted website — progress saves in this browser only. <b>Export a backup file</b> below now and then, or download the course for automatic file-saving.";}
+      else{st.textContent="… checking how your progress is being saved …";}
+    }
+    refresh();document.addEventListener("ccaf-sync-mode",refresh);
+    document.getElementById("expBtn").addEventListener("click",function(){
+      var d=(window.CCAF_SYNC&&window.CCAF_SYNC.snapshot)?window.CCAF_SYNC.snapshot():{};
+      var blob=new Blob([JSON.stringify({ts:Date.now(),data:d},null,1)],{type:"application/json"});
+      var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+      a.download="ccaf-progress-"+new Date().toISOString().slice(0,10)+".json";
+      document.body.appendChild(a);a.click();a.remove();
+    });
+    var inp=document.getElementById("impFile");
+    document.getElementById("impBtn").addEventListener("click",function(){inp.click();});
+    inp.addEventListener("change",function(){
+      var f=inp.files[0];if(!f)return;
+      var r=new FileReader();
+      r.onload=function(){
+        try{
+          var j=JSON.parse(r.result);var d=(j&&j.data)?j.data:j;var n=0;
+          for(var k in d){if(k.indexOf("ccaf-")===0&&k!=="ccaf-sync-ts"){localStorage.setItem(k,String(d[k]));n++;}}
+          alert("✅ Imported "+n+" saved items. Reloading…");location.reload();
+        }catch(e){alert("❌ That file didn't look like a CCA-F progress backup.");}
+      };
+      r.readAsText(f);
+    });
+  })();
+  </script>
   <script>
   (function(){
     var PIPE = [
@@ -373,7 +418,7 @@
   <footer>A community study course · not affiliated with Anthropic · run it locally and make it yours — see the README.</footer>
 </div>
 
-<div id="toast">Copied — paste it to Codex 👍</div>
+<div id="toast">Copied — paste it to your AI tutor 👍</div>
 
 <script>
   const COURSES = [

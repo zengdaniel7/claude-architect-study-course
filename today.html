@@ -48,7 +48,7 @@
     </div>
     <div class="pbar"><span id="pbar"></span></div>
     <p class="hint" id="encourage" style="margin:.4em 0 0"></p>
-    <p style="margin:.5em 0 0;font-size:.9rem"><a href="timeline.html"><b>🛤️ See the whole timeline</b> — every unit, what's done, where you are →</a></p>
+    <p style="margin:.5em 0 0;font-size:.9rem"><a href="timeline.html"><b>🛤️ See the whole timeline</b><span id="tlprog2"></span> — every unit, what's done, where you are →</a></p>
   </div>
 
   <!-- NEXT UNIT -->
@@ -70,7 +70,7 @@
   <div class="card" id="journey" style="display:none">
     <p class="hint" id="yline" style="display:none;margin:0 0 10px"></p>
     <div id="jstrip" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"></div>
-    <p class="hint" style="margin:.7em 0 0"><a href="timeline.html"><b>🛤️ See the whole timeline</b></a> · <a href="daily-pipeline.html">📋 check any day, last week or next →</a></p>
+    <p class="hint" style="margin:.7em 0 0"><a href="timeline.html"><b>🛤️ See the whole timeline</b><span id="tlprog"></span></a> · <a href="daily-pipeline.html">📋 check any day, last week or next →</a></p>
   </div>
 
   <!-- TODAY'S 5 STEPS -->
@@ -180,6 +180,7 @@ document.getElementById("unitsdone").textContent=nDone+" / "+TOTAL+" units";
 
 // next undone unit on the path
 var next=PATH.filter(function(u){return !done[u.id];})[0];
+window.withUnit=function(h,id){return (h.indexOf("quiz.html")===0||h.indexOf("pretest.html")===0)?(h+(h.indexOf("?")>=0?"&":"?")+"unit="+id):h;};
 var WL = next ? (WATCH[next.id]||["curriculum.html#u-"+next.id,"Open today's unit"]) : ["quizzes.html","Take a timed quiz"];
 if(!next){
   document.getElementById("levelnow").textContent="🎉 All units done!";
@@ -195,7 +196,7 @@ if(!next){
   document.getElementById("nexttitle").textContent=next.t;
   document.getElementById("nextone").textContent=next.one;
   document.getElementById("nextgo").href="curriculum.html#u-"+next.id;
-  document.getElementById("nextquiz").href=next.quiz;
+  document.getElementById("nextquiz").href=window.withUnit(next.quiz,next.id);
   document.getElementById("nextask").setAttribute("data-q",next.ask);
 }
 document.getElementById("encourage").textContent = pct===0
@@ -292,10 +293,21 @@ function pbar(){
   if(de){
     if(n===PIPE.length){
       var idx=next?PATH.indexOf(next):-1, up=(idx>=0)?PATH[idx+1]:null;
-      de.innerHTML="<b>🎉 All 5 steps done — finished early?</b><div class=\"btnrow\">"+
-        (next?'<a class="b quiz" href="'+next.quiz+'">🧪 Take the quiz → mark "'+next.t+'" done</a>':"")+
-        (up?'<a class="b go" href="curriculum.html#u-'+up.id+'">👀 Peek at what\'s next: '+up.t+' →</a>':"")+
-        '</div><p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day. The <a href="timeline.html">timeline</a> keeps your place for tomorrow.</p>';
+      de.innerHTML="<b>🎉 All 5 steps done — finished early?</b>"+
+        (next?'<p class="hint" style="margin:.4em 0 .5em">Your 5 daily steps are done ✓. The <b>unit</b> ("'+next.t+'") closes when you mark it done — quiz first (best), or skip straight ahead.</p>':"")+
+        '<div class="btnrow">'+
+        (next?'<a class="b quiz" href="'+window.withUnit(next.quiz,next.id)+'">🧪 Take the quiz → mark "'+next.t+'" done</a>':"")+
+        (next?'<button type="button" class="b go" id="nextUnitBtn" style="border:0;cursor:pointer;font:inherit">⏭️ Mark done & start '+(up?('the next unit: '+up.t):'— that was the LAST unit! 🏁')+' →</button>':"")+
+        '</div><p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day; the <a href="timeline.html">timeline</a> keeps your place'+(up?', or just <a href="curriculum.html#u-'+up.id+'">👀 peek at '+up.t+'</a>':'')+'.</p>';
+      var nb=document.getElementById("nextUnitBtn");
+      if(nb){nb.addEventListener("click",function(){
+        // close the current unit (fresh read-modify-write) and re-tee Today to the next one
+        var s={done:{},opened:{}};
+        try{var j=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(j&&typeof j==="object"){s=j;s.done=s.done||{};s.opened=s.opened||{};}}catch(e){}
+        s.done[next.id]=true;
+        try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s));}catch(e){}
+        location.reload();
+      });}
       de.style.display="block";
     } else { de.style.display="none"; }
   }
@@ -339,6 +351,19 @@ document.addEventListener("click",function(e){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(flash).catch(function(){fb(t);});}else{fb(t);}
 });
 function fb(t){var x=document.createElement("textarea");x.value=t;document.body.appendChild(x);x.select();try{document.execCommand("copy");}catch(_){}x.remove();flash();}
+</script>
+<script>
+(function(){ // course-wide progress next to the timeline links (updates live cross-tab)
+  var IDS=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"];
+  function draw(){
+    var n=0;try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};IDS.forEach(function(i){if(d[i])n++;});}catch(e){}
+    var t=" — "+n+"/16 units ("+Math.round(n/16*100)+"%)";
+    var a=document.getElementById("tlprog"); if(a)a.textContent=t;
+    var b=document.getElementById("tlprog2"); if(b)b.textContent=t;
+  }
+  draw();
+  window.addEventListener("storage",function(e){ if(e.key==="ccaf-curriculum") draw(); });
+})();
 </script>
 </body>
 </html>

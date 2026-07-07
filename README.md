@@ -14,7 +14,7 @@ A complete, self-contained study site for Anthropic's **Claude Certified Archite
 - **🧪 Pre-test (30 Q) + 6 checkpoint quizzes** that track your score *and how much you guessed*
 - **🏋️ Build exercises** you do right on the page, with an AI-checked grading loop (see below)
 - **🩹 Repair guide** — the trickiest pre-test questions explained as pictures
-- Progress is saved automatically in your browser (localStorage) — every tick, card and typed answer, the instant you make it; no account, no server, no tracking. (It's per-browser: clearing browser data clears progress, and it doesn't sync between devices.)
+- Progress is saved automatically — every tick, card and typed answer, the instant you make it; no account, no tracking. On the hosted site it lives in your browser (per-browser, per-address — with **Export/Import backup buttons** on the Home page). Run it locally with `serve.py` and it's **also written to a real file, `my-progress.json`**, which auto-restores if the browser's copy is ever cleared.
 
 ## 🚀 Run it — two ways
 
@@ -25,9 +25,10 @@ Open **https://zengdaniel7.github.io/claude-architect-study-course/** — everyt
 ```bash
 git clone https://github.com/zengdaniel7/claude-architect-study-course.git
 cd claude-architect-study-course
-python3 -m http.server 8000
+python3 serve.py
 ```
 Open http://localhost:8000 — start at the **Home** page. Downloading unlocks what the website can't do:
+- **Your progress becomes a real file** — `serve.py` mirrors every tick and typed answer into `my-progress.json` in the folder, automatically, and restores from it if browser data is ever cleared. (Plain `python3 -m http.server 8000` works too, but then saves stay browser-only.)
 - **The course becomes YOURS to grow** — run an AI coding agent (like [Claude Code](https://claude.com/claude-code)) in the folder and the included [CLAUDE.md](CLAUDE.md) turns it into your personal tutor: it grades your exercise reports, keeps your mistake log, **adds new flashcards and exercises to the actual files** as you learn. The hosted site can never edit itself — a local copy can.
 - Works offline, and you can edit any lesson to match how you learn.
 
@@ -35,6 +36,7 @@ Open http://localhost:8000 — start at the **Home** page. Downloading unlocks w
 |---|---|---|
 | Lessons, quizzes, flashcards, exercises | ✅ | ✅ |
 | Progress auto-saves (in your browser) | ✅ | ✅ |
+| Progress also saved to a real file on disk, with auto-restore | ❌ | ✅ |
 | AI tutor that grades + upgrades the course files | ❌ | ✅ |
 | Edit lessons / add your own content | ❌ | ✅ |
 | Works offline | ❌ | ✅ |
@@ -61,4 +63,4 @@ The course is model-agnostic. Every **"Ask my tutor"** and **"🧠 Check my answ
 
 ## 📄 License
 
-Code and course text: [MIT](LICENSE). The Atkinson Hyperlegible font is under its own [SIL Open Font License](https://openfontlicense.org/). "Claude" and "Anthropic" are trademarks of Anthropic, PBC — this project is unaffiliated.
+Code and course text: [MIT](LICENSE). The Atkinson Hyperlegible fonts in `fonts/` are licensed separately under the [SIL Open Font License](fonts/OFL.txt) (not MIT). "Claude" and "Anthropic" are trademarks of Anthropic, PBC — this project is unaffiliated.

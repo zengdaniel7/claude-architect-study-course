@@ -1,6 +1,61 @@
 /* Shared compact top nav for all CCA-F study pages.
    Usage on a page:  <nav class="top" id="site-nav"></nav><script src="nav.js"></script>
    5 primary tabs + a "More ▾" menu. Auto-highlights the current page. */
+
+/* ---- progress file-sync (runs on every page, localhost only) ----
+   Mirrors every ccaf-* localStorage change into my-progress.json on disk
+   (via serve.py) and restores from that file when the browser copy is
+   missing or older — clearing browser data can no longer lose progress.
+   On the hosted site this whole block stays inactive (browser-only saves). */
+(function(){
+  var LOCAL=(location.hostname==="localhost"||location.hostname==="127.0.0.1");
+  window.CCAF_SYNC={mode:LOCAL?"probing":"pages",ts:0};
+  function snap(){var d={};for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);
+    if(k&&k.indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")d[k]=localStorage.getItem(k);}return d;}
+  window.CCAF_SYNC.snapshot=snap;
+  if(!LOCAL)return;
+  function announce(m){window.CCAF_SYNC.mode=m;
+    try{document.dispatchEvent(new CustomEvent("ccaf-sync-mode"));}catch(e){}}
+  // 1) restore from the file BEFORE page scripts read localStorage.
+  //    Synchronous request on purpose: local + tiny = instant, and the page's
+  //    own scripts (which run right after this file) must see restored state.
+  try{
+    var x=new XMLHttpRequest();
+    x.open("GET","my-progress.json?nocache="+Date.now(),false);x.send(null);
+    if(x.status===200){
+      var f=JSON.parse(x.responseText);
+      var mine=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10);
+      if(f&&f.data&&typeof f.ts==="number"&&f.ts>mine){
+        for(var k in f.data){try{localStorage.setItem(k,f.data[k]);}catch(e){}}
+        try{localStorage.setItem("ccaf-sync-ts",String(f.ts));}catch(e){}
+      }
+    }
+  }catch(e){}
+  // 2) push every ccaf-* change to disk (debounced), plus once on load to seed the file
+  var t=null;
+  function push(){clearTimeout(t);t=setTimeout(function(){
+    var ts=Date.now();
+    fetch("/__save",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({ts:ts,data:snap()})})
+    .then(function(r){
+      if(r.ok){try{localStorage.setItem("ccaf-sync-ts",String(ts));}catch(e){}
+        window.CCAF_SYNC.ts=ts;announce("file");}
+      else{announce("nofile");}
+    }).catch(function(){announce("nofile");});
+  },400);}
+  // Storage objects turn direct property writes into stored items, so the
+  // hook must go on Storage.prototype, not on localStorage itself.
+  try{
+    var proto=Object.getPrototypeOf(localStorage);
+    var set0=proto.setItem,rm0=proto.removeItem;
+    proto.setItem=function(k,v){set0.apply(this,arguments);
+      if(this===localStorage&&String(k).indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")push();};
+    proto.removeItem=function(k){rm0.apply(this,arguments);
+      if(this===localStorage&&String(k).indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")push();};
+  }catch(e){}
+  push();
+})();
+
 (function(){
   var PRIMARY=[
     {href:"dashboard.html",   label:"🏠 Home",     cls:"home", m:["dashboard.html",""]},

@@ -1,6 +1,6 @@
 # AI Tutor Briefing — CCA-F Study Course
 
-You are the learner's personal tutor for the CCA-F (Claude Certified Architect – Foundations) exam. This folder is a static study site (plain HTML/JS, no build step). Serve it with `python3 -m http.server 8000`.
+You are the learner's personal tutor for the CCA-F (Claude Certified Architect – Foundations) exam. This folder is a static study site (plain HTML/JS, no build step). Serve it with `python3 serve.py` (auto-saves progress to `my-progress.json`; plain `python3 -m http.server 8000` also works but skips file-saving).
 
 ## Your job
 
@@ -20,7 +20,7 @@ You are the learner's personal tutor for the CCA-F (Claude Certified Architect �
 - `quiz.html?set=X` reads question banks from `quizzes.js` · `pretest.html` = 30-Q diagnostic
 - Article pages (`article-*.html`) retell Anthropic engineering posts as diagrams; `repair-map.html` and `learning-map.html` are visual guides
 - Shared nav lives in `nav.js` (edit once, applies everywhere) · styles in `study.css`
-- **All learner progress lives in browser localStorage** (`ccaf-*` keys) — per browser, never in files. Key ones: `ccaf-curriculum` (units done/opened), `ccaf-pipeline` (today's 5 steps), `ccaf-learn-<deck>` (card mastery), `ccaf-ex-<id>` (exercise answers), `ccaf-last` (resume pointer).
+- **All learner progress lives in browser localStorage** (`ccaf-*` keys). Key ones: `ccaf-curriculum` (units done/opened), `ccaf-pipeline` (today's 5 steps), `ccaf-learn-<deck>` (card mastery), `ccaf-ex-<id>` (exercise answers), `ccaf-last` (resume pointer). When served via `serve.py`, nav.js also mirrors every `ccaf-*` change into `my-progress.json` (gitignored) and auto-restores from it — NEVER commit, edit, or delete that file; it is the learner's progress.
 
 ## Rules
 

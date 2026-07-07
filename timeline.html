@@ -101,6 +101,7 @@ lg.innerHTML="<b>Levels:</b>";
 PATH.forEach(function(u){if(seen[u.lvl])return;seen[u.lvl]=1;
   lg.innerHTML+='<span><i style="background:'+LVLC[u.lvl]+'"></i>'+u.lvl+'</span>';});
 
+function withUnit(h,id){return (h.indexOf("quiz.html")===0||h.indexOf("pretest.html")===0)?(h+(h.indexOf("?")>=0?"&":"?")+"unit="+id):h;}
 var nowId=null;
 PATH.forEach(function(u){if(!nowId && !st.done[u.id])nowId=u.id;});
 
@@ -135,7 +136,7 @@ PATH.forEach(function(u,i){
     '<div class="one">'+u.one+'</div>'+
     chapBlock(u.id)+
     '<div class="links"><a href="curriculum.html#u-'+u.id+'">📖 Open unit →</a>'+
-    '<a href="'+u.quiz+'">🧪 Quiz</a>'+
+    '<a href="'+withUnit(u.quiz,u.id)+'">🧪 Quiz</a>'+
     (EXLINK[u.id]?'<a href="exercise.html?id='+EXLINK[u.id]+'">🏋️ Exercise</a>':'')+
     '</div></li>';
 });
