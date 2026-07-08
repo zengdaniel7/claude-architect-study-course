@@ -123,36 +123,36 @@
 var PATH=[
  {id:"o1",lvl:"Organisms",t:"The Agent Loop",one:"Model + tools + a loop until stop_reason says done",quiz:"quiz.html?set=agentic",
   ask:"This is my #1 priority. Teach me the Agent Loop for CCA-F: think-tool-result-repeat, stop_reason (tool_use vs end_turn), why iteration caps are weak, and runaway guards. One example, 3 flashcards, then quiz me."},
- {id:"o2",lvl:"Organisms",t:"Orchestrator–Workers",one:"A coordinator splits work across subagents",quiz:"quiz.html?set=agentic",
-  ask:"Teach me Orchestrator–Workers (multi-agent) for CCA-F: coordinator role, explicit context passing, parallel work, provenance, and when NOT to use multi-agent. One example, 3 flashcards."},
- {id:"rel",lvl:"Reliability thread",t:"Reliability — the thread",one:"Lost-in-the-middle, verification ladder, provenance, human-in-loop",quiz:"quiz.html?set=reliability",
-  ask:"This is my weak spot. Teach me Reliability for CCA-F: lost-in-the-middle, verification ladder (code>visual>LLM-judge), provenance, human-in-the-loop, batch vs real-time, retries+caching. One example each, then quiz me."},
- {id:"o3",lvl:"Organisms",t:"An MCP server",one:"Tools (actions) vs resources (read-only) vs prompts (workflows)",quiz:"quiz.html?set=tools-mcp",
-  ask:"Teach me MCP for CCA-F: tools vs resources vs prompts, who controls each, scope, secrets. The trap is using a tool when a read-only resource fits. One example, 3 flashcards."},
- {id:"o4",lvl:"Organisms",t:"Claude Code workflows",one:"CLAUDE.md, commands, skills, subagents, hooks, headless",quiz:"quiz.html?set=claude-code",
-  ask:"Teach me Claude Code workflows for CCA-F: CLAUDE.md, slash commands, skills, subagents, hooks, headless claude -p — and when a hook beats a prompt. One example, 3 flashcards."},
- {id:"m1",lvl:"Molecules",t:"A structured-output call",one:"Prompt + schema → guaranteed JSON",quiz:"quiz.html?set=prompting",
+ {id:"a1",lvl:"Atoms",t:"Core vocabulary",one:"The 8 base terms — your words for everything ahead",quiz:"quiz.html?set=foundations",
+  ask:"Quiz me on the 8 core CCA-F terms (API, JSON, schema, token, context window, prompt, tool, model), plain words, tell me what I miss."},
+ {id:"a2",lvl:"Atoms",t:"Model physics & economics",one:"Pick the right model, cache what repeats, batch what can wait",quiz:"quiz.html?set=foundations",
+  ask:"Teach me model choice & economics for CCA-F: fast/cheap models vs stronger models (when each), cost & latency tradeoffs of chains and long context, prompt caching (stable prefix first), and the Batch API vs real-time. One example each, 3 flashcards, then quiz me."},
+ {id:"m3",lvl:"Molecules",t:"Prompt techniques",one:"Clear instructions, few-shot, chaining",quiz:"quiz.html?set=prompting",
+  ask:"Teach me prompt techniques for CCA-F: explicit criteria, few-shot, output format, prompt chaining. One example, 3 flashcards."},
+ {id:"m1",lvl:"Molecules",t:"A structured-output call",one:"Prompt + schema → validated JSON",quiz:"quiz.html?set=prompting",
   ask:"Teach me a structured-output call for CCA-F: prompt + schema, required/optional, nullable, enum, and invalid-JSON vs missing-fact. One example, 3 flashcards."},
  {id:"m2",lvl:"Molecules",t:"One tool call",one:"Give Claude one action; read the result",quiz:"quiz.html?set=tools-mcp",
   ask:"Teach me one tool call for CCA-F: name, description, inputs, tool_result, is_error, tool_choice — and why vague descriptions cause wrong tool calls. One example, 3 flashcards."},
  {id:"m4",lvl:"Molecules",t:"Built-in tools",one:"Read · Write · Edit · Bash · Grep · Glob — pick the right one",quiz:"quiz.html?set=tools-mcp",
   ask:"Teach me Claude Code's built-in tools for CCA-F: when to use Grep vs Glob vs Read/Write vs Edit vs Bash, and the 'grep an entry point then read to follow imports' pattern. One example, 3 flashcards."},
- {id:"m3",lvl:"Molecules",t:"Prompt techniques",one:"Clear instructions, few-shot, chaining",quiz:"quiz.html?set=prompting",
-  ask:"Teach me prompt techniques for CCA-F: explicit criteria, few-shot, output format, prompt chaining. One example, 3 flashcards."},
+ {id:"o3",lvl:"Organisms",t:"An MCP server",one:"Tools (actions) vs resources (read-only) vs prompts (workflows)",quiz:"quiz.html?set=tools-mcp",
+  ask:"Teach me MCP for CCA-F: tools vs resources vs prompts, who controls each, scope, secrets. The trap is using a tool when a read-only resource fits. One example, 3 flashcards."},
+ {id:"o4",lvl:"Organisms",t:"Claude Code workflows",one:"CLAUDE.md, commands, skills, subagents, hooks, headless",quiz:"quiz.html?set=claude-code",
+  ask:"Teach me Claude Code workflows for CCA-F: CLAUDE.md, slash commands, skills, subagents, hooks, headless claude -p — and when a hook beats a prompt. One example, 3 flashcards."},
+ {id:"o2",lvl:"Organisms",t:"Orchestrator–Workers",one:"A coordinator splits work across subagents",quiz:"quiz.html?set=agentic",
+  ask:"Teach me Orchestrator–Workers (multi-agent) for CCA-F: coordinator role, explicit context passing, parallel work, provenance, and when NOT to use multi-agent. One example, 3 flashcards."},
+ {id:"rel",lvl:"Reliability thread",t:"Reliability, context & evals",one:"Lost-in-the-middle, compaction, RAG vs long context, evals, human-in-loop",quiz:"quiz.html?set=reliability",
+  ask:"This is my weak spot. Teach me Reliability for CCA-F: lost-in-the-middle, compaction & memory files, RAG vs long context, the verification ladder (code>visual>LLM-judge) as eval tiers, provenance, human-in-the-loop, batch vs real-time, retries+caching. One example each, then quiz me."},
  {id:"t1",lvl:"Templates",t:"Support-agent system",one:"Agent + tools + escalation rules",quiz:"quiz.html?set=agentic",
   ask:"Walk me through a support-agent system for CCA-F: the loop in context, a refund limit that must escalate, why that needs a hook not a prompt, structured handoff fields. One example, 3 flashcards."},
  {id:"t2",lvl:"Templates",t:"Research multi-agent system",one:"Search → analyze → synthesize → report",quiz:"quiz.html?set=agentic",
   ask:"Walk me through a research multi-agent system for CCA-F: decompose, pass context, gather, attach provenance to every finding. Where does it break? One example, 3 flashcards."},
- {id:"t3",lvl:"Templates",t:"PR-review / CI pipeline",one:"Real-time vs batch; file pass + integration pass",quiz:"quiz.html?set=reliability",
-  ask:"Walk me through a PR-review/CI pipeline for CCA-F: real-time vs batch, file-by-file then integration pass, claude -p JSON output, cutting false positives. One example, 3 flashcards."},
  {id:"p1",lvl:"Pages",t:"The 6 exam scenarios",one:"Whole systems, real tradeoffs — exam style",quiz:"pretest.html",
   ask:"Give me one CCA-F production scenario like the exam. Make me choose the approach and justify it, name the tradeoff, the reliability angle. Then grade me."},
- {id:"p2",lvl:"Pages",t:"Your capstone build",one:"Build one real thing, end to end",quiz:"projects.html",
-  ask:"Help me pick and scope a CCA-F capstone I can build as a beginner: the system, a tiny first version, one guardrail, how I'll explain it. Keep it small and real."},
  {id:"px",lvl:"Pages",t:"Anti-patterns & decision frameworks",one:"The wrong answers — and how to pick A vs B",quiz:"pretest.html",
   ask:"Drill me on CCA-F anti-patterns (the wrong answers): 8 scenario questions where one option is a classic trap (parsing text to stop a loop, iteration caps, prompt-enforcing critical rules, sentiment-based escalation, swallowing errors, too many tools, same-session review, aggregate metrics). Make me pick AND explain. Then grade me."},
- {id:"a1",lvl:"Atoms",t:"Core vocabulary (refresh)",one:"Keep the 8 base terms warm",quiz:"quiz.html?set=foundations",
-  ask:"Quiz me on the 8 core CCA-F terms (API, JSON, schema, token, context window, prompt, tool, model), plain words, tell me what I miss."}
+ {id:"p2",lvl:"Pages",t:"Capstone: PR-review pipeline",one:"Build the real thing end to end — file pass, integration pass, guardrail",quiz:"projects.html",
+  ask:"Help me scope my capstone for CCA-F: a small PR-review pipeline — claude -p with JSON output, file-by-file pass then an integration pass, one guardrail hook, batch vs real-time choice, and how I explain it in 60 seconds. Keep it small and real."}
 ];
 var TOTAL=PATH.length;
 // EVERY video/diagram link per unit — one button each (same lists as the curriculum page).
@@ -169,11 +169,11 @@ var WATCH={
  m3:[[SK+"claude-with-the-anthropic-api","Building with the Claude API (Academy · free, enroll once)"]],
  t1:[[SK+"claude-code-101/469798","Claude Code 101 ▶ Hooks"],["article-effective-agents.html","🧩 Effective agents — as pictures"]],
  t2:[[SK+"claude-code-101/469796","Claude Code 101 ▶ Subagents"],["article-multi-agent.html","🕸️ Multi-agent research — as pictures"]],
- t3:[[SK+"claude-code-101/469794","Claude Code 101 ▶ Code review"],[SK+"claude-code-in-action","Claude Code in Action"]],
  p1:[["pretest.html","Drill: re-take the Pre-Test"],["article-effective-agents.html","🧩 Effective agents — as pictures"]],
- p2:[["projects.html","Projects & rubrics"],[SK+"claude-code-in-action","Claude Code in Action — build along"]],
+ p2:[["projects.html","Projects & rubrics"],[SK+"claude-code-101/469794","Claude Code 101 ▶ Code review"],[SK+"claude-code-in-action","Claude Code in Action — build along"]],
  px:[["pretest.html","Drill: anti-pattern questions"],["article-multi-agent.html","🕸️ Multi-agent research — as pictures"]],
- a1:[[SK+"claude-101/383389","Claude 101 ▶ Meet Claude"],[SK+"claude-platform-101","Claude Platform 101"]]
+ a1:[[SK+"claude-101/383389","Claude 101 ▶ Meet Claude"],[SK+"claude-platform-101","Claude Platform 101"]],
+ a2:[["https://platform.claude.com/docs/en/about-claude/models/choosing-a-model","Choosing a model (docs)"],["https://platform.claude.com/docs/en/build-with-claude/prompt-caching","Prompt caching (docs)"],["https://platform.claude.com/docs/en/build-with-claude/batch-processing","Batch processing (docs)"]]
 };
 // in-site build exercise per unit (exercise.html runner) — shown on the 🔨 Build step
 var BUILDX={
@@ -460,7 +460,7 @@ function fb(t){var x=document.createElement("textarea");x.value=t;document.body.
   });
 })();
 (function(){ // course-wide progress next to the timeline links (updates live cross-tab)
-  var IDS=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"];
+  var IDS=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
   function draw(){
     var n=0;try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};IDS.forEach(function(i){if(d[i])n++;});}catch(e){}
     var t=" — "+n+"/16 units ("+Math.round(n/16*100)+"%)";

@@ -50,10 +50,10 @@
 
 <script src="notes-data.js"></script>
 <script>
-var UPATH=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"];
-var UTITLES={o1:"The Agent Loop",o2:"Orchestrator–Workers",rel:"Reliability — the thread",o3:"An MCP server",o4:"Claude Code workflows",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",m3:"Prompt techniques",t1:"Support-agent system",t2:"Research multi-agent system",t3:"PR-review / CI pipeline",p1:"The 6 exam scenarios",p2:"Your capstone build",px:"Anti-patterns & decision frameworks",a1:"Core vocabulary (refresh)"};
-var ULEVEL={o1:"Organisms",o2:"Organisms",rel:"Reliability thread",o3:"Organisms",o4:"Organisms",m1:"Molecules",m2:"Molecules",m4:"Molecules",m3:"Molecules",t1:"Templates",t2:"Templates",t3:"Templates",p1:"Pages",p2:"Pages",px:"Pages",a1:"Atoms"};
-var UQUIZ={o1:"quiz.html?set=agentic",o2:"quiz.html?set=agentic",rel:"quiz.html?set=reliability",o3:"quiz.html?set=tools-mcp",o4:"quiz.html?set=claude-code",m1:"quiz.html?set=prompting",m2:"quiz.html?set=tools-mcp",m4:"quiz.html?set=tools-mcp",m3:"quiz.html?set=prompting",t1:"quiz.html?set=agentic",t2:"quiz.html?set=agentic",t3:"quiz.html?set=reliability",p1:"pretest.html",p2:"projects.html",px:"pretest.html",a1:"quiz.html?set=foundations"};
+var UPATH=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
+var UTITLES={o1:"The Agent Loop",a1:"Core vocabulary",a2:"Model physics & economics",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator–Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};
+var ULEVEL={o1:"Organisms",a1:"Atoms",a2:"Atoms",m3:"Molecules",m1:"Molecules",m2:"Molecules",m4:"Molecules",o3:"Organisms",o4:"Organisms",o2:"Organisms",rel:"Reliability thread",t1:"Templates",t2:"Templates",p1:"Pages",px:"Pages",p2:"Pages"};
+var UQUIZ={o1:"quiz.html?set=agentic",a1:"quiz.html?set=foundations",a2:"quiz.html?set=foundations",m3:"quiz.html?set=prompting",m1:"quiz.html?set=prompting",m2:"quiz.html?set=tools-mcp",m4:"quiz.html?set=tools-mcp",o3:"quiz.html?set=tools-mcp",o4:"quiz.html?set=claude-code",o2:"quiz.html?set=agentic",rel:"quiz.html?set=reliability",t1:"quiz.html?set=agentic",t2:"quiz.html?set=agentic",p1:"pretest.html",px:"pretest.html",p2:"projects.html"};
 function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
 function currentLesson(){try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
   for(var i=0;i<UPATH.length;i++){if(!d[UPATH[i]])return UPATH[i];}}catch(e){}return UPATH[0];}

@@ -186,7 +186,7 @@
         try{p=JSON.parse(localStorage.getItem("ccaf-pipeline")||"{}");}catch(_){}
         if(!Array.isArray(p.checks)||p.checks.length!==5){p={date:today,checks:[false,false,false,false,false]};}
         if(p.unit===undefined){ // tag the current lesson so a later lesson change resets correctly
-          var UIDS=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"]; // same order as today.html PATH
+          var UIDS=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"]; // same order as today.html PATH
           try{var _d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
             p.unit="end";for(var _i=0;_i<UIDS.length;_i++){if(!_d[UIDS[_i]]){p.unit=UIDS[_i];break;}}}catch(_){}
         }

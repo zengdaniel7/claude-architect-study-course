@@ -103,8 +103,8 @@
   </div>
   <script>
   (function(){
-    var PATH=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"]; // keep in sync with today.html
-    var TITLES={o1:"The Agent Loop",o2:"Orchestrator–Workers",rel:"Reliability — the thread",o3:"An MCP server",o4:"Claude Code workflows",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",m3:"Prompt techniques",t1:"Support-agent system",t2:"Research multi-agent system",t3:"PR-review / CI pipeline",p1:"The 6 exam scenarios",p2:"Your capstone build",px:"Anti-patterns & decision frameworks",a1:"Core vocabulary (refresh)"};
+    var PATH=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"]; // keep in sync with today.html
+    var TITLES={o1:"The Agent Loop",a1:"Core vocabulary",a2:"Model physics & economics",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator–Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};
     function drawWhere(){
       var done={};try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&s.done)done=s.done;}catch(e){}
       var n=PATH.filter(function(id){return done[id];}).length;
@@ -186,7 +186,7 @@
       <div class="top">
         <span class="name"><span class="dot" style="background:var(--yellow)"></span>Prompt Engineering &amp; Structured Output</span>
         <span><span class="pct">20%</span>
-          <button class="ask" data-q="Teach me the CCA-F domain 'Prompt Engineering & Structured Output' (20%). I'm a dyslexic beginner — under 150 words, one sketch, one example, 3 flashcards. Cover clear instructions, few-shot, prompt chaining, and guaranteed JSON via Structured Outputs (nullable/enum/required).">Ask about this</button>
+          <button class="ask" data-q="Teach me the CCA-F domain 'Prompt Engineering & Structured Output' (20%). I'm a dyslexic beginner — under 150 words, one sketch, one example, 3 flashcards. Cover clear instructions, few-shot, prompt chaining, and validated JSON via Structured Outputs (nullable/enum/required).">Ask about this</button>
         </span>
       </div>
       <div class="bar"><span style="width:74%; background:var(--yellow)"></span></div>
@@ -320,7 +320,7 @@
     var _n = new Date(), today = _n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC
     // The 5 steps belong to the CURRENT LESSON (same rule as the lesson page):
     // they carry over past midnight and reset only when the lesson changes.
-    var UIDS=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"]; // same order as today.html PATH
+    var UIDS=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"]; // same order as today.html PATH
     function curLesson(){
       try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
         for(var i=0;i<UIDS.length;i++){ if(!d[UIDS[i]]) return UIDS[i]; } return "end";
