@@ -226,9 +226,10 @@ function renderLesson(){
     qE.textContent=(u.quiz.indexOf("projects.html")===0)?"🔨 Its project":"🧪 Its quiz";
     aE.setAttribute("data-q",u.ask);
     if(!isCur&&WATCH[u.id]){
-      wE.innerHTML=WATCH[u.id].map(function(v){
-        return '<a class="watchlink" href="'+v[0]+'"'+(/^https?:/.test(v[0])?' target="_blank" rel="noopener"':'')+'>▶ '+v[1]+'</a>';
-      }).join(" ");
+      var wn=WATCH[u.id].length;
+      wE.innerHTML=WATCH[u.id].map(function(v,vi){ // one row per video here too
+        return '<div><a class="watchlink" href="'+v[0]+'"'+(/^https?:/.test(v[0])?' target="_blank" rel="noopener"':'')+'>▶ '+(wn>1?(vi+1)+' · ':'')+v[1]+'</a></div>';
+      }).join("");
     }else{wE.innerHTML="";}
     hE.innerHTML=isCur
       ? 'How it closes: finish the <b>5 steps below</b> + take <b>its quiz</b> (your score gets saved) — then the green card lets you close it. No accidental skips.'
@@ -403,10 +404,12 @@ PIPE.forEach(function(it,i){
   var body=document.createElement("div");
   body.innerHTML='<div class="lab">'+it.label+'</div><div class="d">'+it.d+'</div>';
   if(i===0){
-    WL.forEach(function(v){
+    WL.forEach(function(v,vi){ // each video on its OWN row — never crammed together
+      var row=document.createElement("div");
       var wl=document.createElement("a");wl.className="watchlink";wl.href=v[0];
       if(/^https?:/.test(v[0])){wl.target="_blank";wl.rel="noopener";}
-      wl.textContent="▶ "+v[1];body.appendChild(wl);
+      wl.textContent="▶ "+(WL.length>1?(vi+1)+" · ":"")+v[1];
+      row.appendChild(wl);body.appendChild(row);
     });
     if(WL.length>1){var wn=document.createElement("div");wn.className="d";wn.textContent="👆 "+WL.length+" links for this lesson — best watched in order.";body.appendChild(wn);}
   }
