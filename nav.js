@@ -69,6 +69,23 @@
   push();
 })();
 
+(function(){ // completion-gate upgrade: strict about the future, GENEROUS about the past.
+  // Lessons closed before the gate existed stay closed and re-closable (no confiscated work).
+  try{
+    var done=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
+    var qd=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}");
+    var ev=JSON.parse(localStorage.getItem("ccaf-everdone")||"{}");
+    var ch=false;
+    for(var k in done){if(done[k]){
+      if(!ev[k]){ev[k]=true;ch=true;}
+      if(!qd[k]){qd[k]={legacy:true,ts:new Date().toLocaleDateString()};ch=true;}
+    }}
+    if(ch){localStorage.setItem("ccaf-everdone",JSON.stringify(ev));localStorage.setItem("ccaf-quizdone",JSON.stringify(qd));}
+    var st=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"null"); // old single-slot stash -> per-unit map
+    if(st&&st.unit&&Array.isArray(st.checks)){var m={};m[st.unit]=st.checks;localStorage.setItem("ccaf-pipeline-stash",JSON.stringify(m));}
+  }catch(e){}
+})();
+
 (function(){
   var PRIMARY=[
     {href:"dashboard.html",   label:"🏠 Home",     cls:"home", m:["dashboard.html",""]},
@@ -78,6 +95,7 @@
     {href:"timeline.html",    label:"🛤️ Timeline", m:["timeline.html"]}
   ];
   var MORE=[
+    {href:"notes.html",        label:"📖 Lesson notes"},
     {href:"learning-map.html", label:"🗺️ Visual Map"},
     {href:"my-plan.html",      label:"🧭 My Plan"},
     {href:"daily-pipeline.html",label:"📋 Weekly Pipeline"},

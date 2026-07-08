@@ -326,9 +326,12 @@
         for(var i=0;i<UIDS.length;i++){ if(!d[UIDS[i]]) return UIDS[i]; } return "end";
       }catch(e){ return UIDS[0]; }
     }
-    function stashPipe(p){try{if(p.checks.some(Boolean))localStorage.setItem("ccaf-pipeline-stash",JSON.stringify({unit:p.unit,checks:p.checks}));}catch(e){}}
-    function unstashPipe(f){try{var s=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"null");
-      if(s&&s.unit===f.unit&&Array.isArray(s.checks)&&s.checks.length===f.checks.length){f.checks=s.checks;localStorage.removeItem("ccaf-pipeline-stash");}}catch(e){}
+    function stashPipe(p){try{if(p.checks.some(Boolean)){var m=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
+      if(m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;} // old single-slot shape
+      m[p.unit]=p.checks;localStorage.setItem("ccaf-pipeline-stash",JSON.stringify(m));}}catch(e){}}
+    function unstashPipe(f){try{var m=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
+      if(m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;}
+      if(Array.isArray(m[f.unit])&&m[f.unit].length===f.checks.length){f.checks=m[f.unit];delete m[f.unit];localStorage.setItem("ccaf-pipeline-stash",JSON.stringify(m));}}catch(e){}
       return f;}
     function adoptPipe(p){
       var CURID=curLesson();

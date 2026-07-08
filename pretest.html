@@ -227,6 +227,14 @@ var UPATH=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2
 var UTITLES={o1:"The Agent Loop",o2:"Orchestrator\u2013Workers",rel:"Reliability \u2014 the thread",o3:"An MCP server",o4:"Claude Code workflows",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",m3:"Prompt techniques",t1:"Support-agent system",t2:"Research multi-agent system",t3:"PR-review / CI pipeline",p1:"The 6 exam scenarios",p2:"Your capstone build",px:"Anti-patterns & decision frameworks",a1:"Core vocabulary (refresh)"};
 function curState(){try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&typeof s==="object"){s.done=s.done||{};s.opened=s.opened||{};return s;}}catch(e){}return {done:{},opened:{}};}
 function targetUnit(){var u=param("unit");if(u&&UTITLES[u])return u;for(var i=0;i<UPATH.length;i++){if(!curState().done[UPATH[i]])return UPATH[i];}return null;}
+function stepsFor(u){
+  try{if(JSON.parse(localStorage.getItem("ccaf-everdone")||"{}")[u])return {mine:true,n:5,all:true};}catch(e){}
+  try{var p=JSON.parse(localStorage.getItem("ccaf-pipeline")||"{}");
+    if(p&&p.unit===u&&Array.isArray(p.checks)&&p.checks.length===5)return {mine:true,n:p.checks.filter(Boolean).length,all:p.checks.every(function(v){return !!v;})};}catch(e){}
+  try{var m=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
+    if(m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;}
+    if(Array.isArray(m[u])&&m[u].length===5)return {mine:true,n:m[u].filter(Boolean).length,all:m[u].every(function(v){return !!v;})};}catch(e){}
+  return {mine:false,n:0,all:false};}
 function renderUnitDone(ratio){
   var host=document.getElementById("unitdone"); if(!host) return;
   var u=targetUnit();
@@ -235,12 +243,21 @@ function renderUnitDone(ratio){
     host.innerHTML='\u2705 <b>'+UTITLES[u]+'</b> is already marked done. <a href="timeline.html#now">\ud83d\udee4\ufe0f Timeline</a> \u00b7 <a href="today.html">\u25b6\ufe0f Your lesson</a>';
     return;
   }
+  var sg=stepsFor(u);
+  if(!sg.all){ // THE GATE: quiz result is saved; the 5 lesson steps must also be done before the lesson closes
+    host.innerHTML='\u2705 Quiz done for "'+UTITLES[u]+'" \u2014 <b>your score is saved</b>. '+
+      (sg.mine?'\ud83d\udccb <b>'+sg.n+' / 5 steps done</b> \u2014 finish the 5 steps on your <a href="today.html">lesson page</a>, then close it there.'
+             :'Finish its <a href="today.html">5 lesson steps</a> when it is your current lesson \u2014 then it closes.');
+    return;
+  }
+
   var warn=(ratio<0.5)?'<p class="hint" style="margin:.4em 0 0">Under half right \u2014 maybe <a href="curriculum.html#u-'+u+'">review the unit</a> once more first. Your call.</p>':"";
   host.innerHTML='<button type="button" id="udBtn" style="background:var(--green);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:800;padding:12px 22px;font-size:1rem;cursor:pointer">\u2705 Done with \u201c'+UTITLES[u]+'\u201d? Mark the unit complete</button>'+
     '<p class="hint" style="margin:.4em 0 0">This moves your \u2b50 on the timeline and updates your course %.</p>'+warn;
   document.getElementById("udBtn").addEventListener("click",function(){
     var s=curState(); s.done[u]=true;
     try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s));}catch(e){}
+    try{var ev0=JSON.parse(localStorage.getItem("ccaf-everdone")||"{}");ev0[u]=true;localStorage.setItem("ccaf-everdone",JSON.stringify(ev0));}catch(e){}
     var n=0; UPATH.forEach(function(id){ if(s.done[id]) n++; });
     host.innerHTML='<b style="font-size:1.1rem">\ud83c\udf89 \u201c'+UTITLES[u]+'\u201d closed! Course progress: '+n+' / 16 units ('+Math.round(n/16*100)+'%).</b><br>'+
       '<button type="button" id="goNextBtn" style="background:var(--green);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:800;padding:10px 20px;font-size:.95rem;cursor:pointer;margin:8px 8px 0 0">\u25b6\ufe0f Start your next lesson now \u2192</button>'+
@@ -262,7 +279,13 @@ function renderUnitDone(ratio){
   });
 }
 function maybeUnitDone(r){ if(!param("unit")) return; renderUnitDone(r.correct/Q.length); }
-document.getElementById("scoreBtn").addEventListener("click",showScore);
+document.getElementById("scoreBtn").addEventListener("click",function(){showScore();
+  // record ONLY on a deliberate grading click — an auto-replayed score screen never earns credit
+  try{var pun=param("unit");if(pun&&UTITLES[pun]&&lastResult){var qd0=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}");
+    qd0[pun]={score:lastResult.correct,total:30,guessed:lastResult.guessed,set:"pretest",ts:new Date().toLocaleDateString()};
+    localStorage.setItem("ccaf-quizdone",JSON.stringify(qd0));
+    var bd=document.getElementById("band");if(bd)bd.innerHTML+='<br>🧾 This take counts for: <b>'+UTITLES[pun]+'</b> — saved.';}}catch(e){}
+});
 if(Q.every(function(item){ return saved.answers[item.n]!==undefined; })){
   setTimeout(showScore,50);
 }

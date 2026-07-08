@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson notes — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .nhead{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 22px;margin:14px 0}
+  .nhead .ttl{font-size:1.7rem;font-weight:800;margin:2px 0}
+  .npager{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+  .pgbtn{border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:.85rem;border-radius:999px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block}
+  .pgbtn:hover{border-color:var(--accent);color:var(--accent)}
+  .pgbtn.off{opacity:.35;pointer-events:none}
+  #notes h3{margin:1.4em 0 .5em;font-size:1.15rem}
+  #notes .idea{background:#fff;border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:12px;padding:12px 16px;margin:10px 0;line-height:1.65}
+  #notes ul{line-height:1.8}
+  #notes p{line-height:1.7;max-width:62ch}
+  .b{display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:800;border-radius:999px;padding:10px 18px;text-decoration:none;font-size:.92rem;margin:4px 8px 0 0}
+  .b.go{background:var(--accent);color:#fff} .b.quiz{background:var(--green);color:#fff} .b.plain{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+  @media print{nav.top,.npager,.actions{display:none}}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="nav.js"></script>
+
+<div class="wrap">
+  <header style="padding:26px 0 4px">
+    <h1>📖 Lesson notes</h1>
+    <p class="sub">Everything this lesson's quiz, flashcards and exercises test — in plain words, made for taking your own notes from.</p>
+  </header>
+
+  <div class="npager">
+    <a class="pgbtn" id="nprev" href="#">◀ Previous lesson</a>
+    <div style="font-weight:800" id="npos">&nbsp;</div>
+    <a class="pgbtn" id="nnext" href="#">Next lesson ▶</a>
+  </div>
+
+  <div class="nhead">
+    <div class="hint" id="nlevel"></div>
+    <div class="ttl" id="ntitle">Loading…</div>
+    <div class="actions" id="nactions" style="margin-top:10px"></div>
+  </div>
+
+  <div id="notes" class="card">Loading notes…</div>
+
+  <footer>Write these ideas in your own words — that's the step that makes them stick. · Notes print cleanly if you want them on paper.</footer>
+</div>
+
+<script src="notes-data.js"></script>
+<script>
+var UPATH=["o1","o2","rel","o3","o4","m1","m2","m4","m3","t1","t2","t3","p1","p2","px","a1"];
+var UTITLES={o1:"The Agent Loop",o2:"Orchestrator–Workers",rel:"Reliability — the thread",o3:"An MCP server",o4:"Claude Code workflows",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",m3:"Prompt techniques",t1:"Support-agent system",t2:"Research multi-agent system",t3:"PR-review / CI pipeline",p1:"The 6 exam scenarios",p2:"Your capstone build",px:"Anti-patterns & decision frameworks",a1:"Core vocabulary (refresh)"};
+var ULEVEL={o1:"Organisms",o2:"Organisms",rel:"Reliability thread",o3:"Organisms",o4:"Organisms",m1:"Molecules",m2:"Molecules",m4:"Molecules",m3:"Molecules",t1:"Templates",t2:"Templates",t3:"Templates",p1:"Pages",p2:"Pages",px:"Pages",a1:"Atoms"};
+var UQUIZ={o1:"quiz.html?set=agentic",o2:"quiz.html?set=agentic",rel:"quiz.html?set=reliability",o3:"quiz.html?set=tools-mcp",o4:"quiz.html?set=claude-code",m1:"quiz.html?set=prompting",m2:"quiz.html?set=tools-mcp",m4:"quiz.html?set=tools-mcp",m3:"quiz.html?set=prompting",t1:"quiz.html?set=agentic",t2:"quiz.html?set=agentic",t3:"quiz.html?set=reliability",p1:"pretest.html",p2:"projects.html",px:"pretest.html",a1:"quiz.html?set=foundations"};
+function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
+function currentLesson(){try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
+  for(var i=0;i<UPATH.length;i++){if(!d[UPATH[i]])return UPATH[i];}}catch(e){}return UPATH[0];}
+var u=param("unit"); if(!u||!UTITLES[u]) u=currentLesson();
+var idx=UPATH.indexOf(u);
+document.title=UTITLES[u]+" — Lesson notes — CCA-F";
+document.getElementById("npos").textContent="Lesson "+(idx+1)+" of "+UPATH.length;
+document.getElementById("nlevel").textContent=ULEVEL[u]||"";
+document.getElementById("ntitle").textContent=UTITLES[u];
+var pv=document.getElementById("nprev"), nx=document.getElementById("nnext");
+if(idx>0){pv.href="notes.html?unit="+UPATH[idx-1];}else{pv.className+=" off";}
+if(idx<UPATH.length-1){nx.href="notes.html?unit="+UPATH[idx+1];}else{nx.className+=" off";}
+var q=UQUIZ[u]||"quizzes.html";
+var isProj=q.indexOf("projects")===0;
+document.getElementById("nactions").innerHTML=
+  '<a class="b go" href="today.html">▶️ My lesson page</a>'+
+  '<a class="b quiz" href="'+(isProj?q:(q+(q.indexOf("?")>=0?"&":"?")+"unit="+u))+'">'+(isProj?"🔨 Its project":"🧪 Its quiz")+' →</a>'+
+  '<a class="b plain" href="curriculum.html#u-'+u+'">📚 On the curriculum</a>';
+var N=(window.LESSON_NOTES||{})[u];
+document.getElementById("notes").innerHTML = N && N.html ? N.html
+  : '<p><b>These notes are being written.</b> Meanwhile, the 📒 Prep notes on the <a href="curriculum.html#u-'+u+'">curriculum</a> cover the tested ideas.</p>';
+try{localStorage.setItem("ccaf-last",JSON.stringify({href:"notes.html?unit="+u,label:"Notes: "+UTITLES[u],ts:Date.now()}));}catch(e){}
+</script>
+</body>
+</html>
