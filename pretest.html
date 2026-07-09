@@ -228,12 +228,8 @@ var UTITLES={o1:"The Agent Loop",a1:"Core vocabulary",a2:"Model physics & econom
 function curState(){try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&typeof s==="object"){s.done=s.done||{};s.opened=s.opened||{};return s;}}catch(e){}return {done:{},opened:{}};}
 function targetUnit(){var u=param("unit");if(u&&UTITLES[u])return u;for(var i=0;i<UPATH.length;i++){if(!curState().done[UPATH[i]])return UPATH[i];}return null;}
 function stepsFor(u){
+  if(window.CCAF)return CCAF.stepsFor(u); // everdone → ccaf-steps (the one real step store)
   try{if(JSON.parse(localStorage.getItem("ccaf-everdone")||"{}")[u])return {mine:true,n:5,all:true};}catch(e){}
-  try{var p=JSON.parse(localStorage.getItem("ccaf-pipeline")||"{}");
-    if(p&&p.unit===u&&Array.isArray(p.checks)&&p.checks.length===5)return {mine:true,n:p.checks.filter(Boolean).length,all:p.checks.every(function(v){return !!v;})};}catch(e){}
-  try{var m=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
-    if(m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;}
-    if(Array.isArray(m[u])&&m[u].length===5)return {mine:true,n:m[u].filter(Boolean).length,all:m[u].every(function(v){return !!v;})};}catch(e){}
   return {mine:false,n:0,all:false};}
 function renderUnitDone(ratio){
   var host=document.getElementById("unitdone"); if(!host) return;
@@ -246,8 +242,14 @@ function renderUnitDone(ratio){
   var sg=stepsFor(u);
   if(!sg.all){ // THE GATE: quiz result is saved; the 5 lesson steps must also be done before the lesson closes
     host.innerHTML='\u2705 Quiz done for "'+UTITLES[u]+'" \u2014 <b>your score is saved</b>. '+
-      (sg.mine?'\ud83d\udccb <b>'+sg.n+' / 5 steps done</b> \u2014 finish the 5 steps on your <a href="today.html">lesson page</a>, then close it there.'
-             :'Finish its <a href="today.html">5 lesson steps</a> when it is your current lesson \u2014 then it closes.');
+      (sg.mine?'\ud83d\udccb <b>'+sg.n+' / 5 steps done</b> \u2014 finish the 5 steps on your <a href="today.html">lesson page</a> (the \u25b6 arrows reach this lesson), then it can close.'
+             :'Finish its <a href="today.html">5 lesson steps</a> \u2014 you can work ahead with the \u25b6 arrows on the lesson page; ticks save per lesson.');
+    return;
+  }
+  var _ev=false;try{_ev=!!(JSON.parse(localStorage.getItem("ccaf-everdone")||"{}")[u]);}catch(e){}
+  var _cu=window.CCAF?CCAF.cur():u;
+  if(!_ev&&u!==_cu){ // council rule: first closes happen IN ORDER; working ahead saves, closing waits
+    host.innerHTML='\ud83d\udd12 <b>"'+UTITLES[u]+'" is ready</b> \u2014 steps \u2713 and quiz saved. It unlocks the moment you close the lessons before it. Your \u2b50 NOW lesson: <b>'+(UTITLES[_cu]||"\u2014")+'</b> \u00b7 <a href="today.html">\u25b6\ufe0f go close it</a> \u2014 nothing gets lost.';
     return;
   }
 
@@ -258,6 +260,7 @@ function renderUnitDone(ratio){
     var s=curState(); s.done[u]=true;
     try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s));}catch(e){}
     try{var ev0=JSON.parse(localStorage.getItem("ccaf-everdone")||"{}");ev0[u]=true;localStorage.setItem("ccaf-everdone",JSON.stringify(ev0));}catch(e){}
+    if(window.CCAF)CCAF.syncPipeline(); // the mirror moves on to the new NOW lesson
     var n=0; UPATH.forEach(function(id){ if(s.done[id]) n++; });
     host.innerHTML='<b style="font-size:1.1rem">\ud83c\udf89 \u201c'+UTITLES[u]+'\u201d closed! Course progress: '+n+' / 16 units ('+Math.round(n/16*100)+'%).</b><br>'+
       '<button type="button" id="goNextBtn" style="background:var(--green);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:800;padding:10px 20px;font-size:.95rem;cursor:pointer;margin:8px 8px 0 0">\u25b6\ufe0f Start your next lesson now \u2192</button>'+
@@ -265,15 +268,15 @@ function renderUnitDone(ratio){
       '<p style="margin:.5em 0 0;font-size:.85rem;color:#5C6B7A">Marked by mistake? <a href="#" id="unmarkBtn">\u21a9\ufe0f un-mark \u201c'+UTITLES[u]+'\u201d</a></p>';
     var g=document.getElementById("goNextBtn");
     if(g){g.addEventListener("click",function(){
-      // every tick is already in the weekly history (recorded the moment it was made);
-      // just clear the finished lesson's steps so the next lesson starts fresh
-      try{localStorage.removeItem("ccaf-pipeline");}catch(e){}
+      // per-lesson steps persist in ccaf-steps; just repoint the mirror at the new NOW lesson
+      if(window.CCAF)CCAF.syncPipeline();
       location.href="today.html?started=quiz";
     });}
     var um=document.getElementById("unmarkBtn");
     if(um){um.addEventListener("click",function(ev){ev.preventDefault();
       var s2=curState(); delete s2.done[u];
       try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s2));}catch(e){}
+      if(window.CCAF)CCAF.syncPipeline();
       renderUnitDone(ratio);
     });}
   });

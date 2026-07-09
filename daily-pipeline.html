@@ -87,34 +87,38 @@ var todayStr=fmt(new Date());
 document.getElementById("today").textContent="Today is "+todayStr+" · steps follow your lesson — unfinished ones carry over.";
 
 /* ---- storage: per-day log (forever) + today's key shared with Today page/dashboard ---- */
-var WKEY="ccaf-week-log", DKEY="ccaf-pipeline";
+var WKEY="ccaf-week-log";
 var wlog={}; try{wlog=JSON.parse(localStorage.getItem(WKEY)||"{}");}catch(e){}
-var ds={}; try{ds=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
-if(!Array.isArray(ds.checks)||ds.checks.length!==5){ds={date:todayStr,checks:[false,false,false,false,false]};}
-else if(ds.date!==todayStr){ds.date=todayStr;} // steps belong to the current lesson — they carry over past midnight
 // The week log is its own record: every tick is written into it the moment it
 // happens (on whichever page) — it is never inferred from the lesson-steps state,
 // so steps carried over from yesterday can't be stamped onto today's history.
 function wsave(){try{localStorage.setItem(WKEY,JSON.stringify(wlog));}catch(e){}}
-function dsave(){try{localStorage.setItem(DKEY,JSON.stringify(ds));}catch(e){}}
 function refreshFromStorage(){
   // always re-read saved history before using it — ticks made on other pages arrive here
   try{wlog=JSON.parse(localStorage.getItem(WKEY)||"{}");}catch(e){wlog={};}
 }
+function flashPipe(msg){var t=document.getElementById("toast");if(!t)return;
+  t.textContent=msg;t.style.opacity="1";t.style.transform="translateX(-50%) translateY(0)";
+  setTimeout(function(){t.style.opacity="0";t.style.transform="translateX(-50%) translateY(30px)";
+    setTimeout(function(){t.textContent="Copied 👍";},300);},2800);}
 function setStep(dateStr,i,val){
-  refreshFromStorage();
-  wlog[dateStr]=wlog[dateStr]||[false,false,false,false,false];
-  wlog[dateStr][i]=val; wsave();
-  if(dateStr===todayStr){ // mirror ONLY this one step into the lesson checklist — never the whole day row
-    var _p={};try{_p=JSON.parse(localStorage.getItem(DKEY)||"{}");}catch(e){}
-    if(!Array.isArray(_p.checks)||_p.checks.length!==5){_p={date:todayStr,checks:[false,false,false,false,false]};}
-    _p.date=todayStr;_p.checks[i]=val;ds=_p;dsave();
+  todayStr=fmt(new Date()); // re-anchor: a tab left open past midnight must track the real day
+  if(dateStr===todayStr&&window.CCAF){ // today's row = the ⭐ NOW lesson's step (per-lesson save + habit log with sources)
+    CCAF.setStep(CCAF.cur(),i,val);
+    refreshFromStorage();
+    if(val===false && wlog[todayStr] && wlog[todayStr][i]===true){ // another lesson still did this step today
+      flashPipe("✓ Still counts — you did this step on another lesson today, so it stays checked.");
+    }
+  }else{ // editing another day touches ONLY the habit history
+    refreshFromStorage();
+    wlog[dateStr]=wlog[dateStr]||[false,false,false,false,false];
+    wlog[dateStr][i]=val; wsave();
   }
   renderWeek(); dbarSync();
 }
 // live cross-tab sync
 window.addEventListener("storage",function(e){
-  if(e.key!==DKEY&&e.key!==WKEY)return;
+  if(e.key!=="ccaf-steps"&&e.key!==WKEY)return;
   refreshFromStorage(); renderWeek(); dbarSync();
 });
 
@@ -123,6 +127,7 @@ var offset=0; // 0 = this week, -1 = last week, +1 = next week…
 function monday(d){var x=new Date(d);var day=(x.getDay()+6)%7;x.setDate(x.getDate()-day);x.setHours(0,0,0,0);return x;}
 var DOW=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 function renderWeek(){
+  todayStr=fmt(new Date()); // re-anchor the ⭐ today marker in case the tab crossed midnight
   var start=monday(new Date()); start.setDate(start.getDate()+offset*7);
   var end=new Date(start); end.setDate(end.getDate()+6);
   document.getElementById("wtitle").textContent = offset===0?"This week":(offset===-1?"Last week":(offset===1?"Next week":(offset<0?(-offset)+" weeks ago":offset+" weeks ahead")));

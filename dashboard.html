@@ -316,7 +316,6 @@
           <b>Where:</b> <a href="https://apps.ankiweb.net" target="_blank" rel="noopener">Anki</a> (spaced repetition), or the on-site <a href="flashcards.html">Flashcards</a>.`,
         ask:"Turn today's topic into 3 short flashcards (Q on one line, A on the next) plus 1 mistake card." }
     ];
-    var KEY = "ccaf-pipeline";
     var _n = new Date(), today = _n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC
     // The 5 steps belong to the CURRENT LESSON (same rule as the lesson page):
     // they carry over past midnight and reset only when the lesson changes.
@@ -326,33 +325,13 @@
         for(var i=0;i<UIDS.length;i++){ if(!d[UIDS[i]]) return UIDS[i]; } return "end";
       }catch(e){ return UIDS[0]; }
     }
-    function stashPipe(p){try{if(p.checks.some(Boolean)){var m=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
-      if(m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;} // old single-slot shape
-      m[p.unit]=p.checks;localStorage.setItem("ccaf-pipeline-stash",JSON.stringify(m));}}catch(e){}}
-    function unstashPipe(f){try{var m=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
-      if(m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;}
-      if(Array.isArray(m[f.unit])&&m[f.unit].length===f.checks.length){f.checks=m[f.unit];delete m[f.unit];localStorage.setItem("ccaf-pipeline-stash",JSON.stringify(m));}}catch(e){}
-      return f;}
-    function adoptPipe(p){
-      var CURID=curLesson();
-      if(!p||!Array.isArray(p.checks)||p.checks.length!==PIPE.length)return unstashPipe({date:today,unit:CURID,checks:PIPE.map(function(){return false;})});
-      if(p.unit===undefined){p.unit=CURID;p.date=today;return p;} // older save without a lesson tag — keep the ticks
-      if(p.unit!==CURID){stashPipe(p);return unstashPipe({date:today,unit:CURID,checks:PIPE.map(function(){return false;})});} // new lesson = fresh steps (old ones stashed)
-      p.date=today;return p;
-    }
-    var state = {};
-    try { state = JSON.parse(localStorage.getItem(KEY) || "{}"); } catch(e){}
-    state = adoptPipe(state);
-    var host = document.getElementById('pipeline');
+    // per-lesson steps live in ccaf-steps (CCAF helper in nav.js). This checklist is
+    // ALWAYS the ⭐ NOW lesson's steps — the Lesson page is where you browse others.
+    function readSteps(){return {checks:(window.CCAF?CCAF.getSteps(curLesson()):[false,false,false,false,false])};}
+    var state = readSteps();
+    var host = document.getElementById('pipeline');    var host = document.getElementById('pipeline');
     document.getElementById('pipe-date').textContent = "Today is " + today + " — your steps stay with the lesson until you close it.";
-    function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
-    function wlogTick(i,val){ // the day-by-day history gets the tick the moment it happens
-      try{var wl=JSON.parse(localStorage.getItem("ccaf-week-log")||"{}");
-      wl[today]=(Array.isArray(wl[today])&&wl[today].length===5)?wl[today]:[false,false,false,false,false];
-      wl[today][i]=val;localStorage.setItem("ccaf-week-log",JSON.stringify(wl));}catch(e){}}
-    // always re-read the saved state before changing it — ticks made on Today/Weekly/an exercise must never be lost
-    function fresh(){ var s={}; try{s=JSON.parse(localStorage.getItem(KEY)||"{}");}catch(e){}
-      return adoptPipe(s); }
+    function fresh(){ return readSteps(); }
     var CBS=[], NAMES=[];
     function bar(){
       var done = state.checks.filter(Boolean).length;
@@ -382,7 +361,8 @@
       panel.appendChild(btn);
       CBS[i]=cb; NAMES[i]=name;
       cb.addEventListener('change', function(){
-        state=fresh(); state.checks[i]=cb.checked; save(); wlogTick(i,cb.checked);
+        if(window.CCAF)CCAF.setStep(curLesson(),i,cb.checked); // saves per-lesson + habit log + mirror
+        state=fresh();
         name.style.textDecoration=cb.checked?'line-through':'none';
         name.style.color=cb.checked?'#5C6B7A':'';
         bar();
@@ -404,7 +384,7 @@
     });
     // live cross-tab sync: a tick saved on the Lesson page / Weekly Pipeline / an exercise shows up here instantly
     window.addEventListener('storage', function(e){
-      if(e.key!==KEY)return;
+      if(e.key!=='ccaf-steps')return;
       state=fresh();
       for(var i=0;i<CBS.length;i++){
         CBS[i].checked=!!state.checks[i];

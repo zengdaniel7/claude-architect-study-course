@@ -86,6 +86,81 @@
   }catch(e){}
 })();
 
+(function(){ // ---- per-lesson steps: ONE source of truth + a NOW-lesson mirror (council ruling 2026-07-08) ----
+  // ccaf-steps   = {unitId:{checks:[5 bools],date}} — the only real step store.
+  // ccaf-pipeline = a MIRROR of the current (first-not-done) lesson, kept so
+  //   older tabs/pages keep working. Never a source of truth again.
+  // ccaf-week-sources[date][step] = {unitId:true,…} — which lesson(s) earned
+  //   today's habit tick, so un-ticking one lesson can't erase another's credit.
+  function J(k,f){try{var v=JSON.parse(localStorage.getItem(k)||"null");return v==null?f:v;}catch(e){return f;}}
+  function S(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+  function tod(){var n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");}
+  function blank(){return [false,false,false,false,false];}
+  var ORDER=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
+  var TITLES={o1:"The Agent Loop",a1:"Core vocabulary",a2:"Model physics & economics",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator–Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};
+  function cur(){var d=(J("ccaf-curriculum",{})||{}).done||{};for(var i=0;i<ORDER.length;i++){if(!d[ORDER[i]])return ORDER[i];}return "end";}
+  function getSteps(u){var st=J("ccaf-steps",{})||{};var r=st[u];
+    return (r&&Array.isArray(r.checks)&&r.checks.length===5)?r.checks.slice():blank();}
+  function syncPipeline(){var c=cur();
+    try{var nw=JSON.stringify({date:tod(),unit:c,checks:getSteps(c)});
+      if(localStorage.getItem("ccaf-pipeline")!==nw)localStorage.setItem("ccaf-pipeline",nw);}catch(e){}}
+  function setStep(u,i,val){
+    var st=J("ccaf-steps",{})||{};
+    var r=(st[u]&&Array.isArray(st[u].checks)&&st[u].checks.length===5)?st[u]:{checks:blank()};
+    r.checks[i]=!!val; r.date=tod(); st[u]=r; S("ccaf-steps",st);
+    var t=tod(), src=J("ccaf-week-sources",{})||{};
+    src[t]=src[t]||{}; src[t][i]=src[t][i]||{};
+    if(val)src[t][i][u]=true; else delete src[t][i][u];
+    S("ccaf-week-sources",src);
+    var wl=J("ccaf-week-log",{})||{};
+    wl[t]=(Array.isArray(wl[t])&&wl[t].length===5)?wl[t]:blank();
+    wl[t][i]=Object.keys(src[t][i]).length>0;
+    S("ccaf-week-log",wl);
+    syncPipeline();
+  }
+  function stepsFor(u){
+    if((J("ccaf-everdone",{})||{})[u])return {mine:true,n:5,all:true};
+    var st=J("ccaf-steps",{})||{};var r=st[u];
+    if(r&&Array.isArray(r.checks)&&r.checks.length===5){var n=r.checks.filter(Boolean).length;
+      return {mine:n>0,n:n,all:n===5};}
+    return {mine:false,n:0,all:false};
+  }
+  // one-time migration: OR-merge old pipeline + stash into ccaf-steps (true wins, backup first)
+  try{
+    if(!localStorage.getItem("ccaf-steps-v")){
+      var oldP=J("ccaf-pipeline",null), oldM=J("ccaf-pipeline-stash",null);
+      S("ccaf-steps-backup-1",{pipeline:oldP,stash:oldM,steps:J("ccaf-steps",null)});
+      var st0=J("ccaf-steps",{})||{};
+      var orIn=function(u,checks){ if(!u||!Array.isArray(checks)||checks.length!==5)return;
+        var r=(st0[u]&&Array.isArray(st0[u].checks)&&st0[u].checks.length===5)?st0[u]:{checks:blank()};
+        for(var i=0;i<5;i++)r.checks[i]=r.checks[i]||!!checks[i];
+        r.date=r.date||tod(); st0[u]=r; };
+      if(oldP&&Array.isArray(oldP.checks))orIn(oldP.unit||cur(),oldP.checks);
+      var m=oldM;
+      if(m&&m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;} // old single-slot shape
+      if(m&&typeof m==="object"){for(var k in m)orIn(k,m[k]);}
+      S("ccaf-steps",st0);
+      // today's habit row predates source tracking — credit it to the lesson it belonged to
+      var t0=tod(), wl0=J("ccaf-week-log",{})||{}, src0=J("ccaf-week-sources",{})||{};
+      if(Array.isArray(wl0[t0])&&!src0[t0]){src0[t0]={};var su=(oldP&&oldP.unit)||cur();
+        for(var i0=0;i0<5;i0++){src0[t0][i0]={};if(wl0[t0][i0])src0[t0][i0][su]=true;}
+        S("ccaf-week-sources",src0);}
+      localStorage.setItem("ccaf-steps-v","1");
+    }
+  }catch(e){}
+  // absorb a tick an OLD tab may have written straight into the mirror, then re-mirror
+  try{var pAb=J("ccaf-pipeline",null),cAb=cur();
+    if(pAb&&pAb.unit===cAb&&Array.isArray(pAb.checks)&&pAb.checks.length===5){
+      var stA=J("ccaf-steps",{})||{};
+      var rA=(stA[cAb]&&Array.isArray(stA[cAb].checks)&&stA[cAb].checks.length===5)?stA[cAb]:{checks:blank()};
+      var chA=false;
+      for(var iA=0;iA<5;iA++){if(pAb.checks[iA]&&!rA.checks[iA]){rA.checks[iA]=true;chA=true;}}
+      if(chA){rA.date=tod();stA[cAb]=rA;S("ccaf-steps",stA);}
+    }}catch(e){}
+  syncPipeline();
+  window.CCAF={ORDER:ORDER,TITLES:TITLES,cur:cur,today:tod,getSteps:getSteps,setStep:setStep,stepsFor:stepsFor,syncPipeline:syncPipeline};
+})();
+
 (function(){
   var PRIMARY=[
     {href:"dashboard.html",   label:"🏠 Home",     cls:"home", m:["dashboard.html",""]},

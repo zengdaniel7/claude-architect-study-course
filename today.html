@@ -87,6 +87,8 @@
   <!-- THIS LESSON'S 5 STEPS -->
   <h2>📋 This lesson's 5 steps</h2>
   <div class="card">
+    <p id="steptitle" style="margin:0 0 6px;font-size:1.05rem"></p>
+    <div id="aheadbanner" style="display:none;border:1.5px solid;border-radius:12px;padding:10px 14px;margin:0 0 10px;font-size:.92rem;line-height:1.7"></div>
     <p class="hint" id="pipeprog">0 / 5 done</p>
     <div class="pbar" style="height:14px;margin-bottom:10px"><span id="pipebar"></span></div>
     <div id="steps"></div>
@@ -113,7 +115,7 @@
     <a href="pretest.html">🧪 Re-take the pre-test</a>
   </div>
 
-  <footer>This page follows your current lesson (curriculum + its 5 steps) on this device. · 2026-07-07</footer>
+  <footer>Follows your current lesson by default — press ◀ ▶ to work ahead on any lesson's 5 steps (they save per lesson; only your ⭐ NOW lesson closes). · 2026-07-08</footer>
 </div>
 
 <div id="toast">Copied — paste it to your tutor 👍</div>
@@ -225,23 +227,18 @@ function renderLesson(){
     qE.href=window.withUnit(u.quiz,u.id);
     qE.textContent=(u.quiz.indexOf("projects.html")===0)?"🔨 Its project":"🧪 Its quiz";
     aE.setAttribute("data-q",u.ask);
-    if(!isCur&&WATCH[u.id]){
-      var wn=WATCH[u.id].length;
-      wE.innerHTML=WATCH[u.id].map(function(v,vi){ // one row per video here too
-        return '<div><a class="watchlink" href="'+v[0]+'"'+(/^https?:/.test(v[0])?' target="_blank" rel="noopener"':'')+'>▶ '+(wn>1?(vi+1)+' · ':'')+v[1]+'</a></div>';
-      }).join("");
-    }else{wE.innerHTML="";}
+    wE.innerHTML=""; // the steps panel below now shows THIS lesson’s videos
     hE.innerHTML=isCur
       ? 'How it closes: finish the <b>5 steps below</b> + take <b>its quiz</b> (your score gets saved) — then the green card lets you close it. No accidental skips.'
       : (isDone
         ? 'You finished this one ✓ — rewatch it, retake its quiz, or un-mark it on the <a href="timeline.html">timeline</a>.'
-        : 'Just peeking ahead 👀 — the 5 steps below stay with your <b>current</b> lesson.');
+        : 'Working ahead is safe 👀 — the 5 steps below belong to THIS lesson and save as you tick. Only your ⭐ NOW lesson can close, so nothing closes by accident.');
     bk.style.display=isCur?"none":"block";
   }
 }
-document.getElementById("lprev").addEventListener("click",function(){ vi=(vi===-1)?TOTAL-1:Math.max(0,vi-1); renderLesson(); });
-document.getElementById("lnext").addEventListener("click",function(){ if(curIdx===-1){vi=(vi>=0&&vi<TOTAL-1)?vi+1:-1;}else{vi=Math.min(TOTAL-1,vi+1);} renderLesson(); });
-document.querySelector("#lback a").addEventListener("click",function(ev){ev.preventDefault();vi=curIdx;renderLesson();});
+document.getElementById("lprev").addEventListener("click",function(){ vi=(vi===-1)?TOTAL-1:Math.max(0,vi-1); renderLesson(); buildSteps(); });
+document.getElementById("lnext").addEventListener("click",function(){ if(curIdx===-1){vi=(vi>=0&&vi<TOTAL-1)?vi+1:-1;}else{vi=Math.min(TOTAL-1,vi+1);} renderLesson(); buildSteps(); });
+document.querySelector("#lback a").addEventListener("click",function(ev){ev.preventDefault();vi=curIdx;renderLesson();buildSteps();});
 renderLesson();
 document.getElementById("encourage").textContent = pct===0
   ? "Fresh start. Do just the next unit today — that's a win."
@@ -317,118 +314,126 @@ var PIPE=[
  {label:"🃏 3 flashcards + 1 mistake card", d:"3 Q→A cards + 1 card for something you got wrong.",
   ask:"Turn my current lesson into 3 short flashcards (Q then A) plus 1 mistake card."}
 ];
-var PKEY="ccaf-pipeline";
 var _n=new Date(),today=_n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC
 var CURID=next?next.id:"end";
-// The 5 steps belong to the CURRENT LESSON, not the calendar day: they carry
-// over past midnight and reset only when you move on to a new lesson.
-// If the lesson changes while steps are half-done (e.g. you un-marked an earlier
-// lesson to review it), the old ticks are STASHED, and restored when that lesson
-// becomes current again — never silently destroyed.
-function stashPipe(p){try{if(p.checks.some(Boolean)){var m=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
- if(m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;} // old single-slot shape
- m[p.unit]=p.checks;localStorage.setItem("ccaf-pipeline-stash",JSON.stringify(m));}}catch(e){}}
-function unstashPipe(f){try{var m=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
- if(m.unit&&m.checks){var m2={};m2[m.unit]=m.checks;m=m2;}
- if(Array.isArray(m[f.unit])&&m[f.unit].length===f.checks.length){f.checks=m[f.unit];delete m[f.unit];localStorage.setItem("ccaf-pipeline-stash",JSON.stringify(m));}}catch(e){}
- return f;}
-function adoptPipe(p){
- if(!p||!Array.isArray(p.checks)||p.checks.length!==PIPE.length)return unstashPipe({date:today,unit:CURID,checks:PIPE.map(function(){return false;})});
- if(p.unit===undefined){p.unit=CURID;p.date=today;return p;} // older save without a lesson tag — keep the ticks
- if(p.unit!==CURID){stashPipe(p);return unstashPipe({date:today,unit:CURID,checks:PIPE.map(function(){return false;})});} // new lesson = fresh steps (old ones stashed)
- p.date=today;return p;}
-var pst={};
-try{pst=JSON.parse(localStorage.getItem(PKEY)||"{}");}catch(e){}
-pst=adoptPipe(pst);
 document.getElementById("datesub").textContent="Today is "+today+" · this page follows your current lesson — not the calendar.";
-function psave(){try{localStorage.setItem(PKEY,JSON.stringify(pst));}catch(e){}}
-psave();
-function wlogTick(i,val){ // the day-by-day history gets the tick the moment it happens
- try{var wl=JSON.parse(localStorage.getItem("ccaf-week-log")||"{}");
- wl[today]=(Array.isArray(wl[today])&&wl[today].length===5)?wl[today]:[false,false,false,false,false];
- wl[today][i]=val;localStorage.setItem("ccaf-week-log",JSON.stringify(wl));}catch(e){}}
-// always re-read the saved state before changing it — ticks made on Home/Weekly/an exercise must never be lost
-function freshPipe(){var p={};try{p=JSON.parse(localStorage.getItem(PKEY)||"{}");}catch(e){}return adoptPipe(p);}
+// Every lesson keeps its OWN 5 steps (saved in ccaf-steps via the CCAF helper in nav.js).
+// The pager flips the WHOLE panel: card, videos, checkboxes and the close card all
+// belong to the lesson you're LOOKING AT. Ticks save no matter which lesson shows —
+// but only your ⭐ NOW lesson can close (council rule: no out-of-order closes).
+function viewedU(){return (vi>=0&&PATH[vi])?PATH[vi]:null;}
+function viewedId(){var u=viewedU();return u?u.id:"end";}
+function stepChecks(u){return window.CCAF?CCAF.getSteps(u):[false,false,false,false,false];}
 function pbar(){
-  var n=pst.checks.filter(Boolean).length;
+  var vu=viewedU(), uid=viewedId();
+  var checks=stepChecks(uid);
+  var n=checks.filter(Boolean).length;
   document.getElementById("pipeprog").textContent="This lesson: "+n+" / "+PIPE.length+" done"+(n===PIPE.length?"  🎉":"");
   document.getElementById("pipebar").style.width=(n/PIPE.length*100)+"%";
-  // finished early? show the smooth way forward
   var de=document.getElementById("doneearly");
-  if(de){
-    if(n===PIPE.length){
-      var idx=next?PATH.indexOf(next):-1, up=null;
-      for(var uk=idx+1;uk>=0&&uk<PATH.length;uk++){ if(!done[PATH[uk].id]){ up=PATH[uk]; break; } } // next lesson = the next NOT-done one
-      var advToday=false; try{var av=JSON.parse(localStorage.getItem("ccaf-advanced")||"{}");advToday=!!(av&&av.date===today);}catch(e){}
-      // THE GATE: a lesson's first close needs its 5 steps AND its quiz taken (score saved). Projects: steps only.
-      var qrec=null; try{var qd=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}");qrec=next?(qd[next.id]||null):null;}catch(e){}
-      var isProj=!!(next&&next.quiz.indexOf("projects.html")===0);
-      var quizOK=isProj||!!qrec;
-      var qtxt=qrec?(qrec.score!=null?' · 🧪 quiz saved: <b>'+qrec.score+' / '+qrec.total+'</b>'+(qrec.guessed?' ('+qrec.guessed+' guessed)':'')+' ✓':' · 🧪 quiz saved ✓'):'';
-      de.innerHTML="<b>🎉 All 5 steps done!</b>"+
-        (next?(quizOK
-          ?'<p class="hint" style="margin:.4em 0 .5em">Steps ✓'+qtxt+' — "'+next.t+'" is ready to close.</p>'
-          :'<p class="hint" style="margin:.4em 0 .5em">One thing left for "'+next.t+'": <b>take its quiz</b>. Your score gets saved, and only then can the lesson close — nothing closes by accident.</p>'):"")+
-        '<div class="btnrow">'+
-        (next?(isProj
-          ?'<a class="b quiz" href="'+next.quiz+'">🔨 Open your capstone project →</a>'
-          :'<a class="b quiz" href="'+window.withUnit(next.quiz,next.id)+'">'+(quizOK?'🧪 Retake its quiz':'🧪 Take the quiz → then it can close')+'</a>'):"")+
-        (next&&quizOK&&!advToday?'<button type="button" class="b go" id="nextUnitBtn" style="border:0;cursor:pointer;font:inherit">⏭️ Close it & start '+(up?('the next lesson: '+up.t):'— that was the LAST lesson! 🏁')+' →</button>':"")+
-        '</div>'+
-        (next&&quizOK&&advToday?'<p class="hint" style="margin:.4em 0 0">🎉 You already closed a lesson today — mark this one done from its <a href="'+(isProj?next.quiz:window.withUnit(next.quiz,next.id))+'">'+(isProj?'project page':'quiz results')+'</a> instead.</p>':"")+
-        '<p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day; the <a href="timeline.html">timeline</a> keeps your place'+(up?', or just <a href="curriculum.html#u-'+up.id+'">👀 peek at '+up.t+'</a>':'')+'.</p>';
-      var nb=document.getElementById("nextUnitBtn");
-      if(nb){nb.addEventListener("click",function(){
-        nb.disabled=true; // double-clicks do nothing
-        // close the current unit (fresh read-modify-write)
-        var s={done:{},opened:{}};
-        try{var j=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(j&&typeof j==="object"){s=j;s.done=s.done||{};s.opened=s.opened||{};}}catch(e){}
-        s.done[next.id]=true;
-        try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s));}catch(e){}
-        try{var ev0=JSON.parse(localStorage.getItem("ccaf-everdone")||"{}");ev0[next.id]=true;localStorage.setItem("ccaf-everdone",JSON.stringify(ev0));}catch(e){}
-        // (no history write needed — every tick was recorded in the weekly log the moment it was made)
-        // the NEW lesson starts with FRESH steps; only one instant-advance per day (stops accidental chain-clicks)
-        pst={date:today,unit:(up?up.id:"end"),checks:PIPE.map(function(){return false;})}; psave();
-        try{localStorage.setItem("ccaf-advanced",JSON.stringify({date:today}));}catch(e){}
-        // real page switch: land at the TOP of Today with the next unit teed up
-        location.href="today.html?started="+encodeURIComponent(up?up.id:"end");
-      });}
-      de.style.display="block";
-    } else { de.style.display="none"; }
+  if(!de)return;
+  if(n!==PIPE.length||!vu||done[vu.id]){de.style.display="none";de.innerHTML="";return;}
+  // THE GATE: a lesson's first close needs its 5 steps AND its quiz taken (score saved). Projects: steps only.
+  var qrec=null;try{var qd=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}");qrec=qd[vu.id]||null;}catch(e){}
+  var isProj=(vu.quiz.indexOf("projects.html")===0);
+  var quizOK=isProj||!!qrec;
+  var qtxt=qrec?(qrec.score!=null?' · 🧪 quiz saved: <b>'+qrec.score+' / '+qrec.total+'</b>'+(qrec.guessed?' ('+qrec.guessed+' guessed)':'')+' ✓':' · 🧪 quiz saved ✓'):'';
+  if(vu.id===CURID){ // ⭐ the NOW lesson — the only one that can first-close
+    var up=null;
+    for(var uk=curIdx+1;uk>=0&&uk<PATH.length;uk++){ if(!done[PATH[uk].id]){ up=PATH[uk]; break; } } // next lesson = the next NOT-done one
+    var advToday=false; try{var av=JSON.parse(localStorage.getItem("ccaf-advanced")||"{}");advToday=!!(av&&av.date===today);}catch(e){}
+    de.innerHTML="<b>🎉 All 5 steps done!</b>"+
+      (quizOK
+        ?'<p class="hint" style="margin:.4em 0 .5em">Steps ✓'+qtxt+' — "'+vu.t+'" is ready to close.</p>'
+        :'<p class="hint" style="margin:.4em 0 .5em">One thing left for "'+vu.t+'": <b>take its quiz</b>. Your score gets saved, and only then can the lesson close — nothing closes by accident.</p>')+
+      '<div class="btnrow">'+
+      (isProj
+        ?'<a class="b quiz" href="'+vu.quiz+'">🔨 Open your capstone project →</a>'
+        :'<a class="b quiz" href="'+window.withUnit(vu.quiz,vu.id)+'">'+(quizOK?'🧪 Retake its quiz':'🧪 Take the quiz → then it can close')+'</a>')+
+      (quizOK&&!advToday?'<button type="button" class="b go" id="nextUnitBtn" style="border:0;cursor:pointer;font:inherit">⏭️ Close it & start '+(up?('the next lesson: '+up.t):'— that was the LAST lesson! 🏁')+' →</button>':"")+
+      '</div>'+
+      (quizOK&&advToday?'<p class="hint" style="margin:.4em 0 0">🎉 You already closed a lesson today — mark this one done from its <a href="'+(isProj?vu.quiz:window.withUnit(vu.quiz,vu.id))+'">'+(isProj?'project page':'quiz results')+'</a> instead.</p>':"")+
+      '<p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day; the <a href="timeline.html">timeline</a> keeps your place'+(up?', or press <b>Next ▶</b> up top to 🔭 work ahead on '+up.t:'')+'.</p>';
+    var nb=document.getElementById("nextUnitBtn");
+    if(nb){nb.addEventListener("click",function(){
+      nb.disabled=true; // double-clicks do nothing
+      var s={done:{},opened:{}};
+      try{var j=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(j&&typeof j==="object"){s=j;s.done=s.done||{};s.opened=s.opened||{};}}catch(e){}
+      s.done[vu.id]=true;
+      try{localStorage.setItem("ccaf-curriculum",JSON.stringify(s));}catch(e){}
+      try{var ev0=JSON.parse(localStorage.getItem("ccaf-everdone")||"{}");ev0[vu.id]=true;localStorage.setItem("ccaf-everdone",JSON.stringify(ev0));}catch(e){}
+      try{localStorage.setItem("ccaf-advanced",JSON.stringify({date:today}));}catch(e){} // one instant-advance per day
+      // the mirror follows the NEW current lesson; its saved steps come along (work-ahead ticks survive)
+      if(window.CCAF)CCAF.syncPipeline();
+      location.href="today.html?started="+encodeURIComponent(up?up.id:"end");
+    });}
+  } else { // 🔭 working ahead — everything saves; closing waits for the NOW lesson (council rule)
+    de.innerHTML='<b>💾 All 5 steps done — saved!</b>'+
+      '<p class="hint" style="margin:.4em 0 .5em">'+(quizOK
+        ?'Steps ✓'+qtxt+' — "'+vu.t+'" is <b>ready</b>. It unlocks the moment your ⭐ NOW lesson ("'+(next?next.t:"—")+'") closes — nothing here gets lost.'
+        :'Nice work-ahead. One thing left for "'+vu.t+'": <b>take its quiz</b> — your score saves now, and the lesson is ready the moment it becomes your ⭐ NOW lesson.')+'</p>'+
+      '<div class="btnrow">'+
+      (isProj
+        ?'<a class="b quiz" href="'+vu.quiz+'">🔨 Open the project →</a>'
+        :'<a class="b quiz" href="'+window.withUnit(vu.quiz,vu.id)+'">'+(quizOK?'🧪 Retake its quiz':'🧪 Take its quiz now')+'</a>')+
+      '<button type="button" class="b go" id="goNowBtn" style="border:0;cursor:pointer;font:inherit">⭐ Back to your NOW lesson →</button>'+
+      '</div>';
+    var gb=document.getElementById("goNowBtn");
+    if(gb)gb.addEventListener("click",function(){vi=curIdx;renderLesson();buildSteps();window.scrollTo({top:0,behavior:"smooth"});});
   }
+  de.style.display="block";
 }
 var sh=document.getElementById("steps");
-PIPE.forEach(function(it,i){
-  var w=document.createElement("div");w.className="step";
-  var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!pst.checks[i];
-  var body=document.createElement("div");
-  body.innerHTML='<div class="lab">'+it.label+'</div><div class="d">'+it.d+'</div>';
-  if(i===0){
-    WL.forEach(function(v,vi){ // each video on its OWN row — never crammed together
-      var row=document.createElement("div");
-      var wl=document.createElement("a");wl.className="watchlink";wl.href=v[0];
-      if(/^https?:/.test(v[0])){wl.target="_blank";wl.rel="noopener";}
-      wl.textContent="▶ "+(WL.length>1?(vi+1)+" · ":"")+v[1];
-      row.appendChild(wl);body.appendChild(row);
-    });
-    if(WL.length>1){var wn=document.createElement("div");wn.className="d";wn.textContent="👆 "+WL.length+" links for this lesson — best watched in order.";body.appendChild(wn);}
+function buildSteps(){ // rebuild the 5 rows for the lesson the pager is showing
+  var vu=viewedU(), uid=viewedId();
+  var checks=stepChecks(uid);
+  var stE=document.getElementById("steptitle");
+  if(stE)stE.innerHTML=vu?('Steps for: <b>'+vu.t+'</b>'+(vu.id===CURID?'  <span style="color:#B58900">⭐ your NOW lesson</span>':'')):'Steps';
+  var ab=document.getElementById("aheadbanner");
+  if(ab){
+    if(vu&&done[vu.id]){ab.style.display="block";ab.style.borderColor="#A9D9BC";ab.style.background="#E9F6EF";
+      ab.innerHTML='✅ <b>This lesson is closed.</b> Its saved steps are below — review freely; ticking here never closes or re-opens anything.';}
+    else if(vu&&vu.id!==CURID){ab.style.display="block";ab.style.borderColor="#E0A106";ab.style.background="#FFF8E7";
+      ab.innerHTML='🔭 <b>You&#39;re working ahead.</b> These are the steps for <b>'+vu.t+'</b> — your ⭐ NOW lesson is <b>'+(next?next.t:"—")+'</b>. Every tick here saves. <a href="#" id="abJump" style="font-weight:800">⭐ Back to your NOW lesson →</a>';
+      var j=document.getElementById("abJump");
+      if(j)j.addEventListener("click",function(ev){ev.preventDefault();vi=curIdx;renderLesson();buildSteps();});}
+    else{ab.style.display="none";ab.innerHTML="";}
   }
-  if(i===2 && next && BUILDX[next.id]){
-    var bl=document.createElement("a");bl.className="watchlink";bl.href=BUILDX[next.id][0];
-    bl.textContent="🏋️ "+BUILDX[next.id][1];body.appendChild(bl);
-  }
-  var ab=document.createElement("button");ab.className="mini";ab.textContent="💬 Ask my tutor";ab.setAttribute("data-q",it.ask);
-  body.appendChild(ab);
-  cb.addEventListener("change",function(){pst=freshPipe();pst.checks[i]=cb.checked;psave();wlogTick(i,cb.checked);pbar();});
-  w.appendChild(cb);w.appendChild(body);sh.appendChild(w);
-});
-pbar();
+  var wl=(uid==="end")?[["quizzes.html","Take a timed quiz"]]:(WATCH[uid]||[["curriculum.html#u-"+uid,"Open this lesson"]]);
+  sh.innerHTML="";
+  PIPE.forEach(function(it,i){
+    var w=document.createElement("div");w.className="step";
+    var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!checks[i];
+    var body=document.createElement("div");
+    body.innerHTML='<div class="lab">'+it.label+'</div><div class="d">'+it.d+'</div>';
+    if(i===0){
+      wl.forEach(function(v,wi){ // each video on its OWN row — never crammed together
+        var row=document.createElement("div");
+        var a=document.createElement("a");a.className="watchlink";a.href=v[0];
+        if(/^https?:/.test(v[0])){a.target="_blank";a.rel="noopener";}
+        a.textContent="▶ "+(wl.length>1?(wi+1)+" · ":"")+v[1];
+        row.appendChild(a);body.appendChild(row);
+      });
+      if(wl.length>1){var wn=document.createElement("div");wn.className="d";wn.textContent="👆 "+wl.length+" links for this lesson — best watched in order.";body.appendChild(wn);}
+    }
+    if(i===2 && BUILDX[uid]){
+      var bl=document.createElement("a");bl.className="watchlink";bl.href=BUILDX[uid][0];
+      bl.textContent="🏋️ "+BUILDX[uid][1];body.appendChild(bl);
+    }
+    var abtn=document.createElement("button");abtn.className="mini";abtn.textContent="💬 Ask my tutor";abtn.setAttribute("data-q",it.ask);
+    body.appendChild(abtn);
+    cb.addEventListener("change",function(){ if(window.CCAF)CCAF.setStep(uid,i,cb.checked); pbar(); });
+    w.appendChild(cb);w.appendChild(body);sh.appendChild(w);
+  });
+  pbar();
+}
+buildSteps();
 // live cross-tab sync: a tick saved on Home / Weekly Pipeline / an exercise shows up here instantly
 window.addEventListener("storage",function(e){
-  if(e.key!==PKEY)return;
-  pst=freshPipe();
+  if(e.key!=="ccaf-steps")return;
+  var checks=stepChecks(viewedId());
   var cbs=document.querySelectorAll("#steps input[type=checkbox]");
-  for(var i=0;i<cbs.length;i++){cbs[i].checked=!!pst.checks[i];}
+  for(var i=0;i<cbs.length;i++){cbs[i].checked=!!checks[i];}
   pbar();
 });
 

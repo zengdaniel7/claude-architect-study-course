@@ -376,13 +376,11 @@ document.addEventListener("click",function(e){
       var ever=false;try{ever=!!(JSON.parse(localStorage.getItem("ccaf-everdone")||"{}")[id]);}catch(e){}
       var qrec=null;try{qrec=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}")[id]||null;}catch(e){}
       var sn=0,sok=ever;
-      if(!sok){try{var gp=JSON.parse(localStorage.getItem("ccaf-pipeline")||"{}");
-        if(gp&&gp.unit===id&&Array.isArray(gp.checks)){sn=gp.checks.filter(Boolean).length;sok=(sn===5);}}catch(e){}}
-      if(!sok){try{var gm=JSON.parse(localStorage.getItem("ccaf-pipeline-stash")||"{}")||{};
-        if(gm.unit&&gm.checks){var g2={};g2[gm.unit]=gm.checks;gm=g2;}
-        if(Array.isArray(gm[id])){sn=Math.max(sn,gm[id].filter(Boolean).length);sok=(gm[id].length===5&&gm[id].every(function(v){return !!v;}));}}catch(e){}}
+      if(!sok&&window.CCAF){var sg=CCAF.stepsFor(id);sn=sg.n;sok=sg.all;} // per-lesson steps (ccaf-steps)
       var qok=isProj||ever||!!qrec;
-      if(!(sok&&qok)){ // inline card, no alert(): short lines he can re-read at his own pace
+      var curU=window.CCAF?CCAF.cur():id;
+      var inOrder=ever||id===curU; // first closes happen in order; re-closing earned work is free
+      if(!(sok&&qok&&inOrder)){ // inline card, no alert(): short lines he can re-read at his own pace
         var gid="gate-"+id, ghost=document.getElementById(gid);
         if(!ghost){ghost=document.createElement("div");ghost.id=gid;
           ghost.style.cssText="margin-top:10px;background:#FFF8E7;border:1.5px solid #E0A106;border-radius:12px;padding:10px 14px;font-size:.92rem;line-height:1.8";
@@ -391,12 +389,14 @@ document.addEventListener("click",function(e){
           (sok?'✅ 5 lesson steps done':'⬜ <b>'+sn+' / 5 steps</b> — finish them on the <a href="today.html">▶️ Lesson page</a> →')+'<br>'+
           (isProj?"✅ no quiz for this one (it's a project)"
                  :(qok?'✅ quiz saved'+(qrec&&qrec.score!=null?': '+qrec.score+' / '+qrec.total:'')
-                      :'⬜ <b>take its quiz</b> — <a href="'+gu.quiz[0]+(gu.quiz[0].indexOf("?")>=0?"&":"?")+'unit='+id+'">start it →</a> (your score gets saved)'));
+                      :'⬜ <b>take its quiz</b> — <a href="'+gu.quiz[0]+(gu.quiz[0].indexOf("?")>=0?"&":"?")+'unit='+id+'">start it →</a> (your score gets saved)'))+
+          (inOrder?'':'<br>🔒 <b>lessons close in order</b> — close your ⭐ NOW lesson first (<a href="today.html">▶️ Lesson page</a>); everything you did here stays saved');
         return;
       }
       var gclear=document.getElementById("gate-"+id);if(gclear)gclear.remove();
     }
     state.done[id]=!state.done[id];save();
+    if(window.CCAF)CCAF.syncPipeline(); // mirror follows the (possibly new) NOW lesson
     if(state.done[id]){try{var ev2=JSON.parse(localStorage.getItem("ccaf-everdone")||"{}");ev2[id]=true;localStorage.setItem("ccaf-everdone",JSON.stringify(ev2));}catch(e){}}
     d.classList.toggle("is-done",state.done[id]);d.textContent=state.done[id]?"✓ Done":"Mark done";
     var dot=document.querySelector('[data-dot="'+id+'"]');if(dot)dot.classList.toggle("done",state.done[id]);

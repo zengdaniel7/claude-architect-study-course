@@ -148,6 +148,7 @@ host.addEventListener("click",function(e){
   var id=t.getAttribute("data-un"); if(!id)return;
   if(!confirm("Un-mark this unit as done? (You can re-mark it any time.)"))return;
   try{var s2=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");s2.done=s2.done||{};delete s2.done[id];localStorage.setItem("ccaf-curriculum",JSON.stringify(s2));}catch(e2){}
+  if(window.CCAF)CCAF.syncPipeline(); // the mirror follows the re-opened lesson
   location.reload();
 });
 })();
