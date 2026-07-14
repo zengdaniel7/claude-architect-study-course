@@ -1,24 +1,24 @@
-/* Atkinson Hyperlegible — dyslexia-friendly font, vendored locally (fonts/) so it works offline */
+/* Atkinson Hyperlegible: dyslexia-friendly and vendored locally for offline study. */
 @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2")}
 @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Bold.woff2") format("woff2")}
 @font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Italic.woff2") format("woff2")}
 @font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:700;font-display:swap;src:url("fonts/AtkinsonHyperlegible-BoldItalic.woff2") format("woff2")}
 
 :root{
-  --bg:#FBF6EC; --card:#FFFDF8; --ink:#26303B; --muted:#5C6B7A; --line:#E6DDCB; --accent:#3A6EA5;
-  --red:#D64545; --green:#2F9E63; --blue:#2D7DD2; --purple:#8A4FC4; --orange:#E8740C; --yellow:#E0A106;
-  --radius:16px;
+  --bg:#F3F7F8; --card:#FFFFFF; --ink:#23313A; --muted:#586873; --line:#CFDADF; --accent:#176C78;
+  --red:#B33A3A; --green:#247A4B; --blue:#2166A5; --purple:#76519C; --orange:#B75A13; --yellow:#B88300;
+  --radius:8px;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--ink);
   font-family:"Atkinson Hyperlegible","Trebuchet MS",Verdana,Tahoma,system-ui,sans-serif;
-  font-size:20px;line-height:1.7;letter-spacing:.2px;padding:0 0 80px}
+  font-size:20px;line-height:1.7;letter-spacing:0;padding:0 0 80px}
 .wrap{max-width:880px;margin:0 auto;padding:0 22px}
-nav.top{position:sticky;top:0;z-index:30;background:rgba(251,246,236,.96);border-bottom:2px solid var(--line);padding:10px 0}
+nav.top{position:sticky;top:0;z-index:30;background:rgba(243,247,248,.96);border-bottom:2px solid var(--line);padding:10px 0}
 nav.top .wrap{display:flex;flex-wrap:wrap;gap:6px}
 nav.top a{display:inline-block;text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;
-  padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#fff}
+  padding:6px 11px;border-radius:6px;border:1px solid var(--line);background:#fff}
 nav.top a:hover{border-color:var(--accent);color:var(--accent)}
 nav.top a.home{background:var(--accent);color:#fff;border-color:var(--accent)}
 nav.top a.here{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -26,6 +26,7 @@ h1{font-size:2rem;margin:24px 0 4px}
 h2{font-size:1.45rem;margin:34px 0 12px;padding-bottom:6px;border-bottom:3px solid var(--line)}
 h3{font-size:1.12rem;margin:20px 0 6px}
 p{margin:.55em 0}
+.prose{max-width:65ch}
 .sub{color:var(--muted);margin-top:0}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 22px;margin:14px 0}
 a{color:var(--accent)}
@@ -36,20 +37,20 @@ ul,ol{padding-left:1.3em} li{margin:6px 0}
 .tag.ok{background:var(--green);color:#fff} .tag.rep{background:var(--yellow);color:#332700}
 table{border-collapse:collapse;width:100%;margin:10px 0;font-size:.95rem}
 th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
-th{background:#F3EBDA}
+th{background:#EAF0F2}
 .callout{border-radius:var(--radius);padding:14px 18px;margin:14px 0;border:1px solid}
 .callout.tip{background:#FFF4D6;border-color:#E8CE7A}
 .callout.ok{background:#E8F5EC;border-color:#A9D9BC}
 .callout.warn{background:#FBE7E5;border-color:#E5A9A4}
 .callout.info{background:#E7F0FB;border-color:#A9C6E5}
 .hint{font-size:.85rem;color:var(--muted)}
-details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:2px 16px;margin:10px 0}
+details{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:2px 16px;margin:10px 0}
 details summary{cursor:pointer;font-weight:700;padding:12px 0;list-style:none}
 details summary::-webkit-details-marker{display:none}
 details summary::before{content:"▸  ";color:var(--accent);font-weight:800}
 details[open] summary::before{content:"▾  "}
 details .body{padding:0 0 14px}
-.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;padding:11px 22px;border-radius:999px}
+.btn{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;padding:11px 22px;border-radius:7px}
 .btn.green{background:var(--green)}
 .num{display:inline-flex;width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;align-items:center;justify-content:center;font-weight:800;margin-right:8px;flex:0 0 auto}
 footer{color:var(--muted);font-size:.85rem;margin-top:40px;text-align:center}
@@ -58,3 +59,8 @@ footer{color:var(--muted);font-size:.85rem;margin-top:40px;text-align:center}
 .check input{width:21px;height:21px;flex:0 0 auto;margin-top:3px;accent-color:#2F9E63}
 .bar{height:16px;border-radius:9px;background:#EFE7D6;overflow:hidden;margin-top:6px}
 .bar>span{display:block;height:100%;border-radius:9px;background:var(--green)}
+.must{border-left:6px solid var(--accent);background:#E8F2F4;padding:14px 18px;margin:14px 0}
+.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+button,input,select,textarea{font:inherit}
+a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,summary:focus-visible{outline:4px solid #F2B544;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

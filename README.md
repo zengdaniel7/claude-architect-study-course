@@ -6,13 +6,16 @@ A complete, self-contained study site for Anthropic's **Claude Certified Archite
 
 ## ✨ What's inside
 
-- **⚛️ The Atomic Curriculum** — 16 units built like a system (Atoms → Molecules → Organisms → Templates → Pages + a Reliability thread), each with a diagram, plain words, chapters, videos, and a quiz
+- **⚛️ The Atomic Curriculum** — 23 prerequisite-aware units, starting with a five-lesson computer-skills Workbench and building through Claude foundations, agentic systems, reliability, and production scenarios
 - **🛤️ Timeline** — the whole course as one visual path with ✓ done / ⭐ you-are-here tracking
 - **▶️ Lesson page** — tells you exactly what to do next: your current lesson, its video, and its 5 steps (they stay with the lesson until you finish it)
-- **🗺️ Visual Learning Map** + **3 engineering articles retold as ~30 diagrams** (Building Effective Agents, Multi-Agent Research System, Writing Tools for Agents — original links included)
+- **🗺️ Prerequisite concept map** + **3 engineering articles retold as ~30 diagrams** (Building Effective Agents, Multi-Agent Research System, Writing Tools for Agents — original links included)
 - **🃏 5 flashcard decks** with two modes: flip-through *and* a Quizlet-style Learn mode that re-asks what you miss
 - **🧪 Pre-test (30 Q) + 6 checkpoint quizzes** that track your score *and how much you guessed*
-- **🏋️ Build exercises** you do right on the page, with an AI-checked grading loop (see below)
+- **🏋️ One fixed build per unit** with worked examples, independent redo, progressive hints, verification steps, and a four-part rubric
+- **🗣️ Typed or spoken teach-back** + a simple spaced-review queue for concept and mistake cards
+- **💬 Grounded tutor bridge** that copies the current lesson, prerequisite, rubric, and recent evidence into a focused tutor prompt
+- **🧰 Applied Engineer path** for programming, APIs, databases, Git, testing, systems, security, architecture, and technical-cofounder judgment
 - **🩹 Repair guide** — the trickiest pre-test questions explained as pictures
 - Progress is saved automatically — every tick, card and typed answer, the instant you make it; no account, no tracking. On the hosted site it lives in your browser (per-browser, per-address — with **Export/Import backup buttons** on the Home page). Run it locally with `serve.py` and it's **also written to a real file, `my-progress.json`**, which auto-restores if the browser's copy is ever cleared.
 
@@ -51,12 +54,14 @@ The course is model-agnostic. Every **"Ask my tutor"** and **"🧠 Check my answ
 
 1. Open **Home** → take the **Pre-Test** to set your baseline (watch your *guess count*, not just the score)
 2. Every day, open **Today** — it tees up one unit and 5 small steps (watch → draw → build → explain → flashcards)
-3. Mark units done on the **Curriculum**; the Timeline, Today, and Home pages all update themselves
-4. Retake quizzes until you pass them **without guessing** — that's the real mastery signal
+3. Complete the unit's independent build and 60-second teach-back
+4. Retake its quiz until you reach at least 80% with **zero guessing**
+5. A unit is mastered only when all four evidence types are present: lesson steps, quiz, independent build, and teach-back
 
 ## 🙏 Credits
 
 - Curriculum structure inspired by [Atomic Design](https://atomicdesign.bradfrost.com/) by Brad Frost
+- Accessibility baseline documented in [DESIGN-STANDARD.md](DESIGN-STANDARD.md)
 - Diagrams retell three Anthropic engineering articles (linked at the top of each article page)
 - Font: [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) (Braille Institute, SIL OFL) — designed for low-vision and dyslexic readers
 - Free prep courses: [Anthropic Academy](https://anthropic.skilljar.com/)

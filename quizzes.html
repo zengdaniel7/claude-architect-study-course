@@ -11,11 +11,12 @@
   .qrow .body{flex:1 1 auto}
   .qrow .ttl{font-weight:700}
   .score{font-weight:800;font-variant-numeric:tabular-nums;min-width:54px;text-align:right}
-  .take{background:var(--green);color:#fff;text-decoration:none;font-weight:700;padding:8px 16px;border-radius:999px;font-size:.85rem;white-space:nowrap}
+  .take{background:var(--green);color:#fff;text-decoration:none;font-weight:700;padding:8px 16px;border-radius:7px;font-size:.85rem;white-space:nowrap}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 <div class="wrap">
   <h1>🎯 Practice</h1>
@@ -42,16 +43,24 @@
 function HKEY(k){return "ccaf-quiz-"+k;}
 function history(k){try{return JSON.parse(localStorage.getItem(HKEY(k))||"[]");}catch(e){return [];}}
 var banks=window.QUIZ_BANKS||{}, order=window.QUIZ_ORDER||Object.keys(banks);
+if(window.CCAF_COURSE&&CCAF_COURSE.banks){
+  function addBank(id,title,phase,ids){var qs=[];ids.forEach(function(u){var b=CCAF_COURSE.banks[u];if(b)qs=qs.concat(b.questions);});banks[id]={title:title,emoji:"CHECK",phase:phase,questions:qs};}
+  addBank("digital-foundations","Digital foundations check","Foundation Workbench",["w1","w2","w3","w4","w5"]);
+  addBank("developer-bridge","Developer bridge check","Developer Bridge",["d1","d2"]);
+  order=["digital-foundations"].concat(order.filter(function(k){return k!=="digital-foundations"&&k!=="developer-bridge";}));
+  order.splice(3,0,"developer-bridge");
+}
 var list=document.getElementById("list"), totalBest=0, totalQ=0, taken=0;
 order.forEach(function(k){
   var b=banks[k]; if(!b)return;
   var h=history(k); var best=h.length?h.reduce(function(a,c){return c.score>a.score?c:a;}):null;
-  if(best){taken++; totalBest+=best.score;} totalQ+=b.questions.length;
+  var qn=10;
+  if(best){taken++; totalBest+=best.score;} totalQ+=qn;
   var row=document.createElement("div");row.className="qrow";
-  var status= best ? (best.score===b.questions.length && best.guessed===0 ? "✅ mastered" : "best "+best.score+"/"+b.questions.length+(best.guessed?(" · "+best.guessed+" guessed"):"")) : "not taken";
+  var status= best ? (best.score===best.total && best.guessed===0 ? "✅ mastered" : "best "+best.score+"/"+best.total+(best.guessed?(" · "+best.guessed+" guessed"):"")) : "not taken";
   row.innerHTML='<div class="body"><div class="ttl">'+b.emoji+' '+b.title+'</div>'+
-    '<div class="hint">'+b.phase+' · '+b.questions.length+' questions · '+status+'</div></div>'+
-    '<div class="score">'+(best?best.score+"/"+b.questions.length:"—")+'</div>'+
+    '<div class="hint">'+b.phase+' · '+qn+' questions · '+status+'</div></div>'+
+    '<div class="score">'+(best?best.score+"/"+best.total:"—")+'</div>'+
     '<a class="take" href="quiz.html?set='+k+'">'+(best?"Retake":"Take")+'</a>';
   list.appendChild(row);
 });

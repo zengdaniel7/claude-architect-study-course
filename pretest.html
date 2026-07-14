@@ -5,27 +5,27 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CCA-F Pre-Test</title>
 <style>
-  /* Atkinson Hyperlegible — dyslexia-friendly font, vendored locally (fonts/) so it works offline */
+  /* Atkinson Hyperlegible: dyslexia-friendly and vendored locally for offline study. */
   @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2")}
   @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Bold.woff2") format("woff2")}
   @font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Italic.woff2") format("woff2")}
   @font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:700;font-display:swap;src:url("fonts/AtkinsonHyperlegible-BoldItalic.woff2") format("woff2")}
   :root{
-    --bg:#FBF6EC; --card:#FFFDF8; --ink:#26303B; --muted:#5C6B7A; --line:#E6DDCB; --accent:#3A6EA5;
-    --green:#2F9E63; --red:#D64545; --radius:16px;
+    --bg:#F3F7F8; --card:#FFFFFF; --ink:#23313A; --muted:#586873; --line:#CFDADF; --accent:#176C78;
+    --green:#247A4B; --red:#B33A3A; --radius:8px;
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
     font-family:"Atkinson Hyperlegible","Trebuchet MS",Verdana,Tahoma,system-ui,sans-serif;
-    font-size:20px;line-height:1.6;padding:0 0 120px}
+    font-size:20px;line-height:1.7;letter-spacing:0;padding:0 0 120px}
   .wrap{max-width:820px;margin:0 auto;padding:0 22px}
   header{padding:30px 0 8px}
   h1{font-size:2rem;margin:0 0 4px}
   .sub{color:var(--muted);margin-top:0}
   a.back{color:var(--accent);text-decoration:none;font-weight:700}
-  nav.top{position:sticky;top:0;z-index:30;background:rgba(251,246,236,.96);border-bottom:2px solid var(--line);padding:10px 0}
+  nav.top{position:sticky;top:0;z-index:30;background:rgba(243,247,248,.96);border-bottom:2px solid var(--line);padding:10px 0}
   nav.top .wrap{display:flex;flex-wrap:wrap;gap:6px}
-  nav.top a{display:inline-block;text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#fff}
+  nav.top a{display:inline-block;text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;padding:6px 11px;border-radius:6px;border:1px solid var(--line);background:#fff}
   nav.top a:hover{border-color:var(--accent);color:var(--accent)}
   nav.top a.home{background:var(--accent);color:#fff;border-color:var(--accent)}
   nav.top a.here{background:var(--ink);color:#fff;border-color:var(--ink)}
@@ -33,7 +33,7 @@
   .sec{font-size:1.25rem;font-weight:800;margin:30px 0 6px;padding-bottom:6px;border-bottom:3px solid var(--line)}
   .q{font-weight:700;margin:0 0 10px}
   .opt{display:flex;align-items:flex-start;gap:12px;padding:9px 12px;margin:7px 0;border:2px solid var(--line);
-       border-radius:12px;cursor:pointer;background:#fff}
+       border-radius:8px;cursor:pointer;background:#fff}
   .opt:hover{border-color:var(--accent)}
   .opt input{margin-top:5px;width:20px;height:20px;flex:0 0 auto;accent-color:var(--accent)}
   .opt .ltr{font-weight:800;color:var(--accent);flex:0 0 auto}
@@ -46,24 +46,27 @@
   .bar{height:16px;border-radius:9px;background:#EFE7D6;overflow:hidden;margin-top:5px}
   .bar > span{display:block;height:100%;border-radius:9px;background:var(--green)}
   button.go{position:fixed;right:22px;bottom:22px;z-index:20;
-    background:var(--green);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:800;
+    background:var(--green);color:#fff;border:0;border-radius:8px;font:inherit;font-weight:800;
     padding:14px 30px;font-size:1.05rem;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.18)}
   @media(max-width:1080px){button.go{padding:10px 18px;font-size:.92rem;right:12px;bottom:12px}}
   @media(max-width:700px){button.go{left:0;right:0;bottom:0;width:100%;border-radius:0;padding:13px 0;font-size:1rem;box-shadow:0 -4px 14px rgba(0,0,0,.18)}}
   .wrap{padding-bottom:110px}
   button.go:hover{filter:brightness(1.07)}
-  .mini{background:var(--accent);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:700;
+  .mini{background:var(--accent);color:#fff;border:0;border-radius:7px;font:inherit;font-weight:700;
         padding:8px 16px;cursor:pointer;margin:6px 8px 0 0;font-size:.85rem}
   #results{display:none}
   .big{font-size:2.4rem;font-weight:800}
-  .band{background:#FFF4D6;border:1px solid #E8CE7A;border-radius:12px;padding:12px 16px;margin:12px 0}
+  .band{background:#FFF4D6;border:1px solid #E8CE7A;border-radius:8px;padding:12px 16px;margin:12px 0}
   #toast{position:fixed;left:50%;bottom:84px;transform:translateX(-50%) translateY(30px);background:var(--ink);
     color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;opacity:0;transition:.25s;pointer-events:none}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:4px solid #F2B544;outline-offset:3px}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 <div class="wrap">
   <header>
@@ -203,6 +206,7 @@ function band(score){
 var lastResult=null;
 function showScore(){
   var r=grade(); lastResult=r;
+  saveMistakeCards(r);
   document.getElementById("score").textContent="Your score: "+r.correct+" / 30";
   document.getElementById("confidence").innerHTML=
     "<b>Confidence score:</b> "+r.confidentCorrect.length+" secure correct · "+
@@ -220,11 +224,23 @@ function showScore(){
   document.getElementById("results").scrollIntoView({behavior:"smooth"});
   maybeUnitDone(r);
 }
+function saveMistakeCards(r){
+  var sectionUnit={A:"a1",B:"m3",C:"m2",D:"o4",E:"o1",F:"rel"};
+  var cards={};try{cards=JSON.parse(localStorage.getItem("ccaf-mistake-cards")||"{}");}catch(e){}
+  Q.forEach(function(item){
+    var picked=saved.answers[item.n],guessed=!!saved.guess[item.n],wrong=Number(picked)!==item.ans;
+    if(!guessed&&!wrong)return;
+    cards["pretest-q"+item.n]={id:"pretest-q"+item.n,unit:sectionUnit[item.sec],front:item.q,
+      back:item.opts[item.ans]+(guessed&&!wrong?" (Correct, but you marked this as a guess.)":""),
+      source:guessed&&!wrong?"pre-test: guessed correct":"pre-test: wrong or unsure"};
+  });
+  try{localStorage.setItem("ccaf-mistake-cards",JSON.stringify(cards));}catch(e){}
+}
 function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
 
 // ---- mark-unit-done (quiz -> timeline/course progress chain) ----
-var UPATH=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
-var UTITLES={o1:"The Agent Loop",a1:"Core vocabulary",a2:"Model physics & economics",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator\u2013Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};
+var UPATH=window.CCAF?CCAF.ORDER.slice():[];
+var UTITLES=window.CCAF?CCAF.TITLES:{};
 function curState(){try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&typeof s==="object"){s.done=s.done||{};s.opened=s.opened||{};return s;}}catch(e){}return {done:{},opened:{}};}
 function targetUnit(){var u=param("unit");if(u&&UTITLES[u])return u;for(var i=0;i<UPATH.length;i++){if(!curState().done[UPATH[i]])return UPATH[i];}return null;}
 function stepsFor(u){
@@ -234,16 +250,20 @@ function stepsFor(u){
 function renderUnitDone(ratio){
   var host=document.getElementById("unitdone"); if(!host) return;
   var u=targetUnit();
-  if(!u){host.innerHTML='<b>\ud83c\udfc1 All 16 units are marked done \u2014 course complete!</b> <a href="timeline.html">See the timeline \u2192</a>';return;}
+  if(!u){host.innerHTML='<b>\ud83c\udfc1 All '+UPATH.length+' units are marked done \u2014 course complete!</b> <a href="timeline.html">See the timeline \u2192</a>';return;}
   if(curState().done[u]){
     host.innerHTML='\u2705 <b>'+UTITLES[u]+'</b> is already marked done. <a href="timeline.html#now">\ud83d\udee4\ufe0f Timeline</a> \u00b7 <a href="today.html">\u25b6\ufe0f Your lesson</a>';
     return;
   }
-  var sg=stepsFor(u);
-  if(!sg.all){ // THE GATE: quiz result is saved; the 5 lesson steps must also be done before the lesson closes
-    host.innerHTML='\u2705 Quiz done for "'+UTITLES[u]+'" \u2014 <b>your score is saved</b>. '+
-      (sg.mine?'\ud83d\udccb <b>'+sg.n+' / 5 steps done</b> \u2014 finish the 5 steps on your <a href="today.html">lesson page</a> (the \u25b6 arrows reach this lesson), then it can close.'
-             :'Finish its <a href="today.html">5 lesson steps</a> \u2014 you can work ahead with the \u25b6 arrows on the lesson page; ticks save per lesson.');
+  var m=window.CCAF?CCAF.mastery(u):null;
+  if(!m||!m.mastered){
+    var ex=(window.CCAF_COURSE&&CCAF_COURSE.map[u])?CCAF_COURSE.map[u].exercise:"";
+    host.innerHTML='<b>Your result is saved.</b> To master "'+UTITLES[u]+'":<br>'+
+      (m&&m.steps.all?'\u2705 5 lesson steps':'\u2b1c <b>'+(m?m.steps.n:0)+' / 5 lesson steps</b> \u2014 <a href="today.html">continue \u2192</a>')+'<br>'+
+      (m&&m.quizOK?'\u2705 80%+ with zero guesses':'\u2b1c <b>80%+ with zero guesses</b> \u2014 review guessed and wrong answers, then retry')+'<br>'+
+      (m&&m.buildOK?'\u2705 independent build':'\u2b1c <b>independent build</b> \u2014 <a href="exercise.html?id='+ex+'">build \u2192</a>')+'<br>'+
+      (m&&m.teachOK?'\u2705 teach-back':'\u2b1c <b>teach it back</b> \u2014 <a href="teachback.html?unit='+u+'">explain \u2192</a>')+'<br>'+
+      '<a href="review.html">Review guessed + wrong cards \u2192</a>';
     return;
   }
   var _ev=false;try{_ev=!!(JSON.parse(localStorage.getItem("ccaf-everdone")||"{}")[u]);}catch(e){}
@@ -254,7 +274,7 @@ function renderUnitDone(ratio){
   }
 
   var warn=(ratio<0.5)?'<p class="hint" style="margin:.4em 0 0">Under half right \u2014 maybe <a href="curriculum.html#u-'+u+'">review the unit</a> once more first. Your call.</p>':"";
-  host.innerHTML='<button type="button" id="udBtn" style="background:var(--green);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:800;padding:12px 22px;font-size:1rem;cursor:pointer">\u2705 Done with \u201c'+UTITLES[u]+'\u201d? Mark the unit complete</button>'+
+  host.innerHTML='<button type="button" id="udBtn" style="background:var(--green);color:#fff;border:0;border-radius:7px;font:inherit;font-weight:800;padding:12px 22px;font-size:1rem;cursor:pointer">\u2705 Done with \u201c'+UTITLES[u]+'\u201d? Mark the unit complete</button>'+
     '<p class="hint" style="margin:.4em 0 0">This moves your \u2b50 on the timeline and updates your course %.</p>'+warn;
   document.getElementById("udBtn").addEventListener("click",function(){
     var s=curState(); s.done[u]=true;
@@ -262,8 +282,8 @@ function renderUnitDone(ratio){
     try{var ev0=JSON.parse(localStorage.getItem("ccaf-everdone")||"{}");ev0[u]=true;localStorage.setItem("ccaf-everdone",JSON.stringify(ev0));}catch(e){}
     if(window.CCAF)CCAF.syncPipeline(); // the mirror moves on to the new NOW lesson
     var n=0; UPATH.forEach(function(id){ if(s.done[id]) n++; });
-    host.innerHTML='<b style="font-size:1.1rem">\ud83c\udf89 \u201c'+UTITLES[u]+'\u201d closed! Course progress: '+n+' / 16 units ('+Math.round(n/16*100)+'%).</b><br>'+
-      '<button type="button" id="goNextBtn" style="background:var(--green);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:800;padding:10px 20px;font-size:.95rem;cursor:pointer;margin:8px 8px 0 0">\u25b6\ufe0f Start your next lesson now \u2192</button>'+
+    host.innerHTML='<b style="font-size:1.1rem">\ud83c\udf89 \u201c'+UTITLES[u]+'\u201d closed! Course progress: '+n+' / '+UPATH.length+' units ('+Math.round(n/UPATH.length*100)+'%).</b><br>'+
+      '<button type="button" id="goNextBtn" style="background:var(--green);color:#fff;border:0;border-radius:7px;font:inherit;font-weight:800;padding:10px 20px;font-size:.95rem;cursor:pointer;margin:8px 8px 0 0">\u25b6\ufe0f Start your next lesson now \u2192</button>'+
       '<a href="timeline.html#now">\ud83d\udee4\ufe0f See your \u2b50 move on the timeline</a>'+
       '<p style="margin:.5em 0 0;font-size:.85rem;color:#5C6B7A">Marked by mistake? <a href="#" id="unmarkBtn">\u21a9\ufe0f un-mark \u201c'+UTITLES[u]+'\u201d</a></p>';
     var g=document.getElementById("goNextBtn");
@@ -287,6 +307,7 @@ document.getElementById("scoreBtn").addEventListener("click",function(){showScor
   try{var pun=param("unit");if(pun&&UTITLES[pun]&&lastResult){var qd0=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}");
     qd0[pun]={score:lastResult.correct,total:30,guessed:lastResult.guessed,set:"pretest",ts:new Date().toLocaleDateString()};
     localStorage.setItem("ccaf-quizdone",JSON.stringify(qd0));
+    renderUnitDone(lastResult.correct/30);
     var bd=document.getElementById("band");if(bd)bd.innerHTML+='<br>🧾 This take counts for: <b>'+UTITLES[pun]+'</b> — saved.';}}catch(e){}
 });
 if(Q.every(function(item){ return saved.answers[item.n]!==undefined; })){

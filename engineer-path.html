@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Applied Engineer path</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:12px}.lane{border:2px solid var(--line);background:#fff;padding:16px}
+  .module{border-left:7px solid var(--accent);background:#fff;padding:16px 18px;margin:12px 0}
+  .module.done{border-color:var(--green);background:#EAF7EF}.module h3{margin:0 0 6px}
+  .module label{display:flex;gap:11px;align-items:flex-start;font-weight:800;margin-top:10px}.module input{width:23px;height:23px;flex:0 0 auto}
+  .links a{display:inline-block;margin:5px 8px 0 0;font-weight:700}.project{border-left:5px solid var(--purple);padding-left:12px;margin-top:10px}
+  @media(max-width:700px){.split{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
+<script src="nav.js"></script>
+<main class="wrap">
+  <header style="padding:28px 0 6px">
+    <h1>Applied Engineer path</h1>
+    <p class="sub">The long-term goal: build enough breadth to create products, follow a CTO-level conversation, and evaluate a technical cofounder without being blind.</p>
+  </header>
+
+  <div class="split">
+    <div class="lane"><b>Until the CCA-F milestone</b><br>16 hours/week exam path<br>4 hours/week applied-engineer lane</div>
+    <div class="lane"><b>After the exam</b><br>12-week applied baseline<br>Then choose deeper CS and AI branches</div>
+  </div>
+  <div class="callout tip"><b>Rule:</b> breadth is useful, but every topic must produce a small artifact. Watch -> draw -> build -> explain -> flashcard still applies.</div>
+
+  <h2>Eight modules</h2>
+  <div id="modules"></div>
+
+  <h2>How the new libraries fit</h2>
+  <div class="card">
+    <p><b>OSSU Computer Science:</b> the long-term academic backbone and prerequisite map. It is roughly a two-year, 20-hours/week curriculum, so it is a depth library, not an exam prerequisite.</p>
+    <p><b>CS Video Courses:</b> alternate university lectures when a concept needs a second visual explanation.</p>
+    <p><b>30 Seconds of Code:</b> quick concept-plus-example refreshers while coding, not a complete curriculum.</p>
+    <p><b>Project Based Learning:</b> project ideas once the required concept and tool have been taught.</p>
+    <p><b>AI Engineering From Scratch:</b> the deeper AI lane. Its lesson pattern of narrative + runnable code + shipped output is adopted here; phases 11, 13, 14, 17, and 19 become useful after programming foundations.</p>
+  </div>
+
+  <h2>Technical cofounder literacy</h2>
+  <div class="card">
+    <p>By the end, you should be able to ask for evidence about:</p>
+    <ul>
+      <li><b>Architecture:</b> why this design, what simpler option was rejected, and which constraint drove it?</li>
+      <li><b>Delivery:</b> show a shipped system, tests, review history, incidents, and what changed afterward.</li>
+      <li><b>Security:</b> where secrets live, who has access, backups, dependency risks, and the threat model.</li>
+      <li><b>Reliability:</b> service objectives, monitoring, failure modes, rollback, and on-call ownership.</li>
+      <li><b>Economics:</b> current infrastructure cost, cost per user/job, scale risks, and build-versus-buy decisions.</li>
+      <li><b>Leadership:</b> how technical debt is prioritized, how estimates are communicated, and how engineers are hired and reviewed.</li>
+    </ul>
+  </div>
+  <footer>Broad path sources are linked, not copied. CCA-F exam claims remain separately labeled official or reported.</footer>
+</main>
+<script>
+(function(){
+  var modules=[
+    {t:"1. Programming and problem solving",learn:"Variables, conditionals, loops, functions, data structures, debugging, and Big-O intuition.",project:"Build a command-line study-card manager that reads and writes JSON.",links:[["https://cs50.harvard.edu/python/","CS50P | Python"],["https://github.com/ossu/computer-science#intro-cs","OSSU | Intro CS"],["https://github.com/Developer-Y/cs-video-courses#introduction-to-computer-science","CS Video Courses | Intro CS"]]},
+    {t:"2. Web, networks, and APIs",learn:"HTTP, DNS, client/server, REST, authentication, status codes, latency, and browser basics.",project:"Build a tiny API with three endpoints, clear errors, and one external API call.",links:[["https://developer.mozilla.org/en-US/docs/Learn_web_development/Howto/Web_mechanics/How_does_the_Internet_work","MDN | How the Internet works"],["https://github.com/practical-tutorials/project-based-learning#python","Project Based Learning | Python APIs"]]},
+    {t:"3. Data and databases",learn:"Tables, rows, keys, SQL, indexes, transactions, data modeling, migrations, and backups.",project:"Add SQLite storage to the study-card app; draw its schema and write five queries.",links:[["https://cs50.harvard.edu/sql/","CS50 SQL"],["https://github.com/ossu/computer-science#core-applications","OSSU | Core applications"]]},
+    {t:"4. Git, testing, and delivery",learn:"Repository, branch, diff, commit, PR, unit/integration tests, CI, deployment, and rollback.",project:"Ship one change through branch -> tests -> pull request -> CI -> review -> merge.",links:[["https://github.com/skills/introduction-to-github","GitHub Skills | Introduction to GitHub"],["https://missing.csail.mit.edu/","MIT | Missing Semester"]]},
+    {t:"5. Systems, cloud, and security",learn:"Processes, memory, storage, queues, caches, containers, cloud services, permissions, secrets, and threat modeling.",project:"Deploy a small service, add logging and a backup, then write a one-page threat model.",links:[["https://github.com/ossu/computer-science#core-systems","OSSU | Core systems"],["https://github.com/ossu/computer-science#core-security","OSSU | Core security"],["https://github.com/Developer-Y/cs-video-courses#computer-networks","CS Video Courses | Networks"]]},
+    {t:"6. Architecture and reliability",learn:"Requirements, constraints, APIs, data flow, scaling, availability, consistency, observability, incidents, and cost.",project:"Write an architecture decision record for the study app and run one failure drill.",links:[["https://github.com/ossu/computer-science#core-systems","OSSU | Systems"],["https://github.com/practical-tutorials/project-based-learning","Project Based Learning | Systems projects"]]},
+    {t:"7. Applied AI engineering",learn:"Model APIs, embeddings, RAG, tools, MCP, agents, evals, guardrails, cost, latency, and production operations.",project:"Build and evaluate one narrow AI workflow, then ship its prompt, code, eval cases, and runbook.",links:[["https://github.com/rohitg00/ai-engineering-from-scratch","AI Engineering From Scratch"],["https://github.com/rohitg00/ai-engineering-from-scratch#the-shape-of-the-curriculum","Phases 11, 13, 14, 17, 19"],["https://github.com/Chalarangelo/30-seconds-of-code","30 Seconds of Code | quick refreshers"]]},
+    {t:"8. CTO and cofounder judgment",learn:"Roadmaps, technical strategy, product constraints, hiring, estimates, security posture, technical debt, build/buy, and due diligence.",project:"Create a cofounder diligence packet: architecture interview, evidence checklist, take-home review, reference questions, and a 30/60/90-day technical plan.",links:[["https://github.com/ossu/computer-science#core-ethics","OSSU | Ethics"],["projects.html","Your portfolio rubrics"]]}
+  ];
+  var key="ccaf-engineer-path",state={};try{state=JSON.parse(localStorage.getItem(key)||"{}");}catch(e){}
+  var host=document.getElementById("modules");modules.forEach(function(m,i){var d=document.createElement("section");d.className="module"+(state[i]?" done":"");d.innerHTML='<h3>'+m.t+'</h3><p><b>Understand:</b> '+m.learn+'</p><p class="project"><b>Ship:</b> '+m.project+'</p><div class="links">'+m.links.map(function(x){return '<a target="_blank" rel="noopener" href="'+x[0]+'">'+x[1]+' -></a>';}).join("")+'</div><label><input type="checkbox" '+(state[i]?"checked":"")+'><span>Baseline understood and artifact shipped</span></label>';var cb=d.querySelector("input");cb.addEventListener("change",function(){state[i]=cb.checked;localStorage.setItem(key,JSON.stringify(state));d.classList.toggle("done",cb.checked);});host.appendChild(d);});
+})();
+</script>
+</body>
+</html>

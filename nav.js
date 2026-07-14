@@ -1,5 +1,5 @@
 /* Shared compact top nav for all CCA-F study pages.
-   Usage on a page:  <nav class="top" id="site-nav"></nav><script src="nav.js"></script>
+   Usage on a page: load course-data.js before nav.js, then render #site-nav.
    5 primary tabs + a "More ▾" menu. Auto-highlights the current page. */
 
 /* ---- progress file-sync (runs on every page, localhost only) ----
@@ -9,36 +9,25 @@
    On the hosted site this whole block stays inactive (browser-only saves). */
 (function(){
   var LOCAL=(location.hostname==="localhost"||location.hostname==="127.0.0.1");
-  window.CCAF_SYNC={mode:LOCAL?"probing":"pages",ts:0};
+  window.CCAF_SYNC={mode:LOCAL?"probing":"pages",ts:0,restored:false};
   function snap(){var d={};for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);
     if(k&&k.indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")d[k]=localStorage.getItem(k);}return d;}
   window.CCAF_SYNC.snapshot=snap;
   if(!LOCAL)return;
   function announce(m){window.CCAF_SYNC.mode=m;
     try{document.dispatchEvent(new CustomEvent("ccaf-sync-mode"));}catch(e){}}
-  // 1) restore from the file BEFORE page scripts read localStorage.
-  //    Synchronous request on purpose: local + tiny = instant, and the page's
-  //    own scripts (which run right after this file) must see restored state.
-  try{
-    var x=new XMLHttpRequest();
-    x.open("GET","my-progress.json?nocache="+Date.now(),false);x.send(null);
-    if(x.status===200){
-      var f=JSON.parse(x.responseText);
-      var mine=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10);
-      if(f&&f.data&&typeof f.ts==="number"&&f.ts>mine){
-        for(var k in f.data){try{localStorage.setItem(k,f.data[k]);}catch(e){}}
-        try{localStorage.setItem("ccaf-sync-ts",String(f.ts));}catch(e){}
-      }
-    }
-  }catch(e){}
-  // 2) push every ccaf-* change to disk (debounced), plus once on load to seed the file
-  var t=null;
-  function push(){clearTimeout(t);t=setTimeout(function(){
+  // Restore without blocking first paint. Embedded previews can deadlock on a
+  // synchronous XHR here, leaving a titled but completely blank tab.
+  var t=null,restoring=true,proto=null,set0=null,rm0=null;
+  function rawSet(k,v){try{if(set0)set0.call(localStorage,k,v);else localStorage.setItem(k,v);}catch(e){}}
+  function push(){
+    if(restoring)return;
+    clearTimeout(t);t=setTimeout(function(){
     var ts=Date.now();
     fetch("/__save",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({ts:ts,data:snap()})})
     .then(function(r){
-      if(r.ok){try{localStorage.setItem("ccaf-sync-ts",String(ts));}catch(e){}
+      if(r.ok){rawSet("ccaf-sync-ts",String(ts));
         window.CCAF_SYNC.ts=ts;announce("file");}
       else{announce("nofile");}
     }).catch(function(){announce("nofile");});
@@ -46,11 +35,12 @@
   // Storage objects turn direct property writes into stored items, so the
   // hook must go on Storage.prototype, not on localStorage itself.
   try{
-    var proto=Object.getPrototypeOf(localStorage);
-    var set0=proto.setItem,rm0=proto.removeItem;
+    proto=Object.getPrototypeOf(localStorage);
+    set0=proto.setItem;rm0=proto.removeItem;
     function touched(){
+      if(restoring)return;
       // local state is now the newest truth — an older file must never clobber it on a later load
-      try{set0.call(localStorage,"ccaf-sync-ts",String(Date.now()));}catch(e){}
+      rawSet("ccaf-sync-ts",String(Date.now()));
       push();
     }
     proto.setItem=function(k,v){set0.apply(this,arguments);
@@ -59,14 +49,34 @@
       if(this===localStorage&&String(k).indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")touched();};
     // navigating right after a click must not lose the click: flush the snapshot as the page unloads
     window.addEventListener("pagehide",function(){
+      if(restoring)return;
       try{
         var ts=Date.now();
         var ok=navigator.sendBeacon&&navigator.sendBeacon("/__save",new Blob([JSON.stringify({ts:ts,data:snap()})],{type:"application/json"}));
-        if(ok){try{set0.call(localStorage,"ccaf-sync-ts",String(ts));}catch(e){}}
+        if(ok)rawSet("ccaf-sync-ts",String(ts));
       }catch(e){}
     });
   }catch(e){}
-  push();
+
+  var ctl=(typeof AbortController!=="undefined")?new AbortController():null;
+  var opts={cache:"no-store"};if(ctl)opts.signal=ctl.signal;
+  var abortTimer=setTimeout(function(){if(ctl)ctl.abort();},1500);
+  fetch("my-progress.json?nocache="+Date.now(),opts)
+    .then(function(r){if(!r.ok)throw new Error("progress unavailable");return r.json();})
+    .then(function(f){
+      clearTimeout(abortTimer);
+      var mine=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10),didRestore=false;
+      if(f&&f.data&&typeof f.ts==="number"&&f.ts>mine){
+        for(var k in f.data)rawSet(k,f.data[k]);
+        rawSet("ccaf-sync-ts",String(f.ts));
+        window.CCAF_SYNC.ts=f.ts;window.CCAF_SYNC.restored=true;didRestore=true;
+      }
+      restoring=false;announce("file");
+      // Page scripts may already have read the old local state. One reload is
+      // enough; the saved timestamp prevents a loop on the second load.
+      if(didRestore)setTimeout(function(){location.reload();},0);else push();
+    })
+    .catch(function(){clearTimeout(abortTimer);restoring=false;announce("nofile");push();});
 })();
 
 (function(){ // completion-gate upgrade: strict about the future, GENEROUS about the past.
@@ -96,8 +106,11 @@
   function S(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
   function tod(){var n=new Date();return n.getFullYear()+"-"+String(n.getMonth()+1).padStart(2,"0")+"-"+String(n.getDate()).padStart(2,"0");}
   function blank(){return [false,false,false,false,false];}
-  var ORDER=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
-  var TITLES={o1:"The Agent Loop",a1:"Core vocabulary",a2:"Model physics & economics",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator–Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};
+  var COURSE=window.CCAF_COURSE||null;
+  var ORDER=COURSE?COURSE.order.slice():["w1","w2","w3","w4","w5","a1","m3","m1","m2","o1","a2","d1","d2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
+  var TITLES={};
+  if(COURSE){COURSE.units.forEach(function(u){TITLES[u.id]=u.title;});}
+  else{TITLES={w1:"Files, folders, and plain text",w2:"JSON by hand",w3:"Programs, functions, and errors",w4:"API request and response",w5:"Safe Terminal basics",a1:"Core vocabulary",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",o1:"The Agent Loop",a2:"Model physics & economics",d1:"Repositories, trees, and diffs",d2:"Commits, pull requests, and CI",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator-Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};}
   function cur(){var d=(J("ccaf-curriculum",{})||{}).done||{};for(var i=0;i<ORDER.length;i++){if(!d[ORDER[i]])return ORDER[i];}return "end";}
   function getSteps(u){var st=J("ccaf-steps",{})||{};var r=st[u];
     return (r&&Array.isArray(r.checks)&&r.checks.length===5)?r.checks.slice():blank();}
@@ -124,6 +137,26 @@
     if(r&&Array.isArray(r.checks)&&r.checks.length===5){var n=r.checks.filter(Boolean).length;
       return {mine:n>0,n:n,all:n===5};}
     return {mine:false,n:0,all:false};
+  }
+  function evidence(){return J("ccaf-evidence",{})||{};}
+  function recordEvidence(u,type,data){
+    var all=evidence();all[u]=all[u]||{};
+    all[u][type]={data:data||{},ts:Date.now()};S("ccaf-evidence",all);
+    return all[u][type];
+  }
+  function mastery(u){
+    var ever=!!((J("ccaf-everdone",{})||{})[u]);
+    var sg=stepsFor(u), q=(J("ccaf-quizdone",{})||{})[u]||null;
+    var ev=evidence()[u]||{}, unit=COURSE&&COURSE.map?COURSE.map[u]:null;
+    var isProject=!!(unit&&String(unit.quiz).indexOf("projects.html")===0);
+    var quizOK=ever||isProject||!!(q&&q.total>0&&(q.score/q.total)>=0.8&&Number(q.guessed||0)===0);
+    var buildOK=ever||!!(ev.build&&ev.build.data&&ev.build.data.mode==="independent");
+    var teachOK=ever||!!(ev.teachback&&ev.teachback.data&&ev.teachback.data.complete);
+    var allOK=ever||(sg.all&&quizOK&&buildOK&&teachOK);
+    var touched=sg.n>0||!!q||!!ev.build||!!ev.teachback;
+    var practiced=!!q||!!ev.build||!!ev.teachback;
+    var state=allOK?"proficient":(practiced?"practiced":(touched?"seen":"new"));
+    return {unit:u,state:state,mastered:allOK,grandfathered:ever,steps:sg,quiz:q,quizOK:quizOK,buildOK:buildOK,teachOK:teachOK};
   }
   // one-time migration: OR-merge old pipeline + stash into ccaf-steps (true wins, backup first)
   try{
@@ -158,7 +191,7 @@
       if(chA){rA.date=tod();stA[cAb]=rA;S("ccaf-steps",stA);}
     }}catch(e){}
   syncPipeline();
-  window.CCAF={ORDER:ORDER,TITLES:TITLES,cur:cur,today:tod,getSteps:getSteps,setStep:setStep,stepsFor:stepsFor,syncPipeline:syncPipeline};
+  window.CCAF={ORDER:ORDER,TITLES:TITLES,COURSE:COURSE,cur:cur,today:tod,getSteps:getSteps,setStep:setStep,stepsFor:stepsFor,syncPipeline:syncPipeline,recordEvidence:recordEvidence,mastery:mastery};
 })();
 
 (function(){
@@ -171,6 +204,10 @@
   ];
   var MORE=[
     {href:"notes.html",        label:"📖 Lesson notes"},
+    {href:"concept-map.html",  label:"Concept map"},
+    {href:"review.html",       label:"Review queue"},
+    {href:"tutor-bridge.html", label:"Ask tutor"},
+    {href:"engineer-path.html",label:"Applied Engineer"},
     {href:"learning-map.html", label:"🗺️ Visual Map"},
     {href:"my-plan.html",      label:"🧭 My Plan"},
     {href:"daily-pipeline.html",label:"📋 Weekly Pipeline"},
@@ -182,20 +219,20 @@
 
   var st=document.createElement("style");
   st.textContent=
-   "nav.top{position:sticky;top:0;z-index:40;background:rgba(251,246,236,.96);border-bottom:2px solid var(--line);padding:10px 0}"+
+   "nav.top{position:sticky;top:0;z-index:40;background:rgba(243,247,248,.96);border-bottom:2px solid var(--line);padding:10px 0}"+
    "nav.top .wrap{display:flex;flex-wrap:wrap;gap:6px;align-items:center}"+
-   "nav.top a{display:inline-block;text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#fff}"+
+   "nav.top a{display:inline-block;text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;padding:6px 11px;border-radius:6px;border:1px solid var(--line);background:#fff}"+
    "nav.top a:hover{border-color:var(--accent);color:var(--accent)}"+
    "nav.top a.home{background:var(--accent);color:#fff;border-color:var(--accent)}"+
    "nav.top a.here{background:var(--ink);color:#fff;border-color:var(--ink)}"+
    ".nav-more{position:relative;display:inline-block}"+
-   ".nav-morebtn{font:inherit;font-weight:700;font-size:.82rem;padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}"+
+   ".nav-morebtn{font:inherit;font-weight:700;font-size:.82rem;padding:6px 11px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}"+
    ".nav-morebtn:hover{border-color:var(--accent);color:var(--accent)}"+
    ".nav-morebtn.here{background:var(--ink);color:#fff;border-color:var(--ink)}"+
-   ".nav-menu{position:absolute;top:118%;right:0;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:6px;display:none;flex-direction:column;gap:3px;z-index:60;min-width:172px}"+
+   ".nav-menu{position:absolute;top:118%;right:0;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:6px;display:none;flex-direction:column;gap:3px;z-index:60;min-width:172px}"+
    ".nav-menu.open{display:flex}"+
-   ".nav-menu a{white-space:nowrap;padding:8px 12px;border-radius:9px;text-decoration:none;color:var(--ink);font-weight:700;font-size:.86rem;border:0;background:transparent}"+
-   ".nav-menu a:hover{background:#F3EBDA}"+
+   ".nav-menu a{white-space:nowrap;padding:8px 12px;border-radius:6px;text-decoration:none;color:var(--ink);font-weight:700;font-size:.86rem;border:0;background:transparent}"+
+   ".nav-menu a:hover{background:#EAF0F2}"+
    ".nav-menu a.here{background:var(--ink);color:#fff}";
   document.head.appendChild(st);
 

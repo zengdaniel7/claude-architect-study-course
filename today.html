@@ -6,17 +6,17 @@
 <title>Your lesson — CCA-F</title>
 <link rel="stylesheet" href="study.css">
 <style>
-  .hero{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin:14px 0}
+  .hero{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px 22px;margin:14px 0}
   .big{font-size:2.2rem;font-weight:800;line-height:1}
-  .pbar{height:18px;border-radius:10px;background:#EFE7D6;overflow:hidden;margin:10px 0 4px}
+  .pbar{height:18px;border-radius:10px;background:#DCE5E8;overflow:hidden;margin:10px 0 4px}
   .pbar>span{display:block;height:100%;background:var(--green);border-radius:10px;width:0;transition:width .3s}
-  .next{background:#EAF2FB;border:2px solid var(--accent);border-radius:18px;padding:20px 22px;margin:16px 0}
+  .next{background:#EAF2FB;border:2px solid var(--accent);border-radius:8px;padding:20px 22px;margin:16px 0}
   .next .ttl{font-size:1.5rem;font-weight:800;margin:4px 0}
   .btnrow{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
-  .b{display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:800;border-radius:999px;padding:11px 20px;text-decoration:none;font-size:.95rem}
+  .b{display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:800;border-radius:7px;padding:11px 20px;text-decoration:none;font-size:.95rem}
   .b.go{background:var(--accent);color:#fff} .b.quiz{background:var(--green);color:#fff} .b.ask{background:#EDE6D6;color:var(--ink)} .b.notes{background:var(--purple,#7C5CBF);color:#fff}
   .b:hover{filter:brightness(1.06)}
-  .pgbtn{border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:.85rem;border-radius:999px;padding:8px 14px;cursor:pointer}
+  .pgbtn{border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:.85rem;border-radius:7px;padding:8px 14px;cursor:pointer}
   .pgbtn:hover{border-color:var(--accent);color:var(--accent)}
   .pgbtn:disabled{opacity:.35;cursor:default}
   .step{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--line)}
@@ -24,17 +24,18 @@
   .step input{width:24px;height:24px;flex:0 0 auto;margin-top:2px;accent-color:var(--green)}
   .step .lab{font-weight:700}
   .step .d{font-size:.86rem;color:var(--muted)}
-  .mini{display:inline-block;background:var(--accent);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:700;font-size:.76rem;padding:5px 11px;cursor:pointer;margin-top:6px}
-  .quicklinks a{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;margin:4px 8px 0 0;text-decoration:none;color:var(--ink);font-weight:700;font-size:.88rem}
+  .mini{display:inline-block;background:var(--accent);color:#fff;border:0;border-radius:7px;font:inherit;font-weight:700;font-size:.76rem;padding:5px 11px;cursor:pointer;margin-top:6px}
+  .quicklinks a{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:7px;padding:8px 14px;margin:4px 8px 0 0;text-decoration:none;color:var(--ink);font-weight:700;font-size:.88rem}
   .quicklinks a:hover{border-color:var(--accent);color:var(--accent)}
-  .watchlink{display:inline-block;background:var(--green);color:#fff;border-radius:999px;padding:7px 15px;margin:6px 8px 0 0;text-decoration:none;font-weight:800;font-size:.85rem}
+  .watchlink{display:inline-block;background:var(--green);color:#fff;border-radius:7px;padding:7px 15px;margin:6px 8px 0 0;text-decoration:none;font-weight:800;font-size:.85rem}
   .watchlink:hover{filter:brightness(1.06)}
-  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:70}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:8px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:70}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 
 <div class="wrap">
@@ -47,7 +48,7 @@
   <div class="hero">
     <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px">
       <div><div class="big" id="pct">0%</div><div class="hint">of the course done</div></div>
-      <div style="text-align:right"><div style="font-weight:800;font-size:1.1rem" id="levelnow">Getting started</div><div class="hint" id="unitsdone">0 / 16 lessons</div></div>
+      <div style="text-align:right"><div style="font-weight:800;font-size:1.1rem" id="levelnow">Getting started</div><div class="hint" id="unitsdone">0 / 23 lessons</div></div>
     </div>
     <div class="pbar"><span id="pbar"></span></div>
     <p class="hint" id="encourage" style="margin:.4em 0 0"></p>
@@ -102,7 +103,7 @@
     <a href="article-effective-agents.html">🧩 Building effective agents</a>
     <a href="article-multi-agent.html">🕸️ Multi-agent research system</a>
     <a href="article-writing-tools.html">🔧 Writing tools for agents</a>
-    <a href="repair-map.html">🩹 The trickiest pre-test questions</a>
+    <a href="repair-map.html">🩹 Pre-test repair guide</a>
   </div>
 
   <!-- QUICK -->
@@ -182,6 +183,13 @@ var BUILDX={
  o1:["exercise.html?id=gate-chain","🚦 Flashcard Factory — chain with a gate"],
  m3:["exercise.html?id=gate-chain","🚦 Flashcard Factory — chain with a gate"]
 };
+// The shared manifest is authoritative. The legacy literals above remain only as
+// an offline fallback for an old cached page.
+if(window.CCAF_COURSE){
+  PATH=CCAF_COURSE.units.map(function(u){return {id:u.id,lvl:u.level,t:u.title,one:u.one,quiz:u.quiz,notes:u.notes,ask:u.ask,prereq:u.prereq,concepts:u.concepts};});
+  TOTAL=PATH.length;WATCH={};BUILDX={};
+  CCAF_COURSE.units.forEach(function(u){WATCH[u.id]=u.watch||[];BUILDX[u.id]=["exercise.html?id="+u.exercise,u.title+" fixed build"];});
+}
 
 // ---- read curriculum progress ----
 var done={};
@@ -222,8 +230,8 @@ function renderLesson(){
     pos.textContent="Lesson "+(vi+1)+" of "+TOTAL;
     lvlE.textContent=u.lvl+(isCur?"  ·  ⭐ your current lesson":(isDone?"  ·  ✅ done — review any time":"  ·  🔭 coming up"));
     tE.textContent=u.t; oE.textContent=u.one;
-    goE.href="curriculum.html#u-"+u.id; goE.textContent="Open it on the curriculum →";
-    document.getElementById("nextnotes").href="notes.html?unit="+u.id;
+    goE.href=(u.id.charAt(0)==="w"||u.id.charAt(0)==="d")?(u.notes||"foundation-lab.html?unit="+u.id):"curriculum.html#u-"+u.id; goE.textContent="Open the lesson →";
+    document.getElementById("nextnotes").href=u.notes||("notes.html?unit="+u.id);
     qE.href=window.withUnit(u.quiz,u.id);
     qE.textContent=(u.quiz.indexOf("projects.html")===0)?"🔨 Its project":"🧪 Its quiz";
     aE.setAttribute("data-q",u.ask);
@@ -252,7 +260,7 @@ document.getElementById("encourage").textContent = pct===0
   function chip(txt,href,style){
     var a=document.createElement("a");
     a.href=href; a.textContent=txt;
-    a.style.cssText="text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;"+(style||"");
+    a.style.cssText="text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;border:1.5px solid var(--line);background:#fff;border-radius:7px;padding:6px 13px;"+(style||"");
     return a;
   }
   function arrow(){var s=document.createElement("span");s.textContent="→";s.style.cssText="color:var(--muted);font-weight:800";return s;}
@@ -336,23 +344,28 @@ function pbar(){
   // THE GATE: a lesson's first close needs its 5 steps AND its quiz taken (score saved). Projects: steps only.
   var qrec=null;try{var qd=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}");qrec=qd[vu.id]||null;}catch(e){}
   var isProj=(vu.quiz.indexOf("projects.html")===0);
-  var quizOK=isProj||!!qrec;
+  var mr=window.CCAF?CCAF.mastery(vu.id):null;
+  var quizOK=mr?mr.quizOK:(isProj||!!qrec),buildOK=mr?mr.buildOK:true,teachOK=mr?mr.teachOK:true,ready=mr?mr.mastered:quizOK;
   var qtxt=qrec?(qrec.score!=null?' · 🧪 quiz saved: <b>'+qrec.score+' / '+qrec.total+'</b>'+(qrec.guessed?' ('+qrec.guessed+' guessed)':'')+' ✓':' · 🧪 quiz saved ✓'):'';
+  var need='<p class="hint" style="margin:.4em 0 .5em"><b>Mastery evidence:</b> '+
+    (quizOK?'quiz ✓':'<a href="'+window.withUnit(vu.quiz,vu.id)+'">quiz 80%+ with zero guesses</a>')+' · '+
+    (buildOK?'independent build ✓':'<a href="'+BUILDX[vu.id][0]+'">independent build</a>')+' · '+
+    (teachOK?'teach-back ✓':'<a href="teachback.html?unit='+vu.id+'">60-second teach-back</a>')+'.</p>';
   if(vu.id===CURID){ // ⭐ the NOW lesson — the only one that can first-close
     var up=null;
     for(var uk=curIdx+1;uk>=0&&uk<PATH.length;uk++){ if(!done[PATH[uk].id]){ up=PATH[uk]; break; } } // next lesson = the next NOT-done one
     var advToday=false; try{var av=JSON.parse(localStorage.getItem("ccaf-advanced")||"{}");advToday=!!(av&&av.date===today);}catch(e){}
     de.innerHTML="<b>🎉 All 5 steps done!</b>"+
-      (quizOK
-        ?'<p class="hint" style="margin:.4em 0 .5em">Steps ✓'+qtxt+' — "'+vu.t+'" is ready to close.</p>'
-        :'<p class="hint" style="margin:.4em 0 .5em">One thing left for "'+vu.t+'": <b>take its quiz</b>. Your score gets saved, and only then can the lesson close — nothing closes by accident.</p>')+
+      (ready
+        ?'<p class="hint" style="margin:.4em 0 .5em">All evidence is complete'+qtxt+'. "'+vu.t+'" is ready to close.</p>'
+        :need)+
       '<div class="btnrow">'+
       (isProj
         ?'<a class="b quiz" href="'+vu.quiz+'">🔨 Open your capstone project →</a>'
-        :'<a class="b quiz" href="'+window.withUnit(vu.quiz,vu.id)+'">'+(quizOK?'🧪 Retake its quiz':'🧪 Take the quiz → then it can close')+'</a>')+
-      (quizOK&&!advToday?'<button type="button" class="b go" id="nextUnitBtn" style="border:0;cursor:pointer;font:inherit">⏭️ Close it & start '+(up?('the next lesson: '+up.t):'— that was the LAST lesson! 🏁')+' →</button>':"")+
+        :'<a class="b quiz" href="'+window.withUnit(vu.quiz,vu.id)+'">'+(quizOK?'Retake its quiz':'Take its quiz')+'</a>')+
+      (ready&&!advToday?'<button type="button" class="b go" id="nextUnitBtn" style="border:0;cursor:pointer;font:inherit">Close it and start '+(up?('the next lesson: '+up.t):'the final review')+' →</button>':"")+
       '</div>'+
-      (quizOK&&advToday?'<p class="hint" style="margin:.4em 0 0">🎉 You already closed a lesson today — mark this one done from its <a href="'+(isProj?vu.quiz:window.withUnit(vu.quiz,vu.id))+'">'+(isProj?'project page':'quiz results')+'</a> instead.</p>':"")+
+      (ready&&advToday?'<p class="hint" style="margin:.4em 0 0">You already closed a lesson today. This ready lesson stays saved for the next session.</p>':"")+
       '<p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day; the <a href="timeline.html">timeline</a> keeps your place'+(up?', or press <b>Next ▶</b> up top to 🔭 work ahead on '+up.t:'')+'.</p>';
     var nb=document.getElementById("nextUnitBtn");
     if(nb){nb.addEventListener("click",function(){
@@ -369,9 +382,7 @@ function pbar(){
     });}
   } else { // 🔭 working ahead — everything saves; closing waits for the NOW lesson (council rule)
     de.innerHTML='<b>💾 All 5 steps done — saved!</b>'+
-      '<p class="hint" style="margin:.4em 0 .5em">'+(quizOK
-        ?'Steps ✓'+qtxt+' — "'+vu.t+'" is <b>ready</b>. It unlocks the moment your ⭐ NOW lesson ("'+(next?next.t:"—")+'") closes — nothing here gets lost.'
-        :'Nice work-ahead. One thing left for "'+vu.t+'": <b>take its quiz</b> — your score saves now, and the lesson is ready the moment it becomes your ⭐ NOW lesson.')+'</p>'+
+      (ready?'<p class="hint" style="margin:.4em 0 .5em">All mastery evidence is saved. It unlocks after your current lesson closes.</p>':need)+
       '<div class="btnrow">'+
       (isProj
         ?'<a class="b quiz" href="'+vu.quiz+'">🔨 Open the project →</a>'
@@ -413,6 +424,7 @@ function buildSteps(){ // rebuild the 5 rows for the lesson the pager is showing
         if(/^https?:/.test(v[0])){a.target="_blank";a.rel="noopener";}
         a.textContent="▶ "+(wl.length>1?(wi+1)+" · ":"")+v[1];
         row.appendChild(a);body.appendChild(row);
+        if(v[2]){var focus=document.createElement("div");focus.className="d";focus.textContent=v[2];row.appendChild(focus);}
       });
       if(wl.length>1){var wn=document.createElement("div");wn.className="d";wn.textContent="👆 "+wl.length+" links for this lesson — best watched in order.";body.appendChild(wn);}
     }
@@ -420,7 +432,17 @@ function buildSteps(){ // rebuild the 5 rows for the lesson the pager is showing
       var bl=document.createElement("a");bl.className="watchlink";bl.href=BUILDX[uid][0];
       bl.textContent="🏋️ "+BUILDX[uid][1];body.appendChild(bl);
     }
-    var abtn=document.createElement("button");abtn.className="mini";abtn.textContent="💬 Ask my tutor";abtn.setAttribute("data-q",it.ask);
+    if(i===3){
+      var tb=document.createElement("a");tb.className="watchlink";tb.href="teachback.html?unit="+uid;tb.textContent="Open the teach-back recorder";body.appendChild(tb);
+    }
+    if(i===4){
+      var rv=document.createElement("a");rv.className="watchlink";rv.href="review.html?unit="+uid;rv.textContent="Review this lesson's cards";body.appendChild(rv);
+    }
+    var prereq=(vu&&vu.prereq||[]).map(function(id){var x=window.CCAF_COURSE&&CCAF_COURSE.map[id];return x?x.title:id;});
+    var abtn=document.createElement("button");abtn.className="mini";abtn.textContent="💬 Ask my tutor";abtn.setAttribute("data-q",
+      "You are my CCA-F tutor. Current lesson: "+(vu?vu.t:uid)+". Prerequisites: "+(prereq.join(", ")||"none")+
+      ". Concepts: "+((vu&&vu.concepts||[]).join(", "))+". Help only with this step: "+it.label+
+      ". Use plain meaning, one example, one boxes-and-arrows sketch, then one small question. Give progressive hints before a full answer. Maximum 5 tutor turns.");
     body.appendChild(abtn);
     cb.addEventListener("change",function(){ if(window.CCAF)CCAF.setStep(uid,i,cb.checked); pbar(); });
     w.appendChild(cb);w.appendChild(body);sh.appendChild(w);
@@ -465,10 +487,10 @@ function fb(t){var x=document.createElement("textarea");x.value=t;document.body.
   });
 })();
 (function(){ // course-wide progress next to the timeline links (updates live cross-tab)
-  var IDS=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
+  var IDS=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():[];
   function draw(){
     var n=0;try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};IDS.forEach(function(i){if(d[i])n++;});}catch(e){}
-    var t=" — "+n+"/16 units ("+Math.round(n/16*100)+"%)";
+    var t=" — "+n+"/"+IDS.length+" units ("+Math.round(n/IDS.length*100)+"%)";
     var a=document.getElementById("tlprog"); if(a)a.textContent=t;
     var b=document.getElementById("tlprog2"); if(b)b.textContent=t;
   }

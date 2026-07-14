@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="study.css">
 <style>
   .lead{font-size:1.02rem;color:var(--muted)}
-  .pbar{height:18px;border-radius:10px;background:#EFE7D6;overflow:hidden;margin:10px 0 4px}
+  .pbar{height:18px;border-radius:10px;background:#DCE5E8;overflow:hidden;margin:10px 0 4px}
   .pbar>span{display:block;height:100%;background:var(--green);border-radius:10px;width:0;transition:width .3s}
   .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;margin:10px 0 0}
   .legend span{display:inline-flex;align-items:center;gap:6px}
@@ -16,7 +16,7 @@
   .part .hint{display:block;font-weight:400;font-size:.85rem}
   ul.tl{list-style:none;margin:0;padding:2px 0 2px 36px;position:relative}
   ul.tl::before{content:"";position:absolute;left:13px;top:8px;bottom:8px;width:4px;border-radius:2px;background:#E6DDCB}
-  li.node{position:relative;margin:0 0 14px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 16px}
+  li.node{position:relative;margin:0 0 14px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:13px 16px}
   li.node::before{content:"";position:absolute;left:-31px;top:19px;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid #C9BD9F;box-sizing:border-box}
   li.node.done{border-color:#A9D9BC}
   li.node.done::before{background:var(--green);border-color:var(--green)}
@@ -27,9 +27,9 @@
   .lvl{display:inline-block;font-size:.7rem;font-weight:800;color:#fff;border-radius:999px;padding:2px 10px;vertical-align:middle;margin-right:6px}
   .here{display:inline-block;background:#E0A106;color:#332700;font-weight:800;font-size:.7rem;padding:2px 10px;border-radius:999px;margin-left:6px}
   .donetag{color:var(--green);font-weight:800;font-size:.85rem;margin-left:6px}
-  .links a{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px;margin:2px 6px 0 0;text-decoration:none;color:var(--ink);font-weight:700;font-size:.78rem}
+  .links a{display:inline-block;background:#fff;border:1px solid var(--line);border-radius:7px;padding:5px 12px;margin:2px 6px 0 0;text-decoration:none;color:var(--ink);font-weight:700;font-size:.78rem}
   .links a:hover{border-color:var(--accent);color:var(--accent)}
-  details.chap{background:#FDFAF2;border:1px dashed #E0D6BE;border-radius:10px;padding:2px 12px;margin:8px 0 6px;font-size:.88rem}
+  details.chap{background:#F7FAFB;border:1px solid var(--line);border-radius:8px;padding:2px 12px;margin:8px 0 6px;font-size:.88rem}
   details.chap summary{padding:8px 0;font-size:.85rem}
   details.chap ul{margin:.2em 0 .6em;padding-left:1.2em}
   details.chap li{margin:4px 0}
@@ -37,6 +37,7 @@
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 
 <div class="wrap">
@@ -47,7 +48,7 @@
 
   <div class="card">
     <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
-      <b id="prog">0 / 16 units</b><span class="hint" id="pct">0%</span>
+      <b id="prog">0 / 23 units</b><span class="hint" id="pct">0%</span>
     </div>
     <div class="pbar"><span id="pbar"></span></div>
     <div class="legend" id="legend"></div>
@@ -62,32 +63,18 @@
 <script src="units-data.js"></script>
 <script>
 (function(){
-// same ids + order as today.html PATH / curriculum.html units
-var LVLC={"Atoms":"#9AA7B2","Molecules":"#E0A106","Organisms":"#D64545","Templates":"#8A4FC4","Pages":"#2F9E63","Reliability":"#2D7DD2"};
-var EXLINK={o1:"gate-chain",m3:"gate-chain"};
-var PARTS={0:["Part 1 · Meet the machine 🔴","One real agent loop first — see where you're headed."],
-           1:["Part 2 · Foundations 🔤","The words and the economics everything else uses."],
-           7:["Part 3 · The big systems 🟣","MCP, Claude Code, orchestration, reliability."],
-          11:["Part 4 · Put it together 🎧","Real systems, end to end."],
-          13:["Part 5 · Exam level 🟢","Scenarios, the traps — and your capstone build."]};
-var PATH=[
- {id:"o1", lvl:"Organisms", ic:"🔁", t:"The Agent Loop",              one:"Model + tools + a loop until stop_reason says done", quiz:"quiz.html?set=agentic"},
- {id:"a1", lvl:"Atoms",     ic:"🔤", t:"Core vocabulary",             one:"The 8 base terms — your words for everything ahead", quiz:"quiz.html?set=foundations"},
- {id:"a2", lvl:"Atoms",     ic:"⚖️", t:"Model physics & economics",   one:"Pick the right model, cache what repeats, batch what can wait", quiz:"quiz.html?set=foundations"},
- {id:"m3", lvl:"Molecules", ic:"🪜", t:"Prompt techniques",           one:"Clear instructions, few-shot, chaining",             quiz:"quiz.html?set=prompting"},
- {id:"m1", lvl:"Molecules", ic:"🧾", t:"A structured-output call",    one:"Prompt + schema → validated JSON",                   quiz:"quiz.html?set=prompting"},
- {id:"m2", lvl:"Molecules", ic:"🔧", t:"One tool call",               one:"Give Claude one action; read the result",            quiz:"quiz.html?set=tools-mcp"},
- {id:"m4", lvl:"Molecules", ic:"🧰", t:"Built-in tools",              one:"Read · Write · Edit · Bash · Grep · Glob",           quiz:"quiz.html?set=tools-mcp"},
- {id:"o3", lvl:"Organisms", ic:"🔌", t:"An MCP server",               one:"Tools vs resources vs prompts",                      quiz:"quiz.html?set=tools-mcp"},
- {id:"o4", lvl:"Organisms", ic:"💻", t:"Claude Code workflows",       one:"CLAUDE.md, commands, skills, subagents, hooks",      quiz:"quiz.html?set=claude-code"},
- {id:"o2", lvl:"Organisms", ic:"🎼", t:"Orchestrator–Workers",        one:"A coordinator splits work across subagents",         quiz:"quiz.html?set=agentic"},
- {id:"rel",lvl:"Reliability",ic:"🛡️", t:"Reliability, context & evals", one:"Lost-in-the-middle, compaction, RAG, evals, human-in-loop", quiz:"quiz.html?set=reliability"},
- {id:"t1", lvl:"Templates", ic:"🎧", t:"Support-agent system",        one:"Agent + tools + escalation rules",                   quiz:"quiz.html?set=agentic"},
- {id:"t2", lvl:"Templates", ic:"🔬", t:"Research multi-agent system", one:"Search → analyze → synthesize → report",             quiz:"quiz.html?set=agentic"},
- {id:"p1", lvl:"Pages",     ic:"🎬", t:"The 6 exam scenarios",        one:"Whole systems, real tradeoffs — exam style",         quiz:"pretest.html"},
- {id:"px", lvl:"Pages",     ic:"⚠️", t:"Anti-patterns & decisions",   one:"The wrong answers — and how to pick A vs B",         quiz:"pretest.html"},
- {id:"p2", lvl:"Pages",     ic:"🏗️", t:"Capstone: PR-review pipeline", one:"Build the real thing end to end — file pass, integration pass, guardrail", quiz:"projects.html"}
-];
+var LVLC={"Foundation Workbench":"#16877A","Atoms":"#9AA7B2","Molecules":"#E0A106","Developer Bridge":"#6B5AA6","Organisms":"#D64545","Templates":"#8A4FC4","Pages":"#2F9E63","Reliability Rail":"#2D7DD2"};
+var ICONS={w1:"📁",w2:"{}",w3:"⚙️",w4:"↔️",w5:">_",a1:"🔤",m3:"✍️",m1:"🧾",m2:"🔧",o1:"🔁",a2:"⚖️",d1:"🔎",d2:"🔀",m4:"🧰",o3:"🔌",o4:"💻",o2:"🎼",rel:"🛡️",t1:"🎧",t2:"🔬",p1:"🎬",px:"⚠️",p2:"🏗️"};
+var EXLINK={};
+var PATH=(window.CCAF_COURSE?CCAF_COURSE.units:[]).map(function(u){
+  EXLINK[u.id]=u.exercise;
+  return {id:u.id,lvl:u.level,ic:ICONS[u.id]||"•",t:u.title,one:u.one,quiz:u.quiz,concepts:u.concepts||[]};
+});
+var PARTS={0:["Part 1 · Foundation Workbench","Files, JSON, programs, APIs, and safe Terminal use."],
+           5:["Part 2 · Claude foundations","Language, prompting, structured data, tool calls, and the agent loop."],
+          11:["Part 3 · Developer Bridge + connected systems","Read changes, use Claude Code, connect MCP, and orchestrate workers."],
+          17:["Part 4 · Reliability + production patterns","Design for failure, then combine the pieces in real systems."],
+          20:["Part 5 · Exam level + capstone","Scenarios, attractive wrong answers, and one end-to-end build."]};
 
 var st={done:{},opened:{}};
 try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s){st.done=s.done||{};st.opened=s.opened||{};}}catch(e){}
@@ -109,6 +96,7 @@ PATH.forEach(function(u){if(!nowId && !st.done[u.id])nowId=u.id;});
 // fold-out chapter list per unit (data shared with the curriculum via units-data.js)
 function chapBlock(id){
   var ch=(typeof UNIT_CHAPTERS!=="undefined" && UNIT_CHAPTERS[id])||null;
+  if(!ch){var pu=PATH.filter(function(x){return x.id===id;})[0];ch=pu&&pu.concepts;}
   if(!ch||!ch.length) return "";
   var items=ch.map(function(x){
     return x.charAt(0)==="§"
