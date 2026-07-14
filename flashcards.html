@@ -9,38 +9,39 @@
   .deckpick{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px dashed var(--line);flex-wrap:wrap}
   .deckpick:last-child{border-bottom:0} .deckpick .body{flex:1 1 220px}
   .deckbtns{display:flex;gap:8px;flex-wrap:wrap}
-  .take{text-decoration:none;font-weight:700;padding:9px 16px;border-radius:999px;font-size:.85rem;white-space:nowrap;display:inline-block}
+  .take{text-decoration:none;font-weight:700;padding:9px 16px;border-radius:7px;font-size:.85rem;white-space:nowrap;display:inline-block}
   .take.browse{background:var(--accent);color:#fff}
   .take.learn{background:var(--green);color:#fff}
   .flash{min-height:230px;display:flex;align-items:center;justify-content:center;text-align:center;
-    background:var(--card);border:2px solid var(--line);border-radius:20px;padding:30px 26px;cursor:pointer;
+    background:var(--card);border:2px solid var(--line);border-radius:8px;padding:30px 26px;cursor:pointer;
     font-size:1.5rem;font-weight:700;line-height:1.5;user-select:none}
   .flash.back{background:#EAF2FB;border-color:var(--accent);font-size:1.25rem;font-weight:500}
   .fwrap{position:relative;margin:10px 0}
   .side{font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:6px}
   .btnrow{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
-  .b{border:0;border-radius:999px;font:inherit;font-weight:700;padding:11px 22px;cursor:pointer;font-size:1rem}
+  .b{border:0;border-radius:7px;font:inherit;font-weight:700;padding:11px 22px;cursor:pointer;font-size:1rem}
   .b.again{background:#F0E3C8;color:#5a4a1f} .b.got{background:var(--green);color:#fff} .b.flip{background:var(--accent);color:#fff}
-  .small{background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:700;border-radius:999px;padding:7px 14px;cursor:pointer;font-size:.82rem;margin:6px 6px 0 0}
+  .small{background:#fff;border:1px solid var(--line);color:var(--ink);font-weight:700;border-radius:7px;padding:7px 14px;cursor:pointer;font-size:.82rem;margin:6px 6px 0 0}
   .modehead{display:flex;gap:10px;align-items:center;margin-bottom:4px;flex-wrap:wrap}
   .modetag{font-size:.78rem;font-weight:800;padding:4px 12px;border-radius:999px}
   .modetag.browse{background:#EAF2FB;color:var(--accent)}
   .modetag.learn{background:#E9F6EF;color:var(--green)}
   /* Learn mode */
-  .qcard{background:var(--card);border:2px solid var(--line);border-radius:20px;padding:26px 24px;text-align:center;font-size:1.3rem;font-weight:700;line-height:1.5;margin:10px 0}
+  .qcard{background:var(--card);border:2px solid var(--line);border-radius:8px;padding:26px 24px;text-align:center;font-size:1.3rem;font-weight:700;line-height:1.5;margin:10px 0}
   .opts{display:flex;flex-direction:column;gap:10px;margin-top:16px}
-  .opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:14px;padding:14px 16px;font:inherit;font-size:1rem;line-height:1.45;cursor:pointer;color:var(--ink)}
+  .opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:8px;padding:14px 16px;font:inherit;font-size:1rem;line-height:1.45;cursor:pointer;color:var(--ink)}
   .opt:hover{border-color:var(--accent)}
   .opt.correct{border-color:var(--green);background:#E9F6EF;font-weight:700}
   .opt.wrong{border-color:var(--red);background:#FBEAEA;font-weight:700}
   .opt[disabled]{cursor:default}
-  .revealbox{background:#FFFDF8;border:2px dashed var(--line);border-radius:16px;padding:16px 18px;margin-top:16px}
+  .revealbox{background:#F7FAFB;border:2px solid var(--line);border-radius:8px;padding:16px 18px;margin-top:16px}
   .roundsum{text-align:center}
   .roundsum .big{font-size:2.2rem;font-weight:900}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 <div class="wrap">
   <div id="picker" style="display:none">

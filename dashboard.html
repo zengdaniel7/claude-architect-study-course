@@ -5,21 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CCA-F Study Dashboard</title>
 <style>
-  /* Atkinson Hyperlegible — dyslexia-friendly font, vendored locally (fonts/) so it works offline */
+  /* Atkinson Hyperlegible: dyslexia-friendly and vendored locally for offline study. */
   @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2")}
   @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:700;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Bold.woff2") format("woff2")}
   @font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Italic.woff2") format("woff2")}
   @font-face{font-family:"Atkinson Hyperlegible";font-style:italic;font-weight:700;font-display:swap;src:url("fonts/AtkinsonHyperlegible-BoldItalic.woff2") format("woff2")}
   :root{
-    --bg:#FBF6EC; --card:#FFFDF8; --ink:#26303B; --muted:#5C6B7A; --line:#E6DDCB; --accent:#3A6EA5;
-    --red:#D64545; --green:#2F9E63; --blue:#2D7DD2; --purple:#8A4FC4; --orange:#E8740C; --yellow:#E0A106;
-    --radius:16px;
+    --bg:#F3F7F8; --card:#FFFFFF; --ink:#23313A; --muted:#586873; --line:#CFDADF; --accent:#176C78;
+    --red:#B33A3A; --green:#247A4B; --blue:#2166A5; --purple:#76519C; --orange:#B75A13; --yellow:#B88300;
+    --radius:8px;
   }
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{margin:0; background:var(--bg); color:var(--ink);
     font-family:"Atkinson Hyperlegible","Trebuchet MS",Verdana,Tahoma,system-ui,sans-serif;
-    font-size:20px; line-height:1.7; letter-spacing:.2px; padding:0 0 80px;}
+    font-size:20px; line-height:1.7; letter-spacing:0; padding:0 0 80px;}
   .wrap{max-width:920px; margin:0 auto; padding:0 22px}
   header{padding:34px 0 14px}
   h1{font-size:2.1rem; margin:0 0 6px}
@@ -32,7 +32,7 @@
   .domain{margin:14px 0}
   .domain .top{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap}
   .domain .name{font-weight:bold}
-  .bar{height:18px; border-radius:10px; background:#EFE7D6; overflow:hidden; margin-top:8px}
+  .bar{height:18px; border-radius:10px; background:#DCE5E8; overflow:hidden; margin-top:8px}
   .bar > span{display:block; height:100%; border-radius:10px}
   .pct{font-variant-numeric:tabular-nums; font-weight:bold}
   .hint{font-size:.85rem; color:var(--muted)}
@@ -41,17 +41,17 @@
   ul.clean{list-style:none; padding-left:0} ul.clean li{padding:8px 0; border-bottom:1px dashed var(--line)}
   ul.clean li:last-child{border-bottom:0}
   ol.loop{padding-left:1.2em} ol.loop li{margin:8px 0; font-weight:600}
-  .ask{border:0; cursor:pointer; background:var(--accent); color:#fff; font:inherit; font-size:.8rem; font-weight:700; padding:6px 12px; border-radius:999px; white-space:nowrap}
+  .ask{border:0; cursor:pointer; background:var(--accent); color:#fff; font:inherit; font-size:.8rem; font-weight:700; padding:6px 12px; border-radius:7px; white-space:nowrap}
   .ask:hover{filter:brightness(1.08)}
   .week{display:flex; gap:12px; align-items:flex-start; padding:12px 0; border-bottom:1px dashed var(--line)}
   .week:last-child{border-bottom:0}
-  .week .n{flex:0 0 auto; width:42px; height:42px; border-radius:12px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800}
+  .week .n{flex:0 0 auto; width:42px; height:42px; border-radius:8px; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800}
   .week .body{flex:1 1 auto}
   .week .ttl{font-weight:700}
   .chip{display:inline-block; font-size:.72rem; color:var(--muted); border:1px solid var(--line); border-radius:999px; padding:1px 8px; margin:2px 4px 0 0}
   a.note{color:var(--accent); text-decoration:none; font-weight:600}
   a.note:hover{text-decoration:underline}
-  #toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(40px); background:var(--ink); color:#fff; padding:12px 20px; border-radius:12px; font-weight:700; opacity:0; transition:.25s; pointer-events:none; z-index:50}
+  #toast{position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(40px); background:var(--ink); color:#fff; padding:12px 20px; border-radius:8px; font-weight:700; opacity:0; transition:.25s; pointer-events:none; z-index:50}
   #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
   .banner{border-radius:var(--radius); padding:14px 18px; margin:16px 0; border:1px solid}
   .banner.tip{background:#FFF4D6; border-color:#E8CE7A}
@@ -60,11 +60,14 @@
   .tag{display:inline-block; font-size:.72rem; font-weight:700; padding:1px 8px; border-radius:999px; vertical-align:middle}
   .tag.ok{background:#2F9E63; color:#fff}
   .tag.rep{background:#E0A106; color:#332700}
+  a:focus-visible,button:focus-visible,input:focus-visible{outline:4px solid #F2B544;outline-offset:3px}
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
   footer{color:var(--muted); font-size:.85rem; margin-top:40px; text-align:center}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 <div class="wrap">
 
@@ -74,7 +77,7 @@
   </header>
 
   <div class="banner ok" style="text-align:center;background:#E8F5EC;border-color:#A9D9BC">
-    <a href="today.html" style="display:inline-block;background:#2F9E63;color:#fff;text-decoration:none;font-weight:800;padding:15px 34px;border-radius:999px;font-size:1.25rem">▶️ Start your lesson →</a>
+    <a href="today.html" style="display:inline-block;background:#247A4B;color:#fff;text-decoration:none;font-weight:800;padding:15px 34px;border-radius:7px;font-size:1.25rem">▶️ Start your lesson →</a>
     <div class="hint" style="margin-top:8px"><b>The one button to click each day</b> — it shows where you are in the course and your 5 steps for today.</div>
   </div>
 
@@ -84,18 +87,23 @@
   </div>
 
   <div class="banner ok" style="text-align:center">
-    <a href="my-plan.html" style="display:inline-block;background:#2F9E63;color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:999px;font-size:1.1rem">🧭 Your personalized plan →</a>
+    <a href="my-plan.html" style="display:inline-block;background:#247A4B;color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:7px;font-size:1.1rem">🧭 Plan worked example →</a>
     <div class="hint" style="margin-top:8px">A sample plan built from a real beginner's pre-test — <a href="pretest.html">take the Pre-Test</a> and re-tune it to you.</div>
   </div>
 
   <div class="banner tip" style="text-align:center">
-    <a href="learning-map.html" style="display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:999px;font-size:1.1rem">🗺️ Your Visual Learning Map →</a>
+    <a href="concept-map.html" style="display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:7px;font-size:1.1rem">🗺️ Open the concept map →</a>
     <div class="hint" style="margin-top:8px">The <b>whole plan as diagrams</b> — agent loop, MCP, structured output, reliability — organized around the spots beginners find hardest.</div>
+  </div>
+
+  <div class="banner ok" style="text-align:center">
+    <a href="engineer-path.html" style="display:inline-block;background:var(--ink);color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:7px;font-size:1.05rem">Applied Engineer path →</a>
+    <div class="hint" style="margin-top:8px">A parallel hands-on path through programming, APIs, data, Git, testing, systems, security, and technical-cofounder judgment.</div>
   </div>
 
   <h2>📍 Where you are <span class="hint">· live — same tracker as the Lesson page</span></h2>
   <div class="card">
-    <p style="margin:0 0 4px"><b id="where-count">0 / 16 units done</b> <span class="hint" id="where-next-wrap">· next up: <b id="where-next">…</b></span></p>
+    <p style="margin:0 0 4px"><b id="where-count">0 / 23 units done</b> <span class="hint" id="where-next-wrap">· next up: <b id="where-next">…</b></span></p>
     <div style="background:#EFE7D8;border-radius:99px;height:12px;overflow:hidden;margin:8px 0 12px"><div id="where-bar" style="background:#2F9E63;height:100%;width:0%;border-radius:99px"></div></div>
     <p style="margin:0 0 8px">👉 <a href="today.html"><b>Open your lesson page →</b></a> <span class="hint">it tees up the exact lesson, video and 5 steps.</span></p>
     <p class="hint" id="where-last" style="display:none;margin:0 0 8px"></p>
@@ -103,8 +111,8 @@
   </div>
   <script>
   (function(){
-    var PATH=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"]; // keep in sync with today.html
-    var TITLES={o1:"The Agent Loop",a1:"Core vocabulary",a2:"Model physics & economics",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator–Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};
+    var PATH=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():[];
+    var TITLES=(window.CCAF&&CCAF.TITLES)?CCAF.TITLES:{};
     function drawWhere(){
       var done={};try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&s.done)done=s.done;}catch(e){}
       var n=PATH.filter(function(id){return done[id];}).length;
@@ -248,8 +256,8 @@
     <h2 style="margin:0 0 6px">💾 Your progress</h2>
     <p class="hint" id="syncstate" style="margin:.3em 0 0">… checking how your progress is being saved …</p>
     <p style="margin:.7em 0 0">
-      <button type="button" id="expBtn" style="background:var(--accent);color:#fff;border:0;border-radius:999px;font:inherit;font-weight:700;padding:8px 16px;cursor:pointer;margin:0 8px 6px 0;font-size:.88rem">⬇️ Export a backup file</button>
-      <button type="button" id="impBtn" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:999px;font:inherit;font-weight:700;padding:8px 16px;cursor:pointer;margin:0 0 6px;font-size:.88rem">⬆️ Import a backup</button>
+      <button type="button" id="expBtn" style="background:var(--accent);color:#fff;border:0;border-radius:7px;font:inherit;font-weight:700;padding:8px 16px;cursor:pointer;margin:0 8px 6px 0;font-size:.88rem">⬇️ Export a backup file</button>
+      <button type="button" id="impBtn" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:7px;font:inherit;font-weight:700;padding:8px 16px;cursor:pointer;margin:0 0 6px;font-size:.88rem">⬆️ Import a backup</button>
       <input type="file" id="impFile" accept=".json,application/json" style="display:none">
     </p>
     <p class="hint" style="margin:.6em 0 0">Everything you tick or type saves itself <b>the moment you do it</b>. Heads-up: progress belongs to the exact address in the bar — <b>localhost:8000</b> and the hosted site each keep their own. Study at the same address every time.</p>

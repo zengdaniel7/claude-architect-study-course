@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concept map | CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .rail{display:grid;grid-template-columns:210px 46px minmax(0,1fr);align-items:stretch;margin:12px 0}
+  .stage{border:2px solid var(--accent);background:#E7F0FB;padding:14px;font-weight:800;display:flex;align-items:center}
+  .arrow{display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--muted)}
+  .nodes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .node{border:2px solid var(--line);background:#fff;padding:12px;text-decoration:none;color:var(--ink);border-radius:6px}
+  .node:hover{border-color:var(--accent)}.node.proficient{border-color:var(--green);background:#EAF7EF}.node.practiced{border-color:var(--yellow);background:#FFF8E7}.node.seen{border-color:var(--accent)}
+  .ttl{font-weight:800}.concepts{font-size:.78rem;color:var(--muted);line-height:1.45;margin-top:5px}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:.85rem}.legend span{border-left:5px solid;padding-left:8px}
+  @media(max-width:720px){.rail{grid-template-columns:1fr}.arrow{transform:rotate(90deg);height:36px}.nodes{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
+<script src="nav.js"></script>
+<main class="wrap">
+  <header style="padding:28px 0 6px">
+    <h1>Concept map</h1>
+    <p class="sub">The fixed prerequisite path. Each box names what it unlocks and what evidence you have.</p>
+  </header>
+  <div class="card legend"><span style="border-color:var(--line)">new</span><span style="border-color:var(--accent)">seen</span><span style="border-color:var(--yellow)">practiced</span><span style="border-color:var(--green)">proficient</span></div>
+  <div id="map"></div>
+  <footer>This map is curated from the course manifest. It does not invent relationships with AI.</footer>
+</main>
+<script>
+(function(){
+  var C=window.CCAF_COURSE,order=["Foundation Workbench","Atoms","Molecules","Organisms","Developer Bridge","Reliability Rail","Templates","Pages"];
+  // Display order is the actual prerequisite order, not the alphabetical order above.
+  var stages=[
+    ["Foundation Workbench",["w1","w2","w3","w4","w5"]],
+    ["Core language",["a1","m3","m1","m2"]],
+    ["Agent foundation",["o1","a2"]],
+    ["Developer Bridge",["d1","d2","m4"]],
+    ["Connected systems",["o3","o4","o2"]],
+    ["Reliability rail",["rel"]],
+    ["System templates",["t1","t2"]],
+    ["Exam and capstone",["p1","px","p2"]]
+  ];
+  var host=document.getElementById("map");
+  stages.forEach(function(s,si){var rail=document.createElement("section");rail.className="rail";var label=document.createElement("div");label.className="stage";label.textContent=s[0];var arrow=document.createElement("div");arrow.className="arrow";arrow.textContent=si?"->":"start";var nodes=document.createElement("div");nodes.className="nodes";
+    s[1].forEach(function(id){var u=C.map[id],m=window.CCAF?CCAF.mastery(id):{state:"new"},a=document.createElement("a");a.className="node "+m.state;a.href=(u.notes||"today.html");a.innerHTML='<div class="ttl">'+u.title+'</div><div class="concepts">Prerequisite: '+((u.prereq||[]).map(function(p){return C.map[p].title;}).join(", ")||"none")+'<br>'+u.concepts.join(" | ")+'<br><b>Evidence: '+m.state+'</b></div>';nodes.appendChild(a);});
+    rail.appendChild(label);rail.appendChild(arrow);rail.appendChild(nodes);host.appendChild(rail);
+  });
+})();
+</script>
+</body>
+</html>

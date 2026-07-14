@@ -11,10 +11,10 @@
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
   @media(max-width:760px){.grid2,.grid3{grid-template-columns:1fr}}
-  .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 16px}
   .stat .big{font-size:1.9rem;font-weight:800;line-height:1}
   .stat .lab{font-size:.8rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
-  .dia{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;margin:14px 0}
+  .dia{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px 18px 14px;margin:14px 0}
   .dia h3{margin:0 0 4px;font-size:1.15rem}
   .dia .cap{font-size:.9rem;color:var(--muted);margin:2px 0 12px}
   .dia .note{font-size:.88rem;color:var(--muted);margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
@@ -29,13 +29,13 @@
   .legend i{width:.85em;height:.85em;border-radius:3px;display:inline-block}
   .prio{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line)}
   .prio:last-child{border-bottom:0}
-  .prio .rank{flex:0 0 auto;width:40px;height:40px;border-radius:12px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+  .prio .rank{flex:0 0 auto;width:40px;height:40px;border-radius:8px;color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
   .prio .body{flex:1 1 auto}
   .prio .ttl{font-weight:800}
-  .tile{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px}
   .tile h4{margin:.1em 0 .3em;font-size:1rem}
   .tile p{margin:.2em 0;font-size:.9rem}
-  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:999px}
+  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:7px}
   .ask:hover{filter:brightness(1.08)}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -75,7 +75,7 @@
   <!-- ============ WHERE YOU ARE ============ -->
   <h2>📍 Example baseline (one real beginner's pre-test)</h2>
   <div class="grid3">
-    <div class="stat"><div class="big" style="color:var(--accent)">20/30</div><div class="lab">Pre-test score</div><p style="margin:.4em 0 0;font-size:.85rem;color:var(--muted)">…but <b>18 guessed</b> → solid base ≈ <b>12</b>. That's our real starting line.</p></div>
+    <div class="stat"><div class="big" style="color:var(--accent)">20/30</div><div class="lab">Worked example</div><p style="margin:.4em 0 0;font-size:.85rem;color:var(--muted)"><b>18 guessed</b> means only about <b>12</b> answers were secure. Use your own confidence count.</p></div>
     <div class="stat"><div class="big" style="color:var(--green)">4/5 · 0 guesses</div><div class="lab">Foundations quiz</div><p style="margin:.4em 0 0;font-size:.85rem;color:var(--muted)">Vocabulary is <b>locked</b> ✅ — so we go light here.</p></div>
     <div class="stat"><div class="big" style="color:var(--red)">Agentic + Reliability</div><div class="lab">Weak spots</div><p style="margin:.4em 0 0;font-size:.85rem;color:var(--muted)">Where most guesses happened → most of your map.</p></div>
   </div>

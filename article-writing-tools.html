@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="study.css">
 <style>
   .lead{font-size:1.05rem;color:var(--muted)}
-  .dia{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 14px;margin:16px 0;scroll-margin-top:70px}
+  .dia{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px 18px 14px;margin:16px 0;scroll-margin-top:70px}
   .dia h3{margin:0 0 4px;font-size:1.15rem}
   .dia .cap{font-size:.9rem;color:var(--muted);margin:2px 0 12px}
   .dia .note{font-size:.92rem;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
@@ -18,9 +18,9 @@
   .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.85rem;margin:8px 0 0}
   .legend span{display:inline-flex;align-items:center;gap:6px}
   .legend i{width:.85em;height:.85em;border-radius:3px;display:inline-block}
-  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:999px}
+  .ask{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.78rem;font-weight:700;padding:6px 12px;border-radius:7px}
   .ask:hover{filter:brightness(1.08)}
-  .golearn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;font-weight:800;padding:10px 20px;border-radius:999px}
+  .golearn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;font-weight:800;padding:10px 20px;border-radius:7px}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -38,13 +38,14 @@
 </defs></svg>
 
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 
 <div class="wrap">
 
   <header style="padding:30px 0 6px">
     <h1>🔧 Writing Tools for Agents — as pictures</h1>
-    <p class="lead">Anthropic's own guide to designing tools that agents actually use well — <b>this is exam gold</b> for the tool-design questions on CCA-F. Read each picture, say the sticky line out loud, then quiz yourself.</p>
+    <p class="lead">Anthropic's own guide to designing tools that agents actually use well — <b>this is exam gold</b> for the "tool design" task statements on CCA-F. Read each picture, say the sticky line out loud, then quiz yourself.</p>
     <p><a href="https://www.anthropic.com/engineering/writing-tools-for-agents" target="_blank" rel="noopener" class="note">🔗 read the original on anthropic.com ↗</a></p>
   </header>
 

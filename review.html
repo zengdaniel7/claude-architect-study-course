@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Review queue | CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .reviewcard{background:#fff;border:3px solid var(--accent);padding:26px 24px;min-height:240px;display:flex;flex-direction:column;justify-content:center;margin:18px 0}
+  .front{font-size:1.35rem;font-weight:800;line-height:1.45}
+  .back{display:none;border-top:2px solid var(--line);margin-top:20px;padding-top:18px;font-size:1.08rem}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+  button,.action{font:inherit;font-weight:800;border:0;padding:11px 18px;cursor:pointer;text-decoration:none;display:inline-block}
+  .show{background:var(--accent);color:#fff}.again{background:var(--red);color:#fff}.hard{background:var(--yellow);color:#332700}.good{background:var(--green);color:#fff}.plain{background:#fff;border:2px solid var(--line);color:var(--ink)}
+  .source{font-size:.78rem;font-weight:800;color:var(--muted)}
+  #done{display:none;border-left:7px solid var(--green);background:#EAF7EF;padding:18px 20px}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
+<script src="nav.js"></script>
+<main class="wrap">
+  <header style="padding:28px 0 5px">
+    <h1>Review queue</h1>
+    <p class="sub" id="summary">Loading cards</p>
+  </header>
+  <div class="callout info"><b>Short rule:</b> wrong returns tomorrow; hard returns in 2 days; got it stretches from 4 days toward 30. A correct guess still returns for review.</div>
+  <div id="session">
+    <div class="reviewcard">
+      <div class="source" id="source"></div>
+      <div class="front" id="front"></div>
+      <div class="back" id="back"></div>
+    </div>
+    <div class="actions" id="before"><button class="show" id="show" type="button">Show answer</button></div>
+    <div class="actions" id="after" style="display:none">
+      <button class="again" data-grade="again" type="button">Again</button>
+      <button class="hard" data-grade="hard" type="button">Hard</button>
+      <button class="good" data-grade="good" type="button">Got it</button>
+    </div>
+  </div>
+  <div id="done"></div>
+  <div class="actions"><a class="action plain" href="today.html">Back to lesson</a><a class="action plain" href="quizzes.html">Practice hub</a></div>
+</main>
+<script>
+(function(){
+  function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
+  function day(n){return Date.now()+n*24*60*60*1000;}
+  var C=window.CCAF_COURSE,filter=param("unit"),cards=[];
+  Object.keys(C.cards).forEach(function(u){if(filter&&u!==filter)return;(C.cards[u]||[]).forEach(function(x,i){cards.push({id:"concept-"+u+"-"+i,unit:u,front:"What is "+x[0]+"?",back:x[1],source:"lesson concept"});});});
+  try{var mistakes=JSON.parse(localStorage.getItem("ccaf-mistake-cards")||"{}");Object.keys(mistakes).forEach(function(k){var x=mistakes[k];if(!filter||x.unit===filter)cards.push(x);});}catch(e){}
+  var sched={};try{sched=JSON.parse(localStorage.getItem("ccaf-review")||"{}");}catch(e){}
+  var now=Date.now(),due=cards.filter(function(c){return !sched[c.id]||Number(sched[c.id].due||0)<=now;});
+  if(!due.length&&filter)due=cards.slice(0,3);
+  var i=0,rated=0,cur=null;
+  var session=document.getElementById("session"),done=document.getElementById("done"),front=document.getElementById("front"),back=document.getElementById("back"),source=document.getElementById("source");
+  function draw(){
+    if(i>=due.length){session.style.display="none";done.style.display="block";done.innerHTML="<b>Review complete.</b><br>"+rated+" card"+(rated===1?"":"s")+" scheduled."+(filter&&rated>=3?" Your flashcard step is complete.":"");if(filter&&rated>=3&&window.CCAF){CCAF.setStep(filter,4,true);CCAF.recordEvidence(filter,"review",{complete:true,count:rated});}return;}
+    cur=due[i];front.textContent=cur.front;back.textContent=cur.back;back.style.display="none";document.getElementById("before").style.display="flex";document.getElementById("after").style.display="none";source.textContent=(C.map[cur.unit]?C.map[cur.unit].title:cur.unit)+" | "+(cur.source||"review");document.getElementById("summary").textContent=(due.length-i)+" due card"+((due.length-i)===1?"":"s")+(filter?" for "+C.map[filter].title:"");
+  }
+  document.getElementById("show").addEventListener("click",function(){back.style.display="block";document.getElementById("before").style.display="none";document.getElementById("after").style.display="flex";});
+  document.querySelectorAll("[data-grade]").forEach(function(b){b.addEventListener("click",function(){var g=b.getAttribute("data-grade"),old=sched[cur.id]||{interval:0,streak:0};if(g==="again"){old.interval=1;old.streak=0;}else if(g==="hard"){old.interval=2;old.streak=Math.max(0,old.streak||0);}else{old.streak=(old.streak||0)+1;old.interval=old.interval?Math.min(30,Math.max(4,old.interval*2)):4;}old.due=day(old.interval);old.last=Date.now();old.grade=g;old.unit=cur.unit;sched[cur.id]=old;localStorage.setItem("ccaf-review",JSON.stringify(sched));rated++;i++;draw();});});
+  if(!due.length){session.style.display="none";done.style.display="block";done.innerHTML="<b>Nothing is due today.</b><br>Your next scheduled cards will appear here automatically.";}else draw();
+})();
+</script>
+</body>
+</html>

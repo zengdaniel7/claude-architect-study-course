@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask tutor | CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
+  .mode{border:2px solid var(--line);background:#fff;color:var(--ink);padding:15px;text-align:left;font:inherit;font-weight:800;cursor:pointer}
+  .mode.active{border-color:var(--accent);background:#E7F0FB}
+  select,textarea{width:100%;font:inherit;color:var(--ink);background:#fff;border:2px solid var(--line);padding:12px}
+  textarea{min-height:150px;resize:vertical;line-height:1.6}
+  .copy{background:var(--green);color:#fff;border:0;padding:12px 20px;font:inherit;font-weight:800;cursor:pointer}
+  .bundle{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+  .bundle div{border-left:5px solid var(--accent);background:#fff;padding:10px 13px}
+  #status{display:none;background:#EAF7EF;border-left:6px solid var(--green);padding:12px;margin-top:12px}
+  @media(max-width:650px){.modes,.bundle{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
+<script src="nav.js"></script>
+<main class="wrap">
+  <header style="padding:28px 0 6px">
+    <h1>Ask your tutor</h1>
+    <p class="sub">A grounded prompt for the exact lesson, prerequisites, build, and recent mistakes.</p>
+  </header>
+  <label for="unit"><b>Lesson</b></label>
+  <select id="unit"></select>
+  <div class="bundle" id="bundle"></div>
+  <div class="modes">
+    <button class="mode active" data-mode="explain" type="button">Explain one idea</button>
+    <button class="mode" data-mode="hint" type="button">Give the next hint</button>
+    <button class="mode" data-mode="grade" type="button">Grade my work</button>
+    <button class="mode" data-mode="quiz" type="button">Quiz me one at a time</button>
+  </div>
+  <label for="work"><b>Your question or work</b> <span class="hint">Optional for Explain or Quiz.</span></label>
+  <textarea id="work" placeholder="Paste the part you want help with, or your answer/build attempt."></textarea>
+  <p><button class="copy" id="copy" type="button">Copy grounded tutor request</button></p>
+  <div id="status"></div>
+  <footer>Routine tutoring can use your Ollama route. Keep scored readiness deterministic; tutor feedback is advisory until verified by quiz/build evidence.</footer>
+</main>
+<script src="exercises.js"></script>
+<script src="exercise-library.js"></script>
+<script>
+(function(){
+  var C=window.CCAF_COURSE,sel=document.getElementById("unit"),mode="explain";
+  C.units.forEach(function(u){var o=document.createElement("option");o.value=u.id;o.textContent=u.title;sel.appendChild(o);});
+  sel.value=(window.CCAF&&CCAF.cur()!=="end")?CCAF.cur():C.order[0];
+  function exercise(u){var x=null;EXERCISES.forEach(function(e){if(e.id===u.exercise)x=e;});return x;}
+  function recent(u){var out=[];try{var m=JSON.parse(localStorage.getItem("ccaf-mistake-cards")||"{}");Object.keys(m).forEach(function(k){if(m[k].unit===u.id)out.push(m[k].front);});}catch(e){}return out.slice(-3);}
+  function draw(){var u=C.map[sel.value],m=window.CCAF?CCAF.mastery(u.id):null,ex=exercise(u);document.getElementById("bundle").innerHTML=
+    '<div><b>Prerequisites</b><br><span class="hint">'+((u.prereq||[]).map(function(id){return C.map[id].title;}).join(", ")||"None")+'</span></div>'+
+    '<div><b>Concepts</b><br><span class="hint">'+u.concepts.join(", ")+'</span></div>'+
+    '<div><b>Build</b><br><span class="hint">'+(ex?ex.title:"Project rubric")+'</span></div>'+
+    '<div><b>Current evidence</b><br><span class="hint">'+(m?m.state:"new")+(m&&m.quiz?" | quiz "+m.quiz.score+"/"+m.quiz.total+", "+Number(m.quiz.guessed||0)+" guessed":"")+'</span></div>';}
+  sel.addEventListener("change",draw);draw();
+  document.querySelectorAll("[data-mode]").forEach(function(b){b.addEventListener("click",function(){mode=b.getAttribute("data-mode");document.querySelectorAll("[data-mode]").forEach(function(x){x.classList.toggle("active",x===b);});});});
+  document.getElementById("copy").addEventListener("click",function(){var u=C.map[sel.value],ex=exercise(u),mist=recent(u),work=document.getElementById("work").value.trim();var action={
+      explain:"Teach only the smallest idea needed. Plain meaning, tiny example, boxes-and-arrows sketch, then ask one check question.",
+      hint:"Do not give the full answer first. Give one nudge. If I still need help, use an analogy/diagram, then a worked example, then the full explanation.",
+      grade:"Grade my work with Beginner, Developing, Exam-ready, or Strong. Say Right, Fix, and one small redo. Do not mark course mastery.",
+      quiz:"Ask one question at a time without showing the answer. After my choice, ask confidence: know, maybe, or no idea. Track guesses separately from score."
+    }[mode];
+    var text="You are my CCA-F tutor for a dyslexic complete beginner. Stay within this lesson for at most 5 turns.\n\nLESSON: "+u.title+"\nPLAIN GOAL: "+u.one+"\nPREREQUISITES: "+((u.prereq||[]).map(function(id){return C.map[id].title;}).join(", ")||"none")+"\nCONCEPTS: "+u.concepts.join(", ")+"\nFIXED BUILD: "+(ex?ex.title+" | "+ex.goal:"capstone rubric")+"\nBUILD RUBRIC: "+(ex?ex.rubric.join(" | "):"see Projects and Rubrics")+"\nRECENT WRONG OR GUESSED QUESTIONS: "+(mist.join(" | ")||"none saved")+"\n\nTEACHING RULE: "+action+"\nAlways use short chunks and define jargon once. Tie the idea to its CCA-F domain and production use.\n\nMY INPUT:\n"+(work||"Start with the lesson goal.");
+    var done=function(){var s=document.getElementById("status");s.style.display="block";s.textContent="Copied. Paste it into this tutor chat or your routine Ollama tutor.";};
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(text).then(done);}else{var x=document.createElement("textarea");x.value=text;document.body.appendChild(x);x.select();document.execCommand("copy");x.remove();done();}
+  });
+})();
+</script>
+</body>
+</html>

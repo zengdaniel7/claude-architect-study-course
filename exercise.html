@@ -8,34 +8,42 @@
 <style>
   .lead{font-size:1.05rem;color:var(--muted)}
   .chiprow{margin:6px 0 0}
-  .stepcard{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:14px;padding:16px 18px;margin:14px 0}
+  .stepcard{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:8px;padding:16px 18px;margin:14px 0}
   .stepcard h3{margin:0 0 6px;font-size:1.08rem}
-  .promptbox{background:#F3EBDA;border:1px dashed #C9BD9F;border-radius:10px;padding:10px 14px;font-size:.88rem;white-space:pre-wrap;margin-top:10px;color:var(--muted)}
-  .copybtn{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.82rem;font-weight:700;padding:8px 14px;border-radius:999px;margin-top:10px}
+  .promptbox{background:#EAF0F2;border:1px solid var(--line);border-radius:8px;padding:10px 14px;font-size:.88rem;white-space:pre-wrap;margin-top:10px;color:var(--muted)}
+  .copybtn{border:0;cursor:pointer;background:var(--accent);color:#fff;font:inherit;font-size:.82rem;font-weight:700;padding:8px 14px;border-radius:7px;margin-top:10px}
   .copybtn:hover{filter:brightness(1.08)}
-  .ansblock{margin-top:14px;background:#FDFAF2;border:1.5px solid #E8DFC8;border-radius:12px;padding:12px 14px}
+  .hintbtn{border:1.5px solid var(--line);cursor:pointer;background:#fff;color:var(--ink);font:inherit;font-size:.8rem;font-weight:800;padding:7px 12px;margin-top:10px}
+  .hintbox{display:none;background:#FFF4D6;border-left:5px solid var(--yellow);padding:10px 13px;margin-top:8px;font-size:.9rem}
+  .modepick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+  .modepick label{display:flex;gap:10px;align-items:flex-start;border:2px solid var(--line);background:#fff;padding:12px;cursor:pointer}
+  .modepick input{width:22px;height:22px;flex:0 0 auto}
+  #finishmsg{display:none;border-left:6px solid var(--red);background:#FBE9E8;padding:10px 14px;margin-top:12px}
+  .ansblock{margin-top:14px;background:#F7FAFB;border:1.5px solid var(--line);border-radius:8px;padding:12px 14px}
   .ansblock .anslab{font-weight:800;margin:0 0 6px;font-size:.95rem}
   .ansblock .anslab .num{width:26px;height:26px;font-size:.85rem;border-radius:7px}
-  textarea.ans{width:100%;min-height:96px;font:inherit;font-size:.95rem;line-height:1.55;border:1.5px solid var(--line);border-radius:10px;padding:11px 13px;background:#fff;resize:vertical;color:var(--ink)}
+  textarea.ans{width:100%;min-height:96px;font:inherit;font-size:.95rem;line-height:1.55;border:1.5px solid var(--line);border-radius:8px;padding:11px 13px;background:#fff;resize:vertical;color:var(--ink)}
   textarea.ans:focus{outline:2px solid var(--accent)}
-  .quizcard{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--green);border-radius:14px;padding:16px 18px;margin:14px 0}
+  .quizcard{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--green);border-radius:8px;padding:16px 18px;margin:14px 0}
   .quizcard h3{margin:0 0 4px;font-size:1.08rem}
   .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-  .bigbtn{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:.92rem;padding:12px 22px;border-radius:999px;color:#fff}
+  .bigbtn{border:0;cursor:pointer;font:inherit;font-weight:800;font-size:.92rem;padding:12px 22px;border-radius:7px;color:#fff}
   .bigbtn:hover{filter:brightness(1.07)}
   .bigbtn.check{background:var(--green)}
   .bigbtn.report{background:var(--purple)}
   .bigbtn.done{background:#fff;color:var(--ink);border:2px solid var(--line)}
   .bigbtn.done.is-done{background:var(--green);color:#fff;border-color:var(--green)}
   .flow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:.85rem;color:var(--muted);margin:10px 0 0}
-  .flow b{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 12px;color:var(--ink);font-size:.82rem}
-  .exlist a.start{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:9px 18px;border-radius:999px;font-size:.88rem}
-  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:12px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
+  .flow b{background:#fff;border:1px solid var(--line);border-radius:6px;padding:4px 12px;color:var(--ink);font-size:.82rem}
+  .exlist a.start{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:9px 18px;border-radius:7px;font-size:.88rem}
+  #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:8px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:620px){.modepick{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 
 <div class="wrap" id="app"></div>
@@ -43,6 +51,7 @@
 <div id="toast">Copied 👍</div>
 
 <script src="exercises.js"></script>
+<script src="exercise-library.js"></script>
 <script>
 (function(){
   var toast=document.getElementById("toast");
@@ -106,6 +115,9 @@
       h+='<div class="ansblock"><div class="anslab"><span class="num">'+boxNum+'</span>'+s.field.label+'</div>'+
          '<textarea class="ans" data-f="'+s.field.id+'" placeholder=""></textarea></div>';
     }
+    if(s.hints&&s.hints.length){
+      h+='<button type="button" class="hintbtn" data-hint="'+i+'">Show hint 1 of '+s.hints.length+'</button><div class="hintbox" id="hint'+i+'"></div>';
+    }
     h+='</div>';
   });
 
@@ -119,14 +131,18 @@
     h+='</div>';
   }
 
-  h+='<h2>✅ When you\'re done</h2><div class="card">'+
-    '<p style="margin:0"><b>1 · Instant check:</b> the green button copies ALL your answers <b>+ the hidden grading rubric</b> as one message — paste it into any AI chat (Comet sidebar, claude.ai) and it grades you on the spot.</p>'+
-    '<p><b>2 · Make it count:</b> the purple button copies a report — paste it to <b>Claude (your course tutor, in Claude Code)</b>. Claude grades it, logs mistakes, updates your flashcards. (Your 🔨 Build step ticks itself when you hit Mark done here.)</p>'+
+  h+='<h2>When you\'re done</h2><div class="card">'+
+    '<p style="margin:0"><b>How did you complete this attempt?</b></p><div class="modepick">'+
+      '<label><input type="radio" name="mode" value="guided"><span><b>With guidance</b><br><span class="hint">Hints, worked answer, or tutor help were needed.</span></span></label>'+
+      '<label><input type="radio" name="mode" value="independent"><span><b>Independent redo</b><br><span class="hint">I completed a fresh version without hints or copying values.</span></span></label>'+
+    '</div>'+
+    '<p style="margin:0"><b>1. Check:</b> Copy your answers and rubric. Paste them into your tutor for a grade.</p>'+
+    '<p><b>2. Save:</b> Copy the report for your course tutor. Mark done records the Build step.</p>'+
     '<div class="actions">'+
       '<button class="bigbtn check" id="btncheck">🧠 Copy answers + rubric → paste to any AI</button>'+
       '<button class="bigbtn report" id="btnreport">📤 Copy report → paste to Claude</button>'+
       '<button class="bigbtn done'+(st.done?' is-done':'')+'" id="btndone">'+(st.done?'✓ Done':'Mark done')+'</button>'+
-    '</div></div>';
+    '</div><div id="finishmsg"></div></div>';
 
   h+='<footer><a href="exercise.html">← all exercises</a> · answers live only in this browser · built by your Claude tutor</footer>';
   app.innerHTML=h;
@@ -135,6 +151,15 @@
   ex.steps.forEach(function(s,i){ if(s.prompt){document.getElementById("pb"+i).textContent=s.prompt;} });
   document.querySelectorAll(".copybtn").forEach(function(b){
     b.addEventListener("click",function(){copy(ex.steps[+b.getAttribute("data-step")].prompt,"Copied — paste it in a NEW chat 👍");});
+  });
+  document.querySelectorAll(".hintbtn").forEach(function(b){
+    var idx=Number(b.getAttribute("data-hint")),shown=0,box=document.getElementById("hint"+idx),hints=ex.steps[idx].hints||[];
+    b.addEventListener("click",function(){
+      shown=Math.min(shown+1,hints.length);box.style.display="block";
+      box.innerHTML="<b>Hint "+shown+":</b> "+hints[shown-1];
+      b.textContent=shown<hints.length?("Show hint "+(shown+1)+" of "+hints.length):"All hints shown";
+      if(shown>=hints.length)b.disabled=true;
+    });
   });
 
   // wire every answer box: restore saved text + placeholder + autosave
@@ -146,6 +171,10 @@
     ta.placeholder=PH[fid]||"";
     ta.value=st.a[fid]||"";
     ta.addEventListener("input",function(){st.a[fid]=ta.value;save();});
+  });
+  document.querySelectorAll('input[name="mode"]').forEach(function(r){
+    if(st.mode===r.value)r.checked=true;
+    r.addEventListener("change",function(){st.mode=r.value;save();});
   });
 
   function answersBlock(){
@@ -176,14 +205,24 @@
 
   var doneBtn=document.getElementById("btndone");
   doneBtn.addEventListener("click",function(){
+    var msg=document.getElementById("finishmsg");
+    if(!st.done){
+      var missing=FIELDS.filter(function(f){return !(st.a[f.id]||"").trim();});
+      if(missing.length||!st.mode){
+        msg.style.display="block";
+        msg.innerHTML="<b>One small thing remains.</b><br>"+(missing.length?(missing.length+" answer box"+(missing.length===1?" is":"es are")+" empty.<br>"):"")+(!st.mode?"Choose With guidance or Independent redo.":"");
+        return;
+      }
+    }
     st.done=!st.done;save();
     doneBtn.classList.toggle("is-done",st.done);
     doneBtn.textContent=st.done?"✓ Done":"Mark done";
     if(st.done){
-      // tick the 🔨 Build step of the ⭐ NOW lesson (per-lesson save + habit log + mirror)
-      var _ct="your current lesson";
-      try{if(window.CCAF){CCAF.setStep(CCAF.cur(),2,true);_ct=CCAF.TITLES[CCAF.cur()]||_ct;}}catch(_){}
-      flash('Done! 🔨 Build step ticked for "'+_ct+'" — now 📤 send the report to Claude');
+      var uid=ex.units[0],_ct=uid;
+      try{if(window.CCAF){CCAF.setStep(uid,2,true);CCAF.recordEvidence(uid,"build",{exercise:ex.id,mode:st.mode,complete:true});_ct=CCAF.TITLES[uid]||_ct;}}catch(_){}
+      msg.style.display="block";msg.style.borderLeftColor=st.mode==="independent"?"var(--green)":"var(--yellow)";msg.style.background=st.mode==="independent"?"#EAF7EF":"#FFF4D6";
+      msg.innerHTML=st.mode==="independent"?"<b>Independent build evidence saved.</b> This can count toward mastery.":"<b>Guided build saved.</b> Good learning evidence. Do a fresh independent redo later for mastery.";
+      flash('Build saved for "'+_ct+'"');
     }
   });
 })();

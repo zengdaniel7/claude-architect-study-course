@@ -6,23 +6,24 @@
 <title>Lesson notes — CCA-F</title>
 <link rel="stylesheet" href="study.css">
 <style>
-  .nhead{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 22px;margin:14px 0}
+  .nhead{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:18px 22px;margin:14px 0}
   .nhead .ttl{font-size:1.7rem;font-weight:800;margin:2px 0}
   .npager{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 10px}
-  .pgbtn{border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:.85rem;border-radius:999px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block}
+  .pgbtn{border:1.5px solid var(--line);background:#fff;color:var(--ink);font:inherit;font-weight:800;font-size:.85rem;border-radius:7px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block}
   .pgbtn:hover{border-color:var(--accent);color:var(--accent)}
   .pgbtn.off{opacity:.35;pointer-events:none}
   #notes h3{margin:1.4em 0 .5em;font-size:1.15rem}
-  #notes .idea{background:#fff;border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:12px;padding:12px 16px;margin:10px 0;line-height:1.65}
+  #notes .idea{background:#fff;border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:8px;padding:12px 16px;margin:10px 0;line-height:1.65}
   #notes ul{line-height:1.8}
   #notes p{line-height:1.7;max-width:62ch}
-  .b{display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:800;border-radius:999px;padding:10px 18px;text-decoration:none;font-size:.92rem;margin:4px 8px 0 0}
+  .b{display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:800;border-radius:7px;padding:10px 18px;text-decoration:none;font-size:.92rem;margin:4px 8px 0 0}
   .b.go{background:var(--accent);color:#fff} .b.quiz{background:var(--green);color:#fff} .b.plain{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
   @media print{nav.top,.npager,.actions{display:none}}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
 <script src="nav.js"></script>
 
 <div class="wrap">
@@ -50,10 +51,9 @@
 
 <script src="notes-data.js"></script>
 <script>
-var UPATH=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
-var UTITLES={o1:"The Agent Loop",a1:"Core vocabulary",a2:"Model physics & economics",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator–Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};
-var ULEVEL={o1:"Organisms",a1:"Atoms",a2:"Atoms",m3:"Molecules",m1:"Molecules",m2:"Molecules",m4:"Molecules",o3:"Organisms",o4:"Organisms",o2:"Organisms",rel:"Reliability thread",t1:"Templates",t2:"Templates",p1:"Pages",px:"Pages",p2:"Pages"};
-var UQUIZ={o1:"quiz.html?set=agentic",a1:"quiz.html?set=foundations",a2:"quiz.html?set=foundations",m3:"quiz.html?set=prompting",m1:"quiz.html?set=prompting",m2:"quiz.html?set=tools-mcp",m4:"quiz.html?set=tools-mcp",o3:"quiz.html?set=tools-mcp",o4:"quiz.html?set=claude-code",o2:"quiz.html?set=agentic",rel:"quiz.html?set=reliability",t1:"quiz.html?set=agentic",t2:"quiz.html?set=agentic",p1:"pretest.html",px:"pretest.html",p2:"projects.html"};
+var UPATH=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
+var UTITLES=(window.CCAF&&CCAF.TITLES)?CCAF.TITLES:{},ULEVEL={},UQUIZ={};
+if(window.CCAF_COURSE){CCAF_COURSE.units.forEach(function(x){ULEVEL[x.id]=x.level;UQUIZ[x.id]=x.quiz;});}
 function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
 function currentLesson(){try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
   for(var i=0;i<UPATH.length;i++){if(!d[UPATH[i]])return UPATH[i];}}catch(e){}return UPATH[0];}
@@ -73,8 +73,10 @@ document.getElementById("nactions").innerHTML=
   '<a class="b quiz" href="'+(isProj?q:(q+(q.indexOf("?")>=0?"&":"?")+"unit="+u))+'">'+(isProj?"🔨 Its project":"🧪 Its quiz")+' →</a>'+
   '<a class="b plain" href="curriculum.html#u-'+u+'">📚 On the curriculum</a>';
 var N=(window.LESSON_NOTES||{})[u];
+var beginner=(window.CCAF_COURSE&&CCAF_COURSE.lessons[u])||null;
 document.getElementById("notes").innerHTML = N && N.html ? N.html
-  : '<p><b>These notes are being written.</b> Meanwhile, the 📒 Prep notes on the <a href="curriculum.html#u-'+u+'">curriculum</a> cover the tested ideas.</p>';
+  : beginner?('<h3>Plain meaning</h3><p>'+beginner.plain+'</p><h3>Tiny example</h3><div class="idea">'+beginner.example+'</div><h3>Watch out</h3><p>'+beginner.danger+'</p><p><a class="b go" href="foundation-lab.html?unit='+u+'">Open the visual and audio lesson</a></p>')
+  : '<p><b>These notes are being written.</b> Use the linked curriculum lesson meanwhile.</p>';
 try{localStorage.setItem("ccaf-last",JSON.stringify({href:"notes.html?unit="+u,label:"Notes: "+UTITLES[u],ts:Date.now()}));}catch(e){}
 </script>
 </body>
