@@ -145,7 +145,17 @@ check(!/text-transform\s*:\s*uppercase/.test(read("review.html")), "review cards
 const foundation = read("foundation-lab.html");
 check(foundation.includes('role="img"'), "visual foundation lessons expose the scene as an image");
 check(foundation.includes("Concept model, not a product screenshot"), "drawn interface scenes are not presented as real screenshots");
-check(foundation.includes('id="speak"'), "visual foundation lessons provide read-aloud");
+check(foundation.includes('data-read-play'), "visual foundation lessons provide read-aloud controls");
+check(foundation.includes('data-read-speed'), "visual foundation lessons provide narration speed control");
+check(foundation.includes('data-read-progress'), "visual foundation lessons provide a seek control");
+check(foundation.includes('read-aloud.js'), "visual foundation lessons load the shared read-aloud player");
+const reader = read("read-aloud.js");
+check(reader.includes("read-word") && reader.includes("is-active"), "read-aloud highlights the active word");
+check(reader.includes("playbackRate") && reader.includes("ccaf-read-aloud-rate"), "read-aloud changes and remembers playback speed");
+for (const id of ["w1", "w2", "w3", "w4", "w5", "d1", "d2"]) {
+  const narration = `audio/foundation/${id}-one-idea.mp3`;
+  check(exists(narration) && fs.statSync(new URL(narration, root)).size > 10000, `${id}: natural foundation narration exists and is nonempty`);
+}
 
 const visualPipelineName = exists("Visual Media Pipeline.md") ? "Visual Media Pipeline.md" : "VISUAL-MEDIA-PIPELINE.md";
 const designStandardName = exists("Dyslexia UI Standard.md") ? "Dyslexia UI Standard.md" : "DESIGN-STANDARD.md";

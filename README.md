@@ -9,6 +9,7 @@ A complete, self-contained study site for Anthropic's **Claude Certified Archite
 - **⚛️ The Atomic Curriculum** — 23 prerequisite-aware units, starting with a five-lesson computer-skills Workbench and building through Claude foundations, agentic systems, reliability, and production scenarios
 - **🛤️ Timeline** — the whole course as one visual path with ✓ done / ⭐ you-are-here tracking
 - **▶️ Lesson page** — tells you exactly what to do next: your current lesson, its video, and its 5 steps (they stay with the lesson until you finish it)
+- **🔊 Natural read-along** — the seven beginner Workbench lessons include local ElevenLabs narration, word highlighting, a seek bar, and remembered `0.75x`-`2x` speed control
 - **🎥 Reviewed video library** — 22 recent community episodes catalogued, with 14 exact lesson clips, full-episode links, transcript provenance, and current-product warnings
 - **🗺️ Prerequisite concept map** + **3 engineering articles retold as ~30 diagrams** (Building Effective Agents, Multi-Agent Research System, Writing Tools for Agents — original links included)
 - **🃏 5 flashcard decks** with two modes: flip-through *and* a Quizlet-style Learn mode that re-asks what you miss
@@ -66,6 +67,7 @@ The course is model-agnostic. Every **"Ask my tutor"** and **"🧠 Check my answ
 - Video choices and timestamps are documented in [VIDEO-CURRICULUM-MAP.md](VIDEO-CURRICULUM-MAP.md); community videos are clearly separated from official Anthropic sources
 - Diagrams retell three Anthropic engineering articles (linked at the top of each article page)
 - Font: [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) (Braille Institute, SIL OFL) — designed for low-vision and dyslexic readers
+- Foundation narration: generated through Higgsfield using an ElevenLabs preset voice; audio is stored locally and no API key is shipped in the site
 - Free prep courses: [Anthropic Academy](https://anthropic.skilljar.com/)
 
 ## 📄 License
