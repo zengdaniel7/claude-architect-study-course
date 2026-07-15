@@ -24,6 +24,8 @@
 <body>
 <nav class="top" id="site-nav"></nav>
 <script src="course-data.js"></script>
+<script src="video-data.js"></script>
+<script src="video-ui.js"></script>
 <script src="nav.js"></script>
 
 <div class="wrap">
@@ -44,12 +46,15 @@
     <div class="actions" id="nactions" style="margin-top:10px"></div>
   </div>
 
+  <div id="lesson-media"></div>
+
   <div id="notes" class="card">Loading notes…</div>
 
   <footer>Write these ideas in your own words — that's the step that makes them stick. · Notes print cleanly if you want them on paper.</footer>
 </div>
 
 <script src="notes-data.js"></script>
+<script src="notes-corrections.js"></script>
 <script>
 var UPATH=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
 var UTITLES=(window.CCAF&&CCAF.TITLES)?CCAF.TITLES:{},ULEVEL={},UQUIZ={};
@@ -71,7 +76,9 @@ var isProj=q.indexOf("projects")===0;
 document.getElementById("nactions").innerHTML=
   '<a class="b go" href="today.html">▶️ My lesson page</a>'+
   '<a class="b quiz" href="'+(isProj?q:(q+(q.indexOf("?")>=0?"&":"?")+"unit="+u))+'">'+(isProj?"🔨 Its project":"🧪 Its quiz")+' →</a>'+
+  '<a class="b plain" href="review.html?unit='+u+'">Review these notes</a>'+
   '<a class="b plain" href="curriculum.html#u-'+u+'">📚 On the curriculum</a>';
+if(window.CCAFMediaUI){document.getElementById("lesson-media").innerHTML=CCAFMediaUI.lessonHTML(u,{title:"Watch before reading these notes"});}
 var N=(window.LESSON_NOTES||{})[u];
 var beginner=(window.CCAF_COURSE&&CCAF_COURSE.lessons[u])||null;
 document.getElementById("notes").innerHTML = N && N.html ? N.html

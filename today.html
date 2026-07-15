@@ -36,6 +36,8 @@
 <body>
 <nav class="top" id="site-nav"></nav>
 <script src="course-data.js"></script>
+<script src="video-data.js"></script>
+<script src="video-ui.js"></script>
 <script src="nav.js"></script>
 
 <div class="wrap">
@@ -140,8 +142,8 @@ var PATH=[
   ask:"Teach me Claude Code's built-in tools for CCA-F: when to use Grep vs Glob vs Read/Write vs Edit vs Bash, and the 'grep an entry point then read to follow imports' pattern. One example, 3 flashcards."},
  {id:"o3",lvl:"Organisms",t:"An MCP server",one:"Tools (actions) vs resources (read-only) vs prompts (workflows)",quiz:"quiz.html?set=tools-mcp",
   ask:"Teach me MCP for CCA-F: tools vs resources vs prompts, who controls each, scope, secrets. The trap is using a tool when a read-only resource fits. One example, 3 flashcards."},
- {id:"o4",lvl:"Organisms",t:"Claude Code workflows",one:"CLAUDE.md, commands, skills, subagents, hooks, headless",quiz:"quiz.html?set=claude-code",
-  ask:"Teach me Claude Code workflows for CCA-F: CLAUDE.md, slash commands, skills, subagents, hooks, headless claude -p — and when a hook beats a prompt. One example, 3 flashcards."},
+ {id:"o4",lvl:"Organisms",t:"Claude Code workflows",one:"CLAUDE.md, skills, subagents, hooks, headless",quiz:"quiz.html?set=claude-code",
+  ask:"Teach me current Claude Code workflows for CCA-F: CLAUDE.md, Skills, commands compatibility, subagents, hooks, headless claude -p — and when a hook beats a prompt. One example, 3 flashcards."},
  {id:"o2",lvl:"Organisms",t:"Orchestrator–Workers",one:"A coordinator splits work across subagents",quiz:"quiz.html?set=agentic",
   ask:"Teach me Orchestrator–Workers (multi-agent) for CCA-F: coordinator role, explicit context passing, parallel work, provenance, and when NOT to use multi-agent. One example, 3 flashcards."},
  {id:"rel",lvl:"Reliability thread",t:"Reliability, context & evals",one:"Lost-in-the-middle, compaction, RAG vs long context, evals, human-in-loop",quiz:"quiz.html?set=reliability",
@@ -150,7 +152,7 @@ var PATH=[
   ask:"Walk me through a support-agent system for CCA-F: the loop in context, a refund limit that must escalate, why that needs a hook not a prompt, structured handoff fields. One example, 3 flashcards."},
  {id:"t2",lvl:"Templates",t:"Research multi-agent system",one:"Search → analyze → synthesize → report",quiz:"quiz.html?set=agentic",
   ask:"Walk me through a research multi-agent system for CCA-F: decompose, pass context, gather, attach provenance to every finding. Where does it break? One example, 3 flashcards."},
- {id:"p1",lvl:"Pages",t:"The 6 exam scenarios",one:"Whole systems, real tradeoffs — exam style",quiz:"pretest.html",
+ {id:"p1",lvl:"Pages",t:"Production scenarios",one:"Whole systems, real tradeoffs — reported exam style",quiz:"pretest.html",
   ask:"Give me one CCA-F production scenario like the exam. Make me choose the approach and justify it, name the tradeoff, the reliability angle. Then grade me."},
  {id:"px",lvl:"Pages",t:"Anti-patterns & decision frameworks",one:"The wrong answers — and how to pick A vs B",quiz:"pretest.html",
   ask:"Drill me on CCA-F anti-patterns (the wrong answers): 8 scenario questions where one option is a classic trap (parsing text to stop a loop, iteration caps, prompt-enforcing critical rules, sentiment-based escalation, swallowing errors, too many tools, same-session review, aggregate metrics). Make me pick AND explain. Then grade me."},
@@ -235,7 +237,7 @@ function renderLesson(){
     qE.href=window.withUnit(u.quiz,u.id);
     qE.textContent=(u.quiz.indexOf("projects.html")===0)?"🔨 Its project":"🧪 Its quiz";
     aE.setAttribute("data-q",u.ask);
-    wE.innerHTML=""; // the steps panel below now shows THIS lesson’s videos
+    wE.innerHTML=window.CCAFMediaUI?CCAFMediaUI.inlineHTML(u.id):"";
     hE.innerHTML=isCur
       ? 'How it closes: finish the <b>5 steps below</b> + take <b>its quiz</b> (your score gets saved) — then the green card lets you close it. No accidental skips.'
       : (isDone
@@ -418,15 +420,18 @@ function buildSteps(){ // rebuild the 5 rows for the lesson the pager is showing
     var body=document.createElement("div");
     body.innerHTML='<div class="lab">'+it.label+'</div><div class="d">'+it.d+'</div>';
     if(i===0){
-      wl.forEach(function(v,wi){ // each video on its OWN row — never crammed together
-        var row=document.createElement("div");
-        var a=document.createElement("a");a.className="watchlink";a.href=v[0];
-        if(/^https?:/.test(v[0])){a.target="_blank";a.rel="noopener";}
-        a.textContent="▶ "+(wl.length>1?(wi+1)+" · ":"")+v[1];
-        row.appendChild(a);body.appendChild(row);
-        if(v[2]){var focus=document.createElement("div");focus.className="d";focus.textContent=v[2];row.appendChild(focus);}
-      });
-      if(wl.length>1){var wn=document.createElement("div");wn.className="d";wn.textContent="👆 "+wl.length+" links for this lesson — best watched in order.";body.appendChild(wn);}
+      if(window.CCAFMediaUI){
+        var media=document.createElement("div");media.innerHTML=CCAFMediaUI.lessonHTML(uid,{compact:true,showReferences:true,title:"Watch, then open your notes"});body.appendChild(media);
+      }else{
+        wl.forEach(function(v,wi){
+          var row=document.createElement("div");
+          var a=document.createElement("a");a.className="watchlink";a.href=v[0];
+          if(/^https?:/.test(v[0])){a.target="_blank";a.rel="noopener";}
+          a.textContent="▶ "+(wl.length>1?(wi+1)+" · ":"")+v[1];
+          row.appendChild(a);body.appendChild(row);
+          if(v[2]){var focus=document.createElement("div");focus.className="d";focus.textContent=v[2];row.appendChild(focus);}
+        });
+      }
     }
     if(i===2 && BUILDX[uid]){
       var bl=document.createElement("a");bl.className="watchlink";bl.href=BUILDX[uid][0];

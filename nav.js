@@ -110,7 +110,7 @@
   var ORDER=COURSE?COURSE.order.slice():["w1","w2","w3","w4","w5","a1","m3","m1","m2","o1","a2","d1","d2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
   var TITLES={};
   if(COURSE){COURSE.units.forEach(function(u){TITLES[u.id]=u.title;});}
-  else{TITLES={w1:"Files, folders, and plain text",w2:"JSON by hand",w3:"Programs, functions, and errors",w4:"API request and response",w5:"Safe Terminal basics",a1:"Core vocabulary",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",o1:"The Agent Loop",a2:"Model physics & economics",d1:"Repositories, trees, and diffs",d2:"Commits, pull requests, and CI",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator-Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"The 6 exam scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};}
+  else{TITLES={w1:"Files, folders, and plain text",w2:"JSON by hand",w3:"Programs, functions, and errors",w4:"API request and response",w5:"Safe Terminal basics",a1:"Core vocabulary",m3:"Prompt techniques",m1:"A structured-output call",m2:"One tool call",o1:"The Agent Loop",a2:"Model physics & economics",d1:"Repositories, trees, and diffs",d2:"Commits, pull requests, and CI",m4:"Built-in tools",o3:"An MCP server",o4:"Claude Code workflows",o2:"Orchestrator-Workers",rel:"Reliability, context & evals",t1:"Support-agent system",t2:"Research multi-agent system",p1:"Production scenarios",px:"Anti-patterns & decision frameworks",p2:"Capstone: PR-review pipeline"};}
   function cur(){var d=(J("ccaf-curriculum",{})||{}).done||{};for(var i=0;i<ORDER.length;i++){if(!d[ORDER[i]])return ORDER[i];}return "end";}
   function getSteps(u){var st=J("ccaf-steps",{})||{};var r=st[u];
     return (r&&Array.isArray(r.checks)&&r.checks.length===5)?r.checks.slice():blank();}
@@ -204,6 +204,7 @@
   ];
   var MORE=[
     {href:"notes.html",        label:"📖 Lesson notes"},
+    {href:"video-library.html",label:"🎥 Video library"},
     {href:"concept-map.html",  label:"Concept map"},
     {href:"review.html",       label:"Review queue"},
     {href:"tutor-bridge.html", label:"Ask tutor"},
