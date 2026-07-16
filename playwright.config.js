@@ -1,5 +1,8 @@
 const { defineConfig, devices } = require("@playwright/test");
 
+const serverOutput = process.env.CI ? "pipe" : "ignore";
+const studioBaseURL = process.env.CCA_STUDIO_E2E_URL || "http://127.0.0.1:8765";
+
 module.exports = defineConfig({
   testDir: "./tests/e2e",
   timeout: 90_000,
@@ -20,16 +23,16 @@ module.exports = defineConfig({
       url: "http://127.0.0.1:4173/dashboard.html",
       reuseExistingServer: !process.env.CI,
       timeout: 15_000,
-      stdout: "ignore",
-      stderr: "ignore"
+      stdout: serverOutput,
+      stderr: serverOutput
     },
     {
       command: "python3 scripts/e2e_studio_server.py",
-      url: "http://127.0.0.1:8765/__health",
+      url: `${studioBaseURL}/__health`,
       reuseExistingServer: !process.env.CI,
       timeout: 20_000,
-      stdout: "ignore",
-      stderr: "ignore"
+      stdout: serverOutput,
+      stderr: serverOutput
     }
   ],
   projects: [

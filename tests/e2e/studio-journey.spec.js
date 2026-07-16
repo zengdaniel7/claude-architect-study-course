@@ -1,6 +1,6 @@
 const { test, expect } = require("@playwright/test");
 
-const STUDIO = "http://127.0.0.1:8765/";
+const STUDIO = `${process.env.CCA_STUDIO_E2E_URL || "http://127.0.0.1:8765"}/`;
 const answers = [2, 1, 0, 0, 0];
 
 test("Studio completes W1 without copy and paste", async ({ page }) => {
