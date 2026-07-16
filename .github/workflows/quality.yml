@@ -1,0 +1,30 @@
+name: Course quality
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  audit-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Enable pinned pnpm
+        run: corepack enable && corepack prepare pnpm@11.7.0 --activate
+      - name: Install project dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Chromium
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Course audit
+        run: npm run audit
+      - name: Save-server tests
+        run: npm run test:server
+      - name: Browser journey tests
+        run: npm run test:e2e

@@ -12,9 +12,9 @@
   .take{text-decoration:none;font-weight:700;padding:9px 16px;border-radius:7px;font-size:.85rem;white-space:nowrap;display:inline-block}
   .take.browse{background:var(--accent);color:#fff}
   .take.learn{background:var(--green);color:#fff}
-  .flash{min-height:230px;display:flex;align-items:center;justify-content:center;text-align:center;
+  .flash{width:100%;min-height:230px;display:flex;align-items:center;justify-content:center;text-align:center;
     background:var(--card);border:2px solid var(--line);border-radius:8px;padding:30px 26px;cursor:pointer;
-    font-size:1.5rem;font-weight:700;line-height:1.5;user-select:none}
+    color:var(--ink);font:inherit;font-size:1.5rem;font-weight:700;line-height:1.5;user-select:none}
   .flash.back{background:#EAF2FB;border-color:var(--accent);font-size:1.25rem;font-weight:500}
   .fwrap{position:relative;margin:10px 0}
   .side{font-size:.8rem;color:var(--muted);text-align:center;margin-bottom:6px}
@@ -54,8 +54,8 @@
   <div id="browse" style="display:none">
     <div class="modehead"><span class="modetag browse">🃏 Flashcards</span><span class="hint" id="btitle"></span></div>
     <p class="sub"><a href="flashcards.html">← All decks</a> · <span id="bpos"></span></p>
-    <div class="side" id="bside">Tap the card to flip</div>
-    <div class="fwrap"><div class="flash" id="bcard"></div></div>
+    <div class="side" id="bside" aria-live="polite">Tap the card to flip</div>
+    <div class="fwrap"><button class="flash" id="bcard" type="button" aria-pressed="false"></button></div>
     <div class="btnrow">
       <button class="b again" id="bPrev">← Prev</button>
       <button class="b flip" id="bFlip">🔄 Flip</button>
@@ -77,7 +77,7 @@
       <div class="side" id="lside"></div>
       <div class="qcard" id="lquestion"></div>
       <div class="opts" id="lopts"></div>
-      <div class="revealbox" id="lreveal" style="display:none"></div>
+      <div class="revealbox" id="lreveal" role="status" aria-live="polite" style="display:none"></div>
       <div class="btnrow" id="lnextrow" style="display:none">
         <button class="b got" id="lNext">Next →</button>
       </div>
@@ -158,13 +158,13 @@ function startBrowse(k){
 function bRender(){
   Bflipped=false;
   var idx=Border[Bpos], c=Bdeck.cards[idx], el=document.getElementById("bcard");
-  el.className="flash"; el.innerHTML=c.front;
+  el.className="flash"; el.innerHTML=c.front;el.setAttribute("aria-pressed","false");
   document.getElementById("bside").textContent="Tap the card to flip";
   document.getElementById("bpos").textContent=(Bpos+1)+" / "+Border.length;
 }
 function bFlip(){
   var idx=Border[Bpos], c=Bdeck.cards[idx], el=document.getElementById("bcard");
-  if(!Bflipped){ el.className="flash back"; el.innerHTML=c.back; document.getElementById("bside").textContent="Answer — tap to flip back"; Bflipped=true; }
+  if(!Bflipped){ el.className="flash back"; el.innerHTML=c.back;el.setAttribute("aria-pressed","true");document.getElementById("bside").textContent="Answer — tap to flip back"; Bflipped=true; }
   else { bRender(); }
 }
 

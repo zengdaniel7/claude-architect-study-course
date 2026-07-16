@@ -185,13 +185,15 @@ var BUILDX={
  o1:["exercise.html?id=gate-chain","🚦 Flashcard Factory — chain with a gate"],
  m3:["exercise.html?id=gate-chain","🚦 Flashcard Factory — chain with a gate"]
 };
-// The shared manifest is authoritative. The legacy literals above remain only as
-// an offline fallback for an old cached page.
-if(window.CCAF_COURSE){
-  PATH=CCAF_COURSE.units.map(function(u){return {id:u.id,lvl:u.level,t:u.title,one:u.one,quiz:u.quiz,notes:u.notes,ask:u.ask,prereq:u.prereq,concepts:u.concepts};});
-  TOTAL=PATH.length;WATCH={};BUILDX={};
-  CCAF_COURSE.units.forEach(function(u){WATCH[u.id]=u.watch||[];BUILDX[u.id]=["exercise.html?id="+u.exercise,u.title+" fixed build"];});
+// The shared manifest is authoritative. Never silently use an older partial path.
+if(!window.CCAF_COURSE||!Array.isArray(CCAF_COURSE.units)||CCAF_COURSE.units.length!==23){
+  document.getElementById("nexttitle").textContent="Course data did not load";
+  document.getElementById("nextone").textContent="Reload this page. If it still appears, restart the local tutor server.";
+  throw new Error("CCA-F course manifest unavailable");
 }
+PATH=CCAF_COURSE.units.map(function(u){return {id:u.id,lvl:u.level,t:u.title,one:u.one,quiz:u.quiz,notes:u.notes,ask:u.ask,prereq:u.prereq,concepts:u.concepts};});
+TOTAL=PATH.length;WATCH={};BUILDX={};
+CCAF_COURSE.units.forEach(function(u){WATCH[u.id]=u.watch||[];BUILDX[u.id]=["exercise.html?id="+u.exercise,u.title+" fixed build"];});
 
 // ---- read curriculum progress ----
 var done={};
@@ -301,9 +303,10 @@ document.getElementById("encourage").textContent = pct===0
 // ---- pick up where you left off (written by curriculum/flashcards/guides) ----
 try{
   var last=JSON.parse(localStorage.getItem("ccaf-last")||"null");
-  if(last && last.href && last.label && (Date.now()-(last.ts||0)) < 14*24*60*60*1000){
+  var safeHref=last&&window.CCAFProgress?CCAFProgress.localPage(last.href):null;
+  if(last && safeHref && last.label && (Date.now()-(last.ts||0)) < 14*24*60*60*1000){
     var ls=document.getElementById("lastseen");
-    var a=document.createElement("a"); a.href=last.href;
+    var a=document.createElement("a"); a.href=safeHref;
     var b=document.createElement("b"); b.textContent=last.label; a.appendChild(b);
     ls.appendChild(document.createTextNode("⏪ Pick up where you left off: "));
     ls.appendChild(a); ls.appendChild(document.createTextNode(" →"));
@@ -392,7 +395,7 @@ function pbar(){
       '<button type="button" class="b go" id="goNowBtn" style="border:0;cursor:pointer;font:inherit">⭐ Back to your NOW lesson →</button>'+
       '</div>';
     var gb=document.getElementById("goNowBtn");
-    if(gb)gb.addEventListener("click",function(){vi=curIdx;renderLesson();buildSteps();window.scrollTo({top:0,behavior:"smooth"});});
+    if(gb)gb.addEventListener("click",function(){vi=curIdx;renderLesson();buildSteps();var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;window.scrollTo({top:0,behavior:reduce?"auto":"smooth"});});
   }
   de.style.display="block";
 }

@@ -49,14 +49,13 @@
     var status=root.querySelector("[data-read-status]");
     if(!transcript||!audio||!play||!restart||!speed||!progress)return null;
 
+    var reduceMotion=!!(global.matchMedia&&global.matchMedia("(prefers-reduced-motion: reduce)").matches);
     var words=splitWords(text),spans=[],timings=[],active=-1,frame=0,fallback=false,fallbackState="idle",utterance=null;
     transcript.textContent="";
-    transcript.setAttribute("aria-label",text);
     words.forEach(function(word,index){
       var span=document.createElement("span");
       span.className="read-word";
       span.dataset.word=String(index);
-      span.setAttribute("aria-hidden","true");
       span.textContent=word.text;
       transcript.appendChild(span);
       if(word.space)transcript.appendChild(document.createTextNode(word.space));
@@ -65,6 +64,7 @@
 
     function announce(message){if(status)status.textContent=message;}
     function setActive(index){
+      if(reduceMotion)index=-1;
       if(index===active)return;
       if(spans[active])spans[active].classList.remove("is-active");
       active=index;
@@ -94,7 +94,7 @@
     }
     function animationLoop(){
       updateClock();
-      if(!audio.paused&&!audio.ended)frame=global.requestAnimationFrame(animationLoop);
+      if(!reduceMotion&&!audio.paused&&!audio.ended)frame=global.requestAnimationFrame(animationLoop);
     }
     function setPlayLabel(label,icon){
       play.innerHTML='<span aria-hidden="true">'+icon+'</span> '+label;
@@ -129,8 +129,9 @@
       if(stored&&Array.from(speed.options).some(function(option){return option.value===stored;}))speed.value=stored;
     }catch(error){}
     audio.addEventListener("loadedmetadata",function(){buildTimings();updateClock();});
+    audio.addEventListener("timeupdate",function(){if(reduceMotion)updateClock();});
     audio.addEventListener("play",function(){
-      global.cancelAnimationFrame(frame);setPlayLabel("Pause","Ⅱ");announce("Narration playing at "+speed.value+" times speed.");animationLoop();
+      global.cancelAnimationFrame(frame);setPlayLabel("Pause","Ⅱ");announce("Narration playing at "+speed.value+" times speed.");if(reduceMotion)updateClock();else animationLoop();
     });
     audio.addEventListener("pause",function(){global.cancelAnimationFrame(frame);updateClock();if(!audio.ended)markIdle();});
     audio.addEventListener("ended",function(){global.cancelAnimationFrame(frame);updateClock();setActive(-1);setPlayLabel("Listen","▶");announce("Narration complete.");});

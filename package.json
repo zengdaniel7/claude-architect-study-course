@@ -1,0 +1,15 @@
+{
+  "name": "cca-f-study-course",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "audit": "node course-audit.mjs && node scripts/check-syntax.mjs",
+    "test:server": "python3 -m unittest discover -s tests -p 'test_serve.py'",
+    "test:e2e": "playwright test",
+    "test": "npm run audit && npm run test:server && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  },
+  "packageManager": "pnpm@11.7.0"
+}

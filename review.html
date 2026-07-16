@@ -39,7 +39,7 @@
       <button class="good" data-grade="good" type="button">Got it</button>
     </div>
   </div>
-  <div id="done"></div>
+  <div id="done" role="status" aria-live="polite" tabindex="-1"></div>
   <div class="actions"><a class="action plain" href="today.html">Back to lesson</a><a class="action plain" href="quizzes.html">Practice hub</a></div>
 </main>
 <script>
@@ -55,7 +55,7 @@
   var i=0,rated=0,cur=null;
   var session=document.getElementById("session"),done=document.getElementById("done"),front=document.getElementById("front"),back=document.getElementById("back"),source=document.getElementById("source");
   function draw(){
-    if(i>=due.length){session.style.display="none";done.style.display="block";done.innerHTML="<b>Review complete.</b><br>"+rated+" card"+(rated===1?"":"s")+" scheduled."+(filter&&rated>=3?" Your flashcard step is complete.":"");if(filter&&rated>=3&&window.CCAF){CCAF.setStep(filter,4,true);CCAF.recordEvidence(filter,"review",{complete:true,count:rated});}return;}
+    if(i>=due.length){session.style.display="none";done.style.display="block";done.innerHTML="<b>Review complete.</b><br>"+rated+" card"+(rated===1?"":"s")+" scheduled."+(filter&&rated>=3?" Your flashcard step is complete.":"");done.focus();if(filter&&rated>=3&&window.CCAF){CCAF.setStep(filter,4,true);CCAF.recordEvidence(filter,"review",{complete:true,count:rated});}return;}
     cur=due[i];front.textContent=cur.front;back.textContent=cur.back;back.style.display="none";document.getElementById("before").style.display="flex";document.getElementById("after").style.display="none";source.textContent=(C.map[cur.unit]?C.map[cur.unit].title:cur.unit)+" | "+(cur.source||"review");document.getElementById("summary").textContent=(due.length-i)+" due card"+((due.length-i)===1?"":"s")+(filter?" for "+C.map[filter].title:"");
   }
   document.getElementById("show").addEventListener("click",function(){back.style.display="block";document.getElementById("before").style.display="none";document.getElementById("after").style.display="flex";});

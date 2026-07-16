@@ -270,12 +270,20 @@ var UNITS=[
    ask:"This is my weak spot. Teach me Reliability for CCA-F as a thread that touches everything: lost-in-the-middle, the verification ladder (code>visual>LLM-judge), provenance, human-in-the-loop, batch vs real-time, retries + caching. One example each, then quiz me."}
 ];
 
-// The original Atomic units stay rich and detailed. The shared manifest adds
-// the repaired beginner Workbench and Developer Bridge without duplicating data.
+// Keep the rich curriculum detail here, but hydrate shared summary fields from
+// the authoritative manifest so the Timeline, Today, Notes, and Curriculum agree.
 if(window.CCAF_COURSE){
-  var existing={};UNITS.forEach(function(u){existing[u.id]=true;});
+  var existing={};UNITS.forEach(function(u){existing[u.id]=u;});
   CCAF_COURSE.units.forEach(function(u){
-    if(existing[u.id])return;
+    if(existing[u.id]){
+      var rich=existing[u.id];
+      rich.title=u.title;
+      rich.one=u.one;
+      rich.ask=u.ask;
+      rich.quiz=rich.quiz||[u.quiz,u.title+" quiz"];
+      rich.quiz[0]=u.quiz;
+      return;
+    }
     var lesson=CCAF_COURSE.lessons[u.id]||{};
     var vids=(u.watch||[]).map(function(v){return [v[0],v[1]+(v[2]?" — "+v[2]:"")];});
     UNITS.push({

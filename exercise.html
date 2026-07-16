@@ -142,7 +142,7 @@
       '<button class="bigbtn check" id="btncheck">🧠 Copy answers + rubric → paste to any AI</button>'+
       '<button class="bigbtn report" id="btnreport">📤 Copy report → paste to Claude</button>'+
       '<button class="bigbtn done'+(st.done?' is-done':'')+'" id="btndone">'+(st.done?'✓ Done':'Mark done')+'</button>'+
-    '</div><div id="finishmsg"></div></div>';
+    '</div><div id="finishmsg" role="status" aria-live="polite" tabindex="-1"></div></div>';
 
   h+='<footer><a href="exercise.html">← all exercises</a> · answers live only in this browser · built by your Claude tutor</footer>';
   app.innerHTML=h;
@@ -204,6 +204,10 @@
   });
 
   var doneBtn=document.getElementById("btndone");
+  var creditUnit=null;
+  if(window.CCAF&&CCAF.COURSE&&CCAF.COURSE.map){
+    (ex.units||[]).some(function(id){if(CCAF.COURSE.map[id]&&CCAF.COURSE.map[id].exercise===ex.id){creditUnit=id;return true;}return false;});
+  }
   doneBtn.addEventListener("click",function(){
     var msg=document.getElementById("finishmsg");
     if(!st.done){
@@ -211,6 +215,7 @@
       if(missing.length||!st.mode){
         msg.style.display="block";
         msg.innerHTML="<b>One small thing remains.</b><br>"+(missing.length?(missing.length+" answer box"+(missing.length===1?" is":"es are")+" empty.<br>"):"")+(!st.mode?"Choose With guidance or Independent redo.":"");
+        msg.focus();
         return;
       }
     }
@@ -218,11 +223,17 @@
     doneBtn.classList.toggle("is-done",st.done);
     doneBtn.textContent=st.done?"✓ Done":"Mark done";
     if(st.done){
-      var uid=ex.units[0],_ct=uid;
-      try{if(window.CCAF){CCAF.setStep(uid,2,true);CCAF.recordEvidence(uid,"build",{exercise:ex.id,mode:st.mode,complete:true});_ct=CCAF.TITLES[uid]||_ct;}}catch(_){}
+      var uid=creditUnit,_ct=uid||ex.title;
+      try{if(uid&&window.CCAF){CCAF.setStep(uid,2,true);CCAF.recordEvidence(uid,"build",{exercise:ex.id,mode:st.mode,complete:true});_ct=CCAF.TITLES[uid]||_ct;}}catch(_){}
       msg.style.display="block";msg.style.borderLeftColor=st.mode==="independent"?"var(--green)":"var(--yellow)";msg.style.background=st.mode==="independent"?"#EAF7EF":"#FFF4D6";
-      msg.innerHTML=st.mode==="independent"?"<b>Independent build evidence saved.</b> This can count toward mastery.":"<b>Guided build saved.</b> Good learning evidence. Do a fresh independent redo later for mastery.";
+      msg.innerHTML=!uid?"<b>Optional practice saved.</b> This exercise does not replace the fixed build for a lesson.":(st.mode==="independent"?"<b>Independent build evidence saved.</b> This can count toward mastery.":"<b>Guided build saved.</b> Good learning evidence. Do a fresh independent redo later for mastery.");
+      msg.focus();
       flash('Build saved for "'+_ct+'"');
+    }else{
+      if(creditUnit&&window.CCAF){
+        try{var ev=JSON.parse(localStorage.getItem("ccaf-evidence")||"{}");if(ev[creditUnit]&&ev[creditUnit].build&&ev[creditUnit].build.data&&ev[creditUnit].build.data.exercise===ex.id){delete ev[creditUnit].build;localStorage.setItem("ccaf-evidence",JSON.stringify(ev));CCAF.setStep(creditUnit,2,false);}}catch(_){}
+      }
+      msg.style.display="block";msg.innerHTML=creditUnit?"<b>Build unmarked.</b> Its lesson evidence was cleared.":"<b>Optional practice unmarked.</b> No lesson mastery was changed.";msg.focus();
     }
   });
 })();

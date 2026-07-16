@@ -16,16 +16,87 @@ not the network) and only accepts one kind of write: the progress snapshot.
 An optional address is available for embedded browsers that cannot reach the
 host machine through their own localhost.
 """
-import hmac, json, os, secrets, sys
+import hmac, json, math, os, re, secrets, shutil, sys, threading
 from http.cookies import SimpleCookie
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, unquote, urlsplit
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SAVE = os.path.join(ROOT, "my-progress.json")
 BAK  = os.path.join(ROOT, "my-progress.backup.json")
+SAVE_LOCK = threading.Lock()
+MAX_BODY = 2_000_000
+MAX_KEYS = 1000
+MAX_KEY = 128
+MAX_VALUE = 1_000_000
+MAX_TOTAL = 1_800_000
+KEY_RE = re.compile(r"^ccaf-[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def validate_progress(payload):
+    if type(payload) is not dict:
+        return False
+    timestamp = payload.get("ts")
+    data = payload.get("data")
+    if isinstance(timestamp, bool) or not isinstance(timestamp, (int, float)):
+        return False
+    if not math.isfinite(timestamp) or timestamp < 0 or type(data) is not dict:
+        return False
+    if len(data) > MAX_KEYS:
+        return False
+    total = 0
+    for key, value in data.items():
+        if not isinstance(key, str) or len(key) > MAX_KEY or not KEY_RE.fullmatch(key) or key == "ccaf-sync-ts":
+            return False
+        if not isinstance(value, str) or len(value) > MAX_VALUE:
+            return False
+        total += len(key) + len(value)
+        if total > MAX_TOTAL:
+            return False
+    return True
+
+
+def write_progress(payload):
+    tmp = f"{SAVE}.{os.getpid()}.{threading.get_ident()}.tmp"
+    backup_tmp = BAK + ".tmp"
+    try:
+        with open(tmp, "w", encoding="utf-8") as handle:
+            json.dump(payload, handle, indent=1)
+            handle.flush()
+            os.fsync(handle.fileno())
+        with SAVE_LOCK:
+            current_timestamp = -1
+            if os.path.exists(SAVE):
+                try:
+                    with open(SAVE, encoding="utf-8") as handle:
+                        current = json.load(handle)
+                    if validate_progress(current):
+                        current_timestamp = current["ts"]
+                except (OSError, ValueError):
+                    pass
+            if payload["ts"] <= current_timestamp:
+                return False, current_timestamp
+            if os.path.exists(SAVE):
+                shutil.copyfile(SAVE, backup_tmp)
+                with open(backup_tmp, "rb") as handle:
+                    os.fsync(handle.fileno())
+                os.replace(backup_tmp, BAK)
+            os.replace(tmp, SAVE)
+            return True, payload["ts"]
+    finally:
+        for path in (tmp, backup_tmp):
+            try:
+                os.remove(path)
+            except FileNotFoundError:
+                pass
 
 class Handler(SimpleHTTPRequestHandler):
+    def _private_path(self):
+        path = unquote(urlsplit(self.path).path)
+        parts = [part for part in path.split("/") if part]
+        blocked = {".git", ".agents", ".claude", "my-progress.backup.json", "my-progress.json.tmp"}
+        return any(part in blocked or part.endswith(".tmp") for part in parts)
+
     def _authorized(self):
         token = getattr(self.server, "access_token", None)
         if not token:
@@ -46,11 +117,15 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if not self._authorized():
             self.send_error(403); return
+        if self._private_path():
+            self.send_error(404); return
         super().do_GET()
 
     def do_HEAD(self):
         if not self._authorized():
             self.send_error(403); return
+        if self._private_path():
+            self.send_error(404); return
         super().do_HEAD()
 
     def do_POST(self):
@@ -60,22 +135,20 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_error(404); return
         try:
             n = int(self.headers.get("Content-Length", 0))
-            if not 0 < n <= 2_000_000:
+            if not 0 < n <= MAX_BODY:
                 self.send_error(413); return
+            if self.headers.get_content_type() != "application/json":
+                self.send_error(415); return
             data = json.loads(self.rfile.read(n))
-            if not (isinstance(data.get("ts"), (int, float)) and isinstance(data.get("data"), dict)):
+            if not validate_progress(data):
                 self.send_error(400); return
-            # keep the previous save as a one-step backup, write atomically
-            if os.path.exists(SAVE):
-                os.replace(SAVE, BAK)
-            tmp = SAVE + ".tmp"
-            with open(tmp, "w") as f:
-                json.dump(data, f, indent=1)
-            os.replace(tmp, SAVE)
+            stored, timestamp = write_progress(data)
+            response = json.dumps({"ok": True, "stored": stored, "ts": timestamp}).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(response)))
             self.end_headers()
-            self.wfile.write(b'{"ok":true}')
+            self.wfile.write(response)
         except Exception:
             self.send_error(400)
 

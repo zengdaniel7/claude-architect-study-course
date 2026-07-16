@@ -2,34 +2,80 @@
    Usage on a page: load course-data.js before nav.js, then render #site-nav.
    5 primary tabs + a "More ▾" menu. Auto-highlights the current page. */
 
-/* ---- progress file-sync (runs on every page, localhost only) ----
+/* Progress files are user-controlled input. Keep one compatibility-preserving
+   validator for file restore, dashboard import, and safe resume links. */
+(function(global){
+  var MAX_KEYS=1000,MAX_KEY=128,MAX_VALUE=1000000,MAX_TOTAL=1800000;
+  function isObject(value){return Object.prototype.toString.call(value)==="[object Object]";}
+  function validKey(key){return typeof key==="string"&&key.length<=MAX_KEY&&/^ccaf-[A-Za-z0-9][A-Za-z0-9._-]*$/.test(key)&&key!=="ccaf-sync-ts";}
+  function snapshot(value){
+    if(!isObject(value))return {ok:false,error:"Progress data must be an object."};
+    var keys=Object.keys(value),out={},total=0;
+    if(keys.length>MAX_KEYS)return {ok:false,error:"Progress data has too many saved items."};
+    for(var i=0;i<keys.length;i++){
+      var key=keys[i],item=value[key];
+      if(!validKey(key))return {ok:false,error:"Progress data contains an invalid key."};
+      if(typeof item!=="string"||item.length>MAX_VALUE)return {ok:false,error:"Progress data contains an invalid value."};
+      total+=key.length+item.length;
+      if(total>MAX_TOTAL)return {ok:false,error:"Progress data is too large."};
+      out[key]=item;
+    }
+    return {ok:true,data:out,count:keys.length};
+  }
+  function backup(value){
+    if(!isObject(value))return {ok:false,error:"That file is not a progress backup."};
+    var wrapped=Object.prototype.hasOwnProperty.call(value,"data"),ts=wrapped?value.ts:null;
+    if(wrapped&&(!Number.isFinite(ts)||ts<0))return {ok:false,error:"That backup has an invalid timestamp."};
+    var checked=snapshot(wrapped?value.data:value);
+    if(!checked.ok)return checked;
+    checked.ts=wrapped?ts:null;checked.legacy=!wrapped;
+    return checked;
+  }
+  function localPage(value){
+    if(typeof value!=="string"||!value||value.length>2048)return null;
+    try{
+      var url=new URL(value,global.location.href);
+      if(url.origin!==global.location.origin||!/^https?:$/.test(url.protocol))return null;
+      if(!/\/[A-Za-z0-9][A-Za-z0-9._-]*\.html$/.test(url.pathname))return null;
+      return url.href;
+    }catch(error){return null;}
+  }
+  global.CCAFProgress={snapshot:snapshot,backup:backup,localPage:localPage};
+})(window);
+
+/* ---- progress file-sync (runs on every page served over local HTTP) ----
    Mirrors every ccaf-* localStorage change into my-progress.json on disk
    (via serve.py) and restores from that file when the browser copy is
    missing or older — clearing browser data can no longer lose progress.
    On the hosted site this whole block stays inactive (browser-only saves). */
 (function(){
-  var LOCAL=(location.hostname==="localhost"||location.hostname==="127.0.0.1");
+  var LOCAL=location.protocol==="http:";
   window.CCAF_SYNC={mode:LOCAL?"probing":"pages",ts:0,restored:false};
   function snap(){var d={};for(var i=0;i<localStorage.length;i++){var k=localStorage.key(i);
-    if(k&&k.indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")d[k]=localStorage.getItem(k);}return d;}
+    if(k&&k.indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")d[k]=localStorage.getItem(k);}
+    var checked=window.CCAFProgress.snapshot(d);return checked.ok?checked.data:{};}
   window.CCAF_SYNC.snapshot=snap;
   if(!LOCAL)return;
   function announce(m){window.CCAF_SYNC.mode=m;
     try{document.dispatchEvent(new CustomEvent("ccaf-sync-mode"));}catch(e){}}
   // Restore without blocking first paint. Embedded previews can deadlock on a
   // synchronous XHR here, leaving a titled but completely blank tab.
-  var t=null,restoring=true,proto=null,set0=null,rm0=null;
+  var t=null,restoring=true,proto=null,set0=null,rm0=null,lastIssued=0;
   function rawSet(k,v){try{if(set0)set0.call(localStorage,k,v);else localStorage.setItem(k,v);}catch(e){}}
+  function nextTs(){var stored=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10)||0;lastIssued=Math.max(Date.now(),stored+1,lastIssued+1);return lastIssued;}
   function push(){
     if(restoring)return;
     clearTimeout(t);t=setTimeout(function(){
-    var ts=Date.now();
+    var ts=nextTs();
     fetch("/__save",{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({ts:ts,data:snap()})})
     .then(function(r){
-      if(r.ok){rawSet("ccaf-sync-ts",String(ts));
-        window.CCAF_SYNC.ts=ts;announce("file");}
-      else{announce("nofile");}
+      if(!r.ok)throw new Error("save unavailable");
+      return r.json().catch(function(){return {};});
+    }).then(function(result){
+      var accepted=Number(result.ts)||ts,current=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10)||0;
+      accepted=Math.max(accepted,current);rawSet("ccaf-sync-ts",String(accepted));
+      window.CCAF_SYNC.ts=Math.max(window.CCAF_SYNC.ts||0,accepted);announce("file");
     }).catch(function(){announce("nofile");});
   },400);}
   // Storage objects turn direct property writes into stored items, so the
@@ -51,9 +97,8 @@
     window.addEventListener("pagehide",function(){
       if(restoring)return;
       try{
-        var ts=Date.now();
-        var ok=navigator.sendBeacon&&navigator.sendBeacon("/__save",new Blob([JSON.stringify({ts:ts,data:snap()})],{type:"application/json"}));
-        if(ok)rawSet("ccaf-sync-ts",String(ts));
+        var ts=nextTs();
+        if(navigator.sendBeacon)navigator.sendBeacon("/__save",new Blob([JSON.stringify({ts:ts,data:snap()})],{type:"application/json"}));
       }catch(e){}
     });
   }catch(e){}
@@ -66,8 +111,9 @@
     .then(function(f){
       clearTimeout(abortTimer);
       var mine=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10),didRestore=false;
-      if(f&&f.data&&typeof f.ts==="number"&&f.ts>mine){
-        for(var k in f.data)rawSet(k,f.data[k]);
+      var checked=(f&&f.data)?window.CCAFProgress.snapshot(f.data):{ok:false};
+      if(checked.ok&&typeof f.ts==="number"&&Number.isFinite(f.ts)&&f.ts>mine){
+        for(var k in checked.data)rawSet(k,checked.data[k]);
         rawSet("ccaf-sync-ts",String(f.ts));
         window.CCAF_SYNC.ts=f.ts;window.CCAF_SYNC.restored=true;didRestore=true;
       }
@@ -146,17 +192,25 @@
   }
   function mastery(u){
     var ever=!!((J("ccaf-everdone",{})||{})[u]);
-    var sg=stepsFor(u), q=(J("ccaf-quizdone",{})||{})[u]||null;
+    var sg=stepsFor(u), q=(J("ccaf-quizdone",{})||{})[u]||null,qPass=q&&q.qualified?q.qualified:q;
     var ev=evidence()[u]||{}, unit=COURSE&&COURSE.map?COURSE.map[u]:null;
     var isProject=!!(unit&&String(unit.quiz).indexOf("projects.html")===0);
-    var quizOK=ever||isProject||!!(q&&q.total>0&&(q.score/q.total)>=0.8&&Number(q.guessed||0)===0);
-    var buildOK=ever||!!(ev.build&&ev.build.data&&ev.build.data.mode==="independent");
+    var quizOK=ever||isProject||!!(qPass&&qPass.total>0&&(qPass.score/qPass.total)>=0.8&&Number(qPass.guessed||0)===0);
+    var buildOK=ever||!!(ev.build&&ev.build.data&&ev.build.data.mode==="independent"&&unit&&ev.build.data.exercise===unit.exercise);
     var teachOK=ever||!!(ev.teachback&&ev.teachback.data&&ev.teachback.data.complete);
     var allOK=ever||(sg.all&&quizOK&&buildOK&&teachOK);
     var touched=sg.n>0||!!q||!!ev.build||!!ev.teachback;
     var practiced=!!q||!!ev.build||!!ev.teachback;
     var state=allOK?"proficient":(practiced?"practiced":(touched?"seen":"new"));
     return {unit:u,state:state,mastered:allOK,grandfathered:ever,steps:sg,quiz:q,quizOK:quizOK,buildOK:buildOK,teachOK:teachOK};
+  }
+  function qualifiesQuiz(result){return !!(result&&result.total>0&&(result.score/result.total)>=0.8&&Number(result.guessed||0)===0);}
+  function quizRecord(result){return {score:result.score,total:result.total,guessed:Number(result.guessed||0),set:result.set||"",ts:result.ts||""};}
+  function mergeQuizResult(previous,latest){
+    var qualified=previous&&previous.qualified?quizRecord(previous.qualified):(qualifiesQuiz(previous)?quizRecord(previous):null);
+    if(qualifiesQuiz(latest))qualified=quizRecord(latest);
+    if(qualified)latest.qualified=qualified;
+    return latest;
   }
   // one-time migration: OR-merge old pipeline + stash into ccaf-steps (true wins, backup first)
   try{
@@ -191,7 +245,7 @@
       if(chA){rA.date=tod();stA[cAb]=rA;S("ccaf-steps",stA);}
     }}catch(e){}
   syncPipeline();
-  window.CCAF={ORDER:ORDER,TITLES:TITLES,COURSE:COURSE,cur:cur,today:tod,getSteps:getSteps,setStep:setStep,stepsFor:stepsFor,syncPipeline:syncPipeline,recordEvidence:recordEvidence,mastery:mastery};
+  window.CCAF={ORDER:ORDER,TITLES:TITLES,COURSE:COURSE,cur:cur,today:tod,getSteps:getSteps,setStep:setStep,stepsFor:stepsFor,syncPipeline:syncPipeline,recordEvidence:recordEvidence,mastery:mastery,mergeQuizResult:mergeQuizResult};
 })();
 
 (function(){
@@ -232,7 +286,7 @@
    ".nav-morebtn.here{background:var(--ink);color:#fff;border-color:var(--ink)}"+
    ".nav-menu{position:absolute;top:118%;right:0;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 28px rgba(0,0,0,.14);padding:6px;display:none;flex-direction:column;gap:3px;z-index:60;min-width:172px}"+
    ".nav-menu.open{display:flex}"+
-   ".nav-menu a{white-space:nowrap;padding:8px 12px;border-radius:6px;text-decoration:none;color:var(--ink);font-weight:700;font-size:.86rem;border:0;background:transparent}"+
+   ".nav-menu a{white-space:normal;overflow-wrap:anywhere;padding:8px 12px;border-radius:6px;text-decoration:none;color:var(--ink);font-weight:700;font-size:.86rem;border:0;background:transparent}"+
    ".nav-menu a:hover{background:#EAF0F2}"+
    ".nav-menu a.here{background:var(--ink);color:#fff}";
   document.head.appendChild(st);
@@ -241,22 +295,33 @@
   var inMore=MORE.some(function(x){return x.href.toLowerCase()===cur;});
 
   var html='<div class="wrap">';
-  html+='<a href="dashboard.html" onclick="if(history.length>1){history.back();return false}">← Back</a>';
+  if(cur!=="dashboard.html")html+='<a href="dashboard.html" id="navBack">← Back</a>';
   PRIMARY.forEach(function(p){
     var c=[]; if(p.cls)c.push(p.cls); if(here(p.m))c.push("here");
-    html+='<a class="'+c.join(" ")+'" href="'+p.href+'">'+p.label+'</a>';
+    html+='<a class="'+c.join(" ")+'" href="'+p.href+'"'+(here(p.m)?' aria-current="page"':'')+'>'+p.label+'</a>';
   });
-  html+='<div class="nav-more"><button type="button" class="nav-morebtn'+(inMore?" here":"")+'" id="navMoreBtn">More ▾</button><div class="nav-menu" id="navMenu">';
-  MORE.forEach(function(x){ html+='<a href="'+x.href+'"'+(x.href.toLowerCase()===cur?' class="here"':'')+'>'+x.label+'</a>'; });
+  html+='<div class="nav-more"><button type="button" class="nav-morebtn'+(inMore?" here":"")+'" id="navMoreBtn" aria-expanded="false" aria-controls="navMenu" aria-haspopup="true">More ▾</button><div class="nav-menu" id="navMenu" hidden>';
+  MORE.forEach(function(x){var active=x.href.toLowerCase()===cur;html+='<a href="'+x.href+'"'+(active?' class="here" aria-current="page"':'')+'>'+x.label+'</a>'; });
   html+='</div></div></div>';
 
   var host=document.getElementById("site-nav");
   if(!host) return;
   host.innerHTML=html;
 
+  var back=document.getElementById("navBack");
+  if(back)back.addEventListener("click",function(e){
+    try{
+      var ref=new URL(document.referrer);
+      if(ref.origin===location.origin&&/\/[A-Za-z0-9][A-Za-z0-9._-]*\.html$/.test(ref.pathname)&&history.length>1){e.preventDefault();history.back();}
+    }catch(error){}
+  });
+
   var btn=document.getElementById("navMoreBtn"), menu=document.getElementById("navMenu");
   if(btn&&menu){
-    btn.addEventListener("click",function(e){e.stopPropagation();menu.classList.toggle("open");});
-    document.addEventListener("click",function(){menu.classList.remove("open");});
+    function setOpen(open,returnFocus){menu.hidden=!open;menu.classList.toggle("open",open);btn.setAttribute("aria-expanded",String(open));if(returnFocus)btn.focus();}
+    btn.addEventListener("click",function(e){e.stopPropagation();setOpen(menu.hidden);});
+    btn.addEventListener("keydown",function(e){if(e.key==="ArrowDown"){e.preventDefault();setOpen(true);var first=menu.querySelector("a");if(first)first.focus();}else if(e.key==="Escape")setOpen(false,true);});
+    menu.addEventListener("keydown",function(e){if(e.key==="Escape"){e.preventDefault();setOpen(false,true);}});
+    document.addEventListener("click",function(){setOpen(false,false);});
   }
 })();

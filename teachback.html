@@ -51,7 +51,7 @@
     <button class="plain" id="copy" type="button">Copy for tutor feedback</button>
     <a class="action plain" href="today.html">Back to lesson</a>
   </div>
-  <div id="status"></div>
+  <div id="status" role="status" aria-live="polite" tabindex="-1"></div>
 </main>
 <script>
 (function(){
@@ -77,9 +77,9 @@
   if(SR){rec=new SR();rec.continuous=true;rec.interimResults=true;rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;words.value=(words.value+" "+t).trim();save();};rec.onend=function(){rb.textContent="Start voice typing";};rb.addEventListener("click",function(){try{rec.start();rb.textContent="Listening...";}catch(e){}});}else{rb.style.display="none";}
   document.getElementById("complete").addEventListener("click",function(){save();var all=Object.keys(st.r).length===4&&Object.keys(st.r).every(function(k){return st.r[k];});var has=(st.words||"").trim().length>=40||st.aloud;
     status.style.display="block";
-    if(!all||!has){status.innerHTML="<b>Not saved as mastery yet.</b><br>"+(!has?"Type at least a short explanation or tick I explained it aloud.<br>":"")+(!all?"Complete all four self-checks.":"");return;}
+    if(!all||!has){status.innerHTML="<b>Not saved as mastery yet.</b><br>"+(!has?"Type at least a short explanation or tick I explained it aloud.<br>":"")+(!all?"Complete all four self-checks.":"");status.focus();return;}
     if(window.CCAF){CCAF.recordEvidence(u,"teachback",{complete:true,words:st.words,aloud:st.aloud,rubric:st.r});CCAF.setStep(u,3,true);}
-    status.style.borderLeftColor="var(--green)";status.style.background="#EAF7EF";status.innerHTML="<b>Teach-back evidence saved.</b> Your Explain step is complete.";
+    status.style.borderLeftColor="var(--green)";status.style.background="#EAF7EF";status.innerHTML="<b>Teach-back evidence saved.</b> Your Explain step is complete.";status.focus();
   });
   document.getElementById("copy").addEventListener("click",function(){save();var prereq=(unit.prereq||[]).map(function(id){return C.map[id]?C.map[id].title:id;});var t="You are my CCA-F tutor. Grade this teach-back gently but accurately. Lesson: "+unit.title+". Prerequisites: "+(prereq.join(", ")||"none")+". Concepts: "+unit.concepts.join(", ")+". Use four checks: plain idea, concrete example, tradeoff/failure, production relevance. Do not add a new lesson. Give: Right, Fix, one tiny redo, and Beginner/Developing/Exam-ready/Strong.\n\nMY TEACH-BACK:\n"+(st.words||"I explained aloud; ask me one short follow-up question.");copyText(t).then(function(){status.style.display="block";status.innerHTML="Copied. Paste it to your tutor.";});});
 })();

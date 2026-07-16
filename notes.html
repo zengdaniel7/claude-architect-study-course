@@ -13,7 +13,7 @@
   .pgbtn:hover{border-color:var(--accent);color:var(--accent)}
   .pgbtn.off{opacity:.35;pointer-events:none}
   #notes h3{margin:1.4em 0 .5em;font-size:1.15rem}
-  #notes .idea{background:#fff;border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:8px;padding:12px 16px;margin:10px 0;line-height:1.65}
+  #notes .idea{background:#fff;border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:8px;padding:12px 16px;margin:10px 0;line-height:1.65;overflow-wrap:anywhere}
   #notes ul{line-height:1.8}
   #notes p{line-height:1.7;max-width:62ch}
   .b{display:inline-block;border:0;cursor:pointer;font:inherit;font-weight:800;border-radius:7px;padding:10px 18px;text-decoration:none;font-size:.92rem;margin:4px 8px 0 0}
@@ -56,7 +56,7 @@
 <script src="notes-data.js"></script>
 <script src="notes-corrections.js"></script>
 <script>
-var UPATH=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
+var UPATH=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():["w1","w2","w3","w4","w5","a1","m3","m1","m2","o1","a2","d1","d2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
 var UTITLES=(window.CCAF&&CCAF.TITLES)?CCAF.TITLES:{},ULEVEL={},UQUIZ={};
 if(window.CCAF_COURSE){CCAF_COURSE.units.forEach(function(x){ULEVEL[x.id]=x.level;UQUIZ[x.id]=x.quiz;});}
 function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
@@ -69,8 +69,9 @@ document.getElementById("npos").textContent="Lesson "+(idx+1)+" of "+UPATH.lengt
 document.getElementById("nlevel").textContent=ULEVEL[u]||"";
 document.getElementById("ntitle").textContent=UTITLES[u];
 var pv=document.getElementById("nprev"), nx=document.getElementById("nnext");
-if(idx>0){pv.href="notes.html?unit="+UPATH[idx-1];}else{pv.className+=" off";}
-if(idx<UPATH.length-1){nx.href="notes.html?unit="+UPATH[idx+1];}else{nx.className+=" off";}
+function disablePager(link){link.removeAttribute("href");link.className+=" off";link.setAttribute("aria-disabled","true");link.tabIndex=-1;}
+if(idx>0){pv.href="notes.html?unit="+UPATH[idx-1];}else{disablePager(pv);}
+if(idx<UPATH.length-1){nx.href="notes.html?unit="+UPATH[idx+1];}else{disablePager(nx);}
 var q=UQUIZ[u]||"quizzes.html";
 var isProj=q.indexOf("projects")===0;
 document.getElementById("nactions").innerHTML=

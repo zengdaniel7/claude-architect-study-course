@@ -5,11 +5,13 @@ const root = new URL("./", import.meta.url);
 const read = (name) => fs.readFileSync(new URL(name, root), "utf8");
 const exists = (name) => fs.existsSync(new URL(name, root));
 const context = vm.createContext({ window: {} });
+const rawNotes = read("notes-data.js");
+const correctionSource = read("notes-corrections.js");
 
 vm.runInContext(read("course-data.js"), context, { filename: "course-data.js" });
 vm.runInContext(read("video-data.js"), context, { filename: "video-data.js" });
-vm.runInContext(read("notes-data.js"), context, { filename: "notes-data.js" });
-vm.runInContext(read("notes-corrections.js"), context, { filename: "notes-corrections.js" });
+vm.runInContext(rawNotes, context, { filename: "notes-data.js" });
+vm.runInContext(correctionSource, context, { filename: "notes-corrections.js" });
 vm.runInContext(read("units-data.js"), context, { filename: "units-data.js" });
 vm.runInContext(read("exercises.js"), context, { filename: "exercises.js" });
 vm.runInContext(read("exercise-library.js"), context, { filename: "exercise-library.js" });
@@ -98,6 +100,14 @@ for (const stale of [
   "reliable way to guarantee the JSON is valid"
 ]) check(!correctedTeachingText.includes(stale), `rendered teaching text removes stale phrase: ${stale}`);
 
+const correctionPairs = [...correctionSource.matchAll(/\[\s*("(?:\\.|[^"\\])*")\s*,\s*("(?:\\.|[^"\\])*")\s*\]/g)];
+check(correctionPairs.length >= 20, "notes correction targets are discoverable by the audit");
+for (const match of correctionPairs) {
+  const target = JSON.parse(match[1]);
+  check(rawNotes.includes(target), `notes correction still matches its source phrase: ${target.slice(0, 58)}`);
+}
+check(rawNotes.includes("The exam gives you <b>scenarios</b>"), "production-scenario correction still matches its source phrase");
+
 const requiredExercises = course.units.map((unit) => unit.exercise);
 check(new Set(requiredExercises).size === requiredExercises.length, "every required unit has a unique fixed build");
 const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
@@ -141,6 +151,24 @@ check(/font-size:20px;line-height:1\.7;letter-spacing:0/.test(css), "shared UI u
 check(css.includes("prefers-reduced-motion:reduce"), "shared UI respects reduced-motion preferences");
 check(css.includes("focus-visible"), "shared UI provides visible keyboard focus");
 check(!/text-transform\s*:\s*uppercase/.test(read("review.html")), "review cards do not force all-capital labels");
+
+const nav = read("nav.js");
+check(nav.includes("CCAFProgress") && nav.includes("Progress data contains an invalid key"), "progress restore uses the shared validator");
+check(nav.includes("lastIssued+1") && nav.includes("result.ts"), "client save revisions are monotonic and accept the server revision");
+check(nav.includes("ev.build.data.exercise===unit.exercise"), "mastery requires the unit's exact fixed build");
+check(nav.includes("mergeQuizResult") && nav.includes("q.qualified"), "earned zero-guess quiz qualification survives later practice attempts");
+check(nav.includes('aria-expanded="false"') && nav.includes('e.key==="Escape"'), "shared More menu exposes keyboard disclosure behavior");
+check(nav.includes('if(cur!=="dashboard.html")') && nav.includes('id="navBack"'), "shared navigation avoids a duplicate Back control on Home");
+check(nav.includes("ref.origin===location.origin") && nav.includes("history.back()"), "shared Back link only follows same-origin course history");
+check(read("dashboard.html").includes("Matching items in this browser will be replaced"), "progress import confirms replacement before writing");
+check(read("today.html").includes("Course data did not load"), "lesson page fails visibly instead of using a partial curriculum");
+check(read("curriculum.html").includes("rich.title=u.title") && read("curriculum.html").includes("rich.quiz[0]=u.quiz"), "rich curriculum summaries hydrate from the authoritative manifest");
+check(read("timeline.html").includes('<button class="donetag"'), "timeline completion controls are native buttons");
+check(read("flashcards.html").includes('<button class="flash"'), "browse flashcards are keyboard-operable buttons");
+check(read("quiz.html").includes('id:"mistake-"+stableQuestionId'), "mistake-card ids do not depend on shuffled display position");
+const serverSource = read("serve.py");
+check(serverSource.includes('payload["ts"] <= current_timestamp'), "save server refuses delayed older snapshots");
+check(serverSource.includes("SAVE_LOCK") && serverSource.includes("os.replace(tmp, SAVE)"), "save server serializes atomic replacements");
 
 const foundation = read("foundation-lab.html");
 check(foundation.includes('role="img"'), "visual foundation lessons expose the scene as an image");

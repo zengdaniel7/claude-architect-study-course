@@ -305,7 +305,8 @@ function maybeUnitDone(r){ if(!param("unit")) return; renderUnitDone(r.correct/Q
 document.getElementById("scoreBtn").addEventListener("click",function(){showScore();
   // record ONLY on a deliberate grading click — an auto-replayed score screen never earns credit
   try{var pun=param("unit");if(pun&&UTITLES[pun]&&lastResult){var qd0=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}");
-    qd0[pun]={score:lastResult.correct,total:30,guessed:lastResult.guessed,set:"pretest",ts:new Date().toLocaleDateString()};
+    var latest={score:lastResult.correct,total:30,guessed:lastResult.guessed,set:"pretest",ts:new Date().toLocaleDateString()};
+    qd0[pun]=(window.CCAF&&CCAF.mergeQuizResult)?CCAF.mergeQuizResult(qd0[pun],latest):latest;
     localStorage.setItem("ccaf-quizdone",JSON.stringify(qd0));
     renderUnitDone(lastResult.correct/30);
     var bd=document.getElementById("band");if(bd)bd.innerHTML+='<br>🧾 This take counts for: <b>'+UTITLES[pun]+'</b> — saved.';}}catch(e){}

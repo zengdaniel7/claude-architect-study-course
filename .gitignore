@@ -2,3 +2,8 @@ my-progress.json
 my-progress.backup.json
 my-progress.json.tmp
 .DS_Store
+node_modules/
+test-results/
+playwright-report/
+__pycache__/
+*.pyc

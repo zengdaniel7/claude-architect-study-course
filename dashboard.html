@@ -125,9 +125,10 @@
     window.addEventListener("storage",function(e){ if(e.key==="ccaf-curriculum") drawWhere(); });
     try{
       var last=JSON.parse(localStorage.getItem("ccaf-last")||"null");
-      if(last && last.href && last.label && (Date.now()-(last.ts||0)) < 14*24*60*60*1000){
+      var safeHref=last&&window.CCAFProgress?CCAFProgress.localPage(last.href):null;
+      if(last && safeHref && last.label && (Date.now()-(last.ts||0)) < 14*24*60*60*1000){
         var wl=document.getElementById("where-last");
-        var a=document.createElement("a"); a.href=last.href;
+        var a=document.createElement("a"); a.href=safeHref;
         var b=document.createElement("b"); b.textContent=last.label; a.appendChild(b);
         wl.appendChild(document.createTextNode("⏪ Continue: "));
         wl.appendChild(a); wl.appendChild(document.createTextNode(" →"));
@@ -260,6 +261,7 @@
       <button type="button" id="impBtn" style="background:#fff;color:var(--ink);border:1.5px solid var(--line);border-radius:7px;font:inherit;font-weight:700;padding:8px 16px;cursor:pointer;margin:0 0 6px;font-size:.88rem">⬆️ Import a backup</button>
       <input type="file" id="impFile" accept=".json,application/json" style="display:none">
     </p>
+    <p class="hint" id="impStatus" role="status" aria-live="polite" style="margin:.4em 0 0"></p>
     <p class="hint" style="margin:.6em 0 0">Everything you tick or type saves itself <b>the moment you do it</b>. Heads-up: progress belongs to the exact address in the bar — <b>localhost:8000</b> and the hosted site each keep their own. Study at the same address every time.</p>
   </div>
   <script>
@@ -287,10 +289,15 @@
       var r=new FileReader();
       r.onload=function(){
         try{
-          var j=JSON.parse(r.result);var d=(j&&j.data)?j.data:j;var n=0;
-          for(var k in d){if(k.indexOf("ccaf-")===0&&k!=="ccaf-sync-ts"){localStorage.setItem(k,String(d[k]));n++;}}
-          alert("✅ Imported "+n+" saved items. Reloading…");location.reload();
-        }catch(e){alert("❌ That file didn't look like a CCA-F progress backup.");}
+          var j=JSON.parse(r.result),checked=window.CCAFProgress.backup(j);
+          if(!checked.ok||!checked.count)throw new Error(checked.error||"The backup is empty.");
+          var when=checked.ts?new Date(checked.ts).toLocaleString():"an older backup format with no date";
+          var warning="Import "+checked.count+" saved items from "+when+"?\n\nMatching items in this browser will be replaced. Other saved items stay here.";
+          if(!confirm(warning)){document.getElementById("impStatus").textContent="Import canceled. Your current progress was not changed.";inp.value="";return;}
+          for(var k in checked.data)localStorage.setItem(k,checked.data[k]);
+          document.getElementById("impStatus").textContent="Imported "+checked.count+" saved items. Reloading.";
+          setTimeout(function(){location.reload();},0);
+        }catch(e){document.getElementById("impStatus").textContent="That file was not a valid CCA-F progress backup. Nothing was changed.";inp.value="";}
       };
       r.readAsText(f);
     });
@@ -327,7 +334,7 @@
     var _n = new Date(), today = _n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC
     // The 5 steps belong to the CURRENT LESSON (same rule as the lesson page):
     // they carry over past midnight and reset only when the lesson changes.
-    var UIDS=["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"]; // same order as today.html PATH
+    var UIDS=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():["w1","w2","w3","w4","w5","a1","m3","m1","m2","o1","a2","d1","d2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
     function curLesson(){
       try{var d=(JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}").done)||{};
         for(var i=0;i<UIDS.length;i++){ if(!d[UIDS[i]]) return UIDS[i]; } return "end";
@@ -337,7 +344,7 @@
     // ALWAYS the ⭐ NOW lesson's steps — the Lesson page is where you browse others.
     function readSteps(){return {checks:(window.CCAF?CCAF.getSteps(curLesson()):[false,false,false,false,false])};}
     var state = readSteps();
-    var host = document.getElementById('pipeline');    var host = document.getElementById('pipeline');
+    var host = document.getElementById('pipeline');
     document.getElementById('pipe-date').textContent = "Today is " + today + " — your steps stay with the lesson until you close it.";
     function fresh(){ return readSteps(); }
     var CBS=[], NAMES=[];
