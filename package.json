@@ -12,7 +12,7 @@
     "studio:preview": "vite preview --config studio/vite.config.ts",
     "studio:start": "python3 scripts/start_studio.py --no-open",
     "test:unit": "vitest run --config studio/vitest.config.ts --maxWorkers=1",
-    "test:studio-server": ".venv/bin/python -m pytest tests/studio_server -q",
+    "test:studio-server": "python -m pytest tests/studio_server -q",
     "test:server": "python3 -m unittest discover -s tests -p 'test_serve.py'",
     "test:e2e": "playwright test",
     "test": "pnpm run audit && pnpm run typecheck && pnpm run test:unit && pnpm run test:server && pnpm run test:studio-server && pnpm run studio:build && pnpm run test:e2e"
