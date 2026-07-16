@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CCA-F Study Dashboard</title>
+<link rel="stylesheet" href="study.css">
 <style>
   /* Atkinson Hyperlegible: dyslexia-friendly and vendored locally for offline study. */
   @font-face{font-family:"Atkinson Hyperlegible";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/AtkinsonHyperlegible-Regular.woff2") format("woff2")}
@@ -63,52 +64,40 @@
   a:focus-visible,button:focus-visible,input:focus-visible{outline:4px solid #F2B544;outline-offset:3px}
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
   footer{color:var(--muted); font-size:.85rem; margin-top:40px; text-align:center}
+  .dashboard-focus{background:#fff;border:2px solid var(--accent);border-radius:8px;padding:20px 22px;margin:10px 0 18px}
+  .dashboard-focus h2{border:0;margin:4px 0 2px;padding:0}
+  .focus-go{display:inline-flex;align-items:center;justify-content:center;min-height:50px;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:10px 20px;border-radius:7px;margin-top:10px}
+  .dashboard-tools{margin:12px 0 24px}.dashboard-tools .toolgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:4px 0 12px}.dashboard-tools a{display:flex;align-items:center;min-height:46px;border:1px solid var(--line);background:#fff;color:var(--ink);text-decoration:none;font-weight:800;padding:8px 11px;border-radius:7px}
+  .dashboard-reference{margin:30px 0}
+  @media(max-width:680px){.dashboard-tools .toolgrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
 <script src="course-data.js"></script>
 <script src="nav.js"></script>
-<div class="wrap">
+<main class="wrap" id="main-content">
 
   <header>
     <h1>🏠 CCA-F Study Dashboard</h1>
     <p class="sub">Claude Certified Architect – Foundations · your home base</p>
   </header>
 
-  <div class="banner ok" style="text-align:center;background:#E8F5EC;border-color:#A9D9BC">
-    <a href="today.html" style="display:inline-block;background:#247A4B;color:#fff;text-decoration:none;font-weight:800;padding:15px 34px;border-radius:7px;font-size:1.25rem">▶️ Start your lesson →</a>
-    <div class="hint" style="margin-top:8px"><b>The one button to click each day</b> — it shows where you are in the course and your 5 steps for today.</div>
-  </div>
-
-  <div class="banner tip">
-    💬 <b>You can annotate this page.</b> Tap any <span class="ask" style="padding:2px 9px">Ask about this</span>
-    button — it copies a ready-made question. Paste it to your AI tutor to learn exactly that part.
-  </div>
-
-  <div class="banner ok" style="text-align:center">
-    <a href="my-plan.html" style="display:inline-block;background:#247A4B;color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:7px;font-size:1.1rem">🧭 Plan worked example →</a>
-    <div class="hint" style="margin-top:8px">A sample plan built from a real beginner's pre-test — <a href="pretest.html">take the Pre-Test</a> and re-tune it to you.</div>
-  </div>
-
-  <div class="banner tip" style="text-align:center">
-    <a href="concept-map.html" style="display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:7px;font-size:1.1rem">🗺️ Open the concept map →</a>
-    <div class="hint" style="margin-top:8px">The <b>whole plan as diagrams</b> — agent loop, MCP, structured output, reliability — organized around the spots beginners find hardest.</div>
-  </div>
-
-  <div class="banner ok" style="text-align:center">
-    <a href="engineer-path.html" style="display:inline-block;background:var(--ink);color:#fff;text-decoration:none;font-weight:800;padding:13px 28px;border-radius:7px;font-size:1.05rem">Applied Engineer path →</a>
-    <div class="hint" style="margin-top:8px">A parallel hands-on path through programming, APIs, data, Git, testing, systems, security, and technical-cofounder judgment.</div>
-  </div>
-
-  <h2>📍 Where you are <span class="hint">· live — same tracker as the Lesson page</span></h2>
-  <div class="card">
-    <p style="margin:0 0 4px"><b id="where-count">0 / 23 units done</b> <span class="hint" id="where-next-wrap">· next up: <b id="where-next">…</b></span></p>
+  <section class="dashboard-focus" aria-labelledby="where-next">
+    <div class="hint">Current lesson</div>
+    <h2 id="where-next">Loading your lesson</h2>
+    <p style="margin:0 0 4px"><b id="where-count">0 / 23 units done</b></p>
     <div style="background:#EFE7D8;border-radius:99px;height:12px;overflow:hidden;margin:8px 0 12px"><div id="where-bar" style="background:#2F9E63;height:100%;width:0%;border-radius:99px"></div></div>
-    <p style="margin:0 0 8px">👉 <a href="today.html"><b>Open your lesson page →</b></a> <span class="hint">it tees up the exact lesson, video and 5 steps.</span></p>
-    <p class="hint" id="where-last" style="display:none;margin:0 0 8px"></p>
-    <p class="hint" style="margin:0">First step: take the <a href="pretest.html">Pre-Test</a> to set your baseline — score AND how much you guessed. (Example: one real learner started at 20/30 with 18 guesses → real base ≈ 12.)</p>
-  </div>
+    <div id="lesson-flow"></div>
+    <a class="focus-go" id="where-go" href="today.html">Continue lesson</a>
+  </section>
+
+  <details class="dashboard-tools"><summary>Study maps and supporting paths</summary><div class="toolgrid body">
+    <p class="hint" id="where-last" style="display:none;grid-column:1/-1;margin:0"></p>
+    <a href="my-plan.html">My plan</a>
+    <a href="concept-map.html">Concept map</a>
+    <a href="engineer-path.html">Applied Engineer path</a>
+  </div></details>
   <script>
   (function(){
     var PATH=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():[];
@@ -119,8 +108,12 @@
       document.getElementById("where-count").textContent=n+" / "+PATH.length+" units done";
       document.getElementById("where-bar").style.width=Math.round(n/PATH.length*100)+"%";
       var nx=PATH.filter(function(id){return !done[id];})[0];
-      document.getElementById("where-next").textContent=nx?TITLES[nx]:"all done — switch to timed practice 🎉";
+      document.getElementById("where-next").textContent=nx?TITLES[nx]:"Course complete";
+      var go=document.getElementById("where-go");
+      if(nx&&window.CCAFFlow){var action=CCAFFlow.next(nx);CCAFFlow.mount("lesson-flow",{unit:nx,stage:action.id==="complete"?"review":action.id});go.href=action.href;go.textContent=(action.id==="complete"?"Finish lesson":"Continue: "+action.label)+" →";}
+      else{document.getElementById("lesson-flow").textContent="";go.href="quizzes.html";go.textContent="Open timed practice →";}
     }
+    window.refreshDashboardFocus=drawWhere;
     drawWhere();
     window.addEventListener("storage",function(e){ if(e.key==="ccaf-curriculum") drawWhere(); });
     try{
@@ -138,6 +131,7 @@
   })();
   </script>
 
+  <details class="dashboard-reference"><summary>Exam facts, domains, and official courses</summary><div class="body">
   <!-- EXAM FACTS -->
   <h2>📌 The exam — what's official vs reported</h2>
 
@@ -241,12 +235,13 @@
       <li><span class="dot" style="background:var(--orange)"></span><b>Orange</b> — human review, judgment, handoff</li>
     </ul>
   </div>
+  </div></details>
 
   <!-- DAILY PIPELINE -->
-  <h2>📋 Your lesson's 5 steps — check things off (fresh steps with each new lesson)</h2>
+  <h2>Practice habits for this lesson</h2>
   <div class="card">
     <p class="hint" id="pipe-date"></p>
-    <p class="hint">👉 Tap a step's <b>name</b> (or the ▸) to see exactly <b>what to do and where</b>.</p>
+    <p class="hint">Five habits support the six-stage lesson path. Your quiz score updates separately.</p>
     <div id="pipeline"></div>
     <div class="bar" style="margin-top:14px"><span id="pipe-bar" style="width:0%; background:var(--green)"></span></div>
     <p class="hint" id="pipe-count">Today: 0 / 5 done</p>
@@ -326,10 +321,10 @@
           <b>To whom:</b> yourself in the mirror, or paste your words to your tutor for grading.<br>
           <b>Why:</b> if you can't say it simply, you don't own it yet.`,
         ask:"I'll explain today's topic in my own words — quiz and grade my explanation, and tell me exactly what I missed." },
-      { label:"🃏 3 flashcards + 1 mistake card",
-        details:`<b>What:</b> 3 Q→A cards on today's idea + 1 "mistake card" for something you got wrong.<br>
-          <b>Where:</b> <a href="https://apps.ankiweb.net" target="_blank" rel="noopener">Anki</a> (spaced repetition), or the on-site <a href="flashcards.html">Flashcards</a>.`,
-        ask:"Turn today's topic into 3 short flashcards (Q on one line, A on the next) plus 1 mistake card." }
+      { label:"🃏 Review 3 cards + 1 mistake card",
+        details:`<b>What:</b> reveal each answer, rate it, then use <b>Next card</b>.<br>
+          <b>Where:</b> the lesson's <a href="review.html">Review queue</a>. Missed quiz ideas become mistake cards.`,
+        ask:"Run my lesson review with me and help me turn one mistake into a short card." }
     ];
     var _n = new Date(), today = _n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC
     // The 5 steps belong to the CURRENT LESSON (same rule as the lesson page):
@@ -360,14 +355,14 @@
       head.style.cssText = 'display:flex;align-items:center;gap:12px;padding:10px 0';
       var cb = document.createElement('input');
       cb.type='checkbox'; cb.checked=!!state.checks[i];
+      cb.setAttribute('aria-label','Mark '+item.label.replace(/^\S+\s+/,"")+' complete');
       cb.style.cssText='width:22px;height:22px;flex:0 0 auto;accent-color:#2F9E63';
-      var name = document.createElement('span');
-      name.textContent=item.label;
-      name.style.cssText='flex:1 1 auto;font-weight:600;cursor:pointer';
+      var name = document.createElement('button');
+      name.type='button';name.textContent=item.label+'  ▸';
+      name.style.cssText='flex:1 1 auto;font:inherit;font-weight:700;text-align:left;border:0;background:transparent;color:var(--ink);cursor:pointer;padding:2px 0';
       if(state.checks[i]){ name.style.textDecoration='line-through'; name.style.color='#5C6B7A'; }
-      var chev = document.createElement('span');
-      chev.textContent='▸'; chev.style.cssText='cursor:pointer;color:var(--accent);font-weight:700;font-size:1.15rem';
       var panel = document.createElement('div');
+      panel.id='home-step-panel-'+i;name.setAttribute('aria-controls',panel.id);name.setAttribute('aria-expanded','false');
       panel.style.cssText='display:none;padding:2px 0 14px 34px;font-size:.92rem;line-height:1.6';
       panel.innerHTML=item.details+'<br>';
       var btn=document.createElement('button');
@@ -380,12 +375,11 @@
         state=fresh();
         name.style.textDecoration=cb.checked?'line-through':'none';
         name.style.color=cb.checked?'#5C6B7A':'';
-        bar();
+        bar();if(window.refreshDashboardFocus)window.refreshDashboardFocus();
       });
-      function toggle(){ var open=panel.style.display==='block'; panel.style.display=open?'none':'block'; chev.textContent=open?'▸':'▾'; }
+      function toggle(){ var open=panel.style.display==='block'; panel.style.display=open?'none':'block';name.setAttribute('aria-expanded',String(!open));name.textContent=item.label+(open?'  ▸':'  ▾'); }
       name.addEventListener('click', toggle);
-      chev.addEventListener('click', toggle);
-      head.appendChild(cb); head.appendChild(name); head.appendChild(chev);
+      head.appendChild(cb); head.appendChild(name);
       wrap.appendChild(head); wrap.appendChild(panel);
       return wrap;
     }
@@ -430,9 +424,9 @@
       <li>🗺️ <a class="note" href="learning-map.html">Visual Learning Map</a> — the whole plan as diagrams, tailored to you <span class="hint">(new)</span></li>
       <li>🧭 <a class="note" href="my-plan.html">My Plan</a> — a worked-example path; take the pre-test and tune it to you</li>
       <li>📊 <a class="note" href="quizzes.html">Quizzes</a> — checkpoint quizzes that track your progress</li>
-      <li>🃏 <a class="note" href="flashcards.html">Flashcards</a> — browse freely, or 🧠 Learn (real quiz rounds, Quizlet-style)
-        &nbsp;·&nbsp; 🖼️ <a class="note" href="CCA-F%20Foundations%20Flashcards.pdf" target="_blank" rel="noopener">Printable deck (PDF) ↗</a>
-        <span class="hint">— diagrams, one card per page, dyslexia-friendly</span></li>
+      <li>🃏 <a class="note" href="flashcards.html">Flashcard library</a> — optional browse and quiz decks
+        &nbsp;·&nbsp; <a class="note" href="review.html">Review queue</a> — required lesson cards
+        &nbsp;·&nbsp; 🖼️ <a class="note" href="CCA-F%20Foundations%20Flashcards.pdf" target="_blank" rel="noopener">Printable deck (PDF) ↗</a></li>
       <li>🧪 <a class="note" href="pretest.html">Pre-Test</a> — clickable, auto-graded</li>
       <li>✅ <a class="note" href="exam-facts.html">Exam Facts</a> — official vs reported + how to register</li>
       <li>⚛️ <a class="note" href="curriculum.html">The Atomic Curriculum</a> — the whole path from building blocks → production systems, each unit with diagram·words·chapters·videos·quiz <span class="hint">(new)</span></li>
@@ -444,7 +438,7 @@
   </div>
 
   <footer>A community study course · not affiliated with Anthropic · run it locally and make it yours — see the README.</footer>
-</div>
+</main>
 
 <div id="toast">Copied — paste it to your AI tutor 👍</div>
 
@@ -539,17 +533,20 @@
     row.innerHTML = `
       <div class="n">${w.n}</div>
       <div class="body">
-        <div class="ttl" style="cursor:pointer">${w.t} <span style="color:var(--accent);font-weight:700">▸</span></div>
+        <button class="ttl" type="button" aria-expanded="false" style="cursor:pointer;font:inherit;font-weight:700;text-align:left;border:0;background:transparent;color:var(--ink);padding:0">${w.t} <span style="color:var(--accent);font-weight:700">▸</span></button>
         <div>${w.tags.map(t=>`<span class="chip"><span class="dot" style="background:var(${w.dot})"></span>${t}</span>`).join('')}</div>
       </div>
       <button class="ask" data-q="${q.replace(/"/g,'&quot;')}">Ask about this</button>`;
     const panel = document.createElement('div');
+    panel.id='week-detail-'+w.n;
     panel.style.cssText = 'display:none;padding:2px 0 16px 54px;font-size:.92rem;line-height:1.65';
     panel.innerHTML = `<b>🎯 Goal:</b> ${w.goal}<br><b>📚 Learn:</b> ${w.learn}<br><b>🔨 Do:</b> ${w.doit}<br><b>✅ Done when:</b> ${w.done}`;
     const ttl = row.querySelector('.ttl');
+    ttl.setAttribute('aria-controls',panel.id);
     ttl.addEventListener('click', ()=>{
       const open = panel.style.display==='block';
       panel.style.display = open?'none':'block';
+      ttl.setAttribute('aria-expanded',String(!open));
       ttl.querySelector('span').textContent = open?'▸':'▾';
     });
     wrap.style.borderBottom = '1px dashed var(--line)';

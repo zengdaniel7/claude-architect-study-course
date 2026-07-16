@@ -63,6 +63,8 @@
     <p class="sub" id="one"></p>
   </header>
 
+  <div id="lesson-flow"></div>
+
   <section class="visual-lesson" aria-label="Visual lesson">
     <div class="scene" id="scene" role="img" aria-describedby="plain"></div>
     <div class="idea">
@@ -107,10 +109,10 @@
   <div class="danger"><b>Watch out:</b> <span id="danger"></span></div>
 
   <div class="actions">
-    <button class="done" id="watched" type="button">Mark watch/listen done</button>
-    <a class="action next" id="build" href="exercise.html">Open the guided build</a>
-    <a class="action next" id="quiz" href="quiz.html">Take the lesson quiz</a>
+    <button class="done" id="watched" type="button">Mark learn step complete</button>
   </div>
+
+  <div id="next-step"></div>
 
   <footer><a href="today.html">Back to your lesson</a></footer>
 </main>
@@ -141,16 +143,16 @@
   document.getElementById("diagram").innerHTML=lesson.diagram.map(function(x){return '<div class="box">'+x+'</div>';}).join("");
   var cards=C.cards[u]||[];
   document.getElementById("terms").innerHTML=cards.map(function(x){return '<div class="term"><b>'+x[0]+'</b><br><span class="hint">'+x[1]+'</span></div>';}).join("");
-  document.getElementById("build").href="exercise.html?id="+unit.exercise;
-  document.getElementById("quiz").href="quiz.html?unit="+u;
+  if(window.CCAFFlow)CCAFFlow.mount("lesson-flow",{unit:u,stage:"learn"});
   window.CCAFReadAloud.mount({
     root:document.querySelector(".idea"),
     text:lesson.plain,
     src:"audio/foundation/"+u+"-one-idea.mp3"
   });
   var watched=document.getElementById("watched");
-  if(window.CCAF&&CCAF.getSteps(u)[0]){watched.textContent="Watch/listen complete";watched.disabled=true;}
-  watched.addEventListener("click",function(){if(window.CCAF){CCAF.setStep(u,0,true);CCAF.recordEvidence(u,"watch",{complete:true});}watched.textContent="Watch/listen complete";watched.disabled=true;});
+  function showNext(){if(window.CCAFFlow){CCAFFlow.mount("lesson-flow",{unit:u,stage:"learn"});CCAFFlow.mountNext("next-step",u,{stage:"draw",context:"Learn step complete.",label:"Next: draw it"});}}
+  if(window.CCAF&&CCAF.getSteps(u)[0]){watched.textContent="Learn step complete";watched.disabled=true;showNext();}
+  watched.addEventListener("click",function(){if(window.CCAF){CCAF.setStep(u,0,true);CCAF.recordEvidence(u,"watch",{complete:true});}watched.textContent="Learn step complete";watched.disabled=true;showNext();});
   try{localStorage.setItem("ccaf-last",JSON.stringify({href:"foundation-lab.html?unit="+u,label:"Lesson: "+unit.title,ts:Date.now()}));}catch(e){}
 })();
 </script>

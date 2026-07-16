@@ -18,16 +18,18 @@
 <nav class="top" id="site-nav"></nav>
 <script src="course-data.js"></script>
 <script src="nav.js"></script>
-<div class="wrap">
+<main class="wrap" id="main-content">
   <h1>🎯 Practice</h1>
-  <p class="sub">Everything you practice with, in one place — quizzes, flashcards, exercises, and the visual repair guide.</p>
+  <p class="sub">Your checks and optional extra practice, in one place.</p>
 
   <div class="card" style="display:flex;flex-wrap:wrap;gap:10px">
+    <a class="take" href="review.html">Review queue</a>
     <a class="take" style="background:var(--accent)" href="pretest.html">🧪 Pre-Test (30 Q diagnostic)</a>
-    <a class="take" style="background:#E8740C" href="flashcards.html">🃏 Flashcards (5 decks)</a>
+    <a class="take" style="background:#E8740C" href="flashcards.html">Flashcard library (optional)</a>
     <a class="take" style="background:var(--purple)" href="exercise.html">🏋️ Build exercises</a>
     <a class="take" style="background:var(--red)" href="repair-map.html">🩹 Repair guide (pictures)</a>
   </div>
+  <p class="hint"><b>Review queue</b> is part of each lesson. The flashcard library is extra practice.</p>
 
   <h2>📊 Checkpoint quizzes</h2>
   <p class="hint">Short checks woven through the plan. Take one at the end of each phase — they show you (and your tutor) exactly where you're at.</p>
@@ -37,7 +39,7 @@
 
   <p class="hint" id="overall"></p>
   <footer>Your pre-test lives separately: <a href="pretest.html">🧪 Pre-Test</a>. Re-take it every few weeks to re-tune <a href="my-plan.html">My Plan</a>.</footer>
-</div>
+</main>
 <script src="quizzes.js"></script>
 <script>
 function HKEY(k){return "ccaf-quiz-"+k;}

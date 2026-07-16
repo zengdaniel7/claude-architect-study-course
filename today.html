@@ -6,7 +6,7 @@
 <title>Your lesson — CCA-F</title>
 <link rel="stylesheet" href="study.css">
 <style>
-  .hero{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px 22px;margin:14px 0}
+  .hero-body{padding:6px 0 12px}
   .big{font-size:2.2rem;font-weight:800;line-height:1}
   .pbar{height:18px;border-radius:10px;background:#DCE5E8;overflow:hidden;margin:10px 0 4px}
   .pbar>span{display:block;height:100%;background:var(--green);border-radius:10px;width:0;transition:width .3s}
@@ -29,6 +29,13 @@
   .quicklinks a:hover{border-color:var(--accent);color:var(--accent)}
   .watchlink{display:inline-block;background:var(--green);color:#fff;border-radius:7px;padding:7px 15px;margin:6px 8px 0 0;text-decoration:none;font-weight:800;font-size:.85rem}
   .watchlink:hover{filter:brightness(1.06)}
+  .focus-meta{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;color:var(--muted);font-size:.82rem;font-weight:800}
+  .focus-options{margin-top:14px;background:transparent;border:0;border-top:1px solid var(--line);border-radius:0;padding:0}
+  .focus-options summary{font-size:.86rem}
+  .lesson-switcher{background:transparent;border:0;padding:0;margin-top:8px}.lesson-switcher summary{font-size:.82rem}
+  .lesson-switcher .pager{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:8px}
+  .course-overview{margin:18px 0}.course-overview summary{display:flex;align-items:center;gap:10px}.course-overview .big{font-size:1.25rem}
+  .optional-study{margin-top:28px}.optional-study .quicklinks{padding:4px 0 12px}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:8px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:70}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
@@ -40,55 +47,56 @@
 <script src="video-ui.js"></script>
 <script src="nav.js"></script>
 
-<div class="wrap">
+<main class="wrap" id="main-content">
   <header style="padding:26px 0 4px">
-    <h1>▶️ Your lesson</h1>
+    <h1>Today's lesson</h1>
     <p class="sub" id="datesub"></p>
   </header>
 
-  <!-- WHERE YOU ARE -->
-  <div class="hero">
-    <div style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px">
-      <div><div class="big" id="pct">0%</div><div class="hint">of the course done</div></div>
-      <div style="text-align:right"><div style="font-weight:800;font-size:1.1rem" id="levelnow">Getting started</div><div class="hint" id="unitsdone">0 / 23 lessons</div></div>
-    </div>
-    <div class="pbar"><span id="pbar"></span></div>
-    <p class="hint" id="encourage" style="margin:.4em 0 0"></p>
-    <p style="margin:.5em 0 0;font-size:.9rem"><a href="timeline.html"><b>🛤️ See the whole timeline</b><span id="tlprog2"></span> — every lesson, what's done, where you are →</a></p>
-  </div>
-
-  <!-- CURRENT LESSON (browse with the arrows) -->
-  <h2>🎯 Your lesson</h2>
+  <!-- CURRENT LESSON -->
   <div class="next">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px">
-      <button type="button" class="pgbtn" id="lprev">◀ Previous</button>
-      <div style="font-weight:800" id="lpos">&nbsp;</div>
-      <button type="button" class="pgbtn" id="lnext">Next ▶</button>
-    </div>
-    <div class="hint" id="nextlevel">—</div>
+    <div class="focus-meta"><div id="lpos">&nbsp;</div><div id="nextlevel">—</div></div>
     <div class="ttl" id="nexttitle">Loading…</div>
     <div id="nextone" style="color:var(--muted)"></div>
     <div id="lwatch"></div>
-    <div class="btnrow">
-      <a class="b go" id="nextgo" href="curriculum.html">Open it on the curriculum →</a>
-      <a class="b notes" id="nextnotes" href="notes.html">📖 Lesson notes</a>
-      <a class="b quiz" id="nextquiz" href="quizzes.html">🧪 Its quiz</a>
-      <button class="b ask" id="nextask">💬 Ask my tutor to teach it</button>
-    </div>
-    <p class="hint" id="lhint" style="margin:.7em 0 0"></p>
-    <p id="lback" style="display:none;margin:.5em 0 0"><a href="#" style="font-weight:800">⭐ Back to your current lesson →</a></p>
+    <div id="focus-action"></div>
+    <div id="lesson-flow"></div>
+    <details class="focus-options"><summary>Other actions for this lesson</summary><div class="body">
+      <div class="btnrow">
+        <a class="b go" id="nextgo" href="curriculum.html">Open lesson</a>
+        <a class="b notes" id="nextnotes" href="notes.html">Lesson notes</a>
+        <a class="b quiz" id="nextquiz" href="quizzes.html">Quiz</a>
+        <button class="b ask" id="nextask">Ask my tutor</button>
+      </div>
+      <p class="hint" id="lhint" style="margin:.7em 0 0"></p>
+      <p id="lback" style="display:none;margin:.5em 0 0"><a href="#" style="font-weight:800">Back to your current lesson</a></p>
+      <p class="hint" id="lastseen" style="display:none;margin:.7em 0 0"></p>
+    </div></details>
+    <details class="lesson-switcher"><summary>Browse another lesson</summary><div class="pager body">
+      <button type="button" class="pgbtn" id="lprev">Previous</button>
+      <button type="button" class="pgbtn" id="lnext">Next</button>
+    </div></details>
   </div>
-  <p class="hint" id="lastseen" style="display:none"></p>
+  <!-- WHERE YOU ARE -->
+  <details class="course-overview">
+    <summary><span class="big" id="pct">0%</span> course complete <span class="hint" id="unitsdone">0 / 23 lessons</span></summary>
+    <div class="hero-body body">
+      <div style="font-weight:800" id="levelnow">Getting started</div>
+      <div class="pbar"><span id="pbar"></span></div>
+      <p class="hint" id="encourage" style="margin:.4em 0 0"></p>
+      <p style="margin:.5em 0 0;font-size:.9rem"><a href="timeline.html"><b>See the whole timeline</b><span id="tlprog2"></span></a></p>
+    </div>
+  </details>
 
   <!-- JOURNEY STRIP: yesterday ← today → coming up -->
-  <div class="card" id="journey" style="display:none">
+  <details id="journey" style="display:none"><summary>Nearby lessons</summary><div class="body">
     <p class="hint" id="yline" style="display:none;margin:0 0 10px"></p>
     <div id="jstrip" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px"></div>
     <p class="hint" style="margin:.7em 0 0"><a href="timeline.html"><b>🛤️ See the whole timeline</b><span id="tlprog"></span></a> · <a href="daily-pipeline.html">📋 check any day, last week or next →</a></p>
-  </div>
+  </div></details>
 
   <!-- THIS LESSON'S 5 STEPS -->
-  <h2>📋 This lesson's 5 steps</h2>
+  <h2 id="lesson-steps">Practice habits for this lesson</h2>
   <div class="card">
     <p id="steptitle" style="margin:0 0 6px;font-size:1.05rem"></p>
     <div id="aheadbanner" style="display:none;border:1.5px solid;border-radius:12px;padding:10px 14px;margin:0 0 10px;font-size:.92rem;line-height:1.7"></div>
@@ -98,28 +106,19 @@
   </div>
   <div class="card" id="doneearly" style="display:none;border:2px solid var(--green);background:#E9F6EF"></div>
 
-  <!-- ARTICLES AS PICTURES -->
-  <h2>📚 The articles — as pictures</h2>
-  <div class="card quicklinks">
-    <p class="hint" style="margin:0 0 8px">Every article the course points to, <b>retold as diagrams right here on your site</b> — no going anywhere else. (Each page still links the original at the top if you want it.)</p>
-    <a href="article-effective-agents.html">🧩 Building effective agents</a>
-    <a href="article-multi-agent.html">🕸️ Multi-agent research system</a>
-    <a href="article-writing-tools.html">🔧 Writing tools for agents</a>
-    <a href="repair-map.html">🩹 Pre-test repair guide</a>
-  </div>
+  <details class="optional-study"><summary>Optional pictures and extra practice</summary><div class="body quicklinks">
+    <a href="article-effective-agents.html">Building effective agents</a>
+    <a href="article-multi-agent.html">Multi-agent research system</a>
+    <a href="article-writing-tools.html">Writing tools for agents</a>
+    <a href="repair-map.html">Pre-test repair guide</a>
+    <a href="flashcards.html">Flashcard library</a>
+    <a href="exercise.html">Build library</a>
+    <a href="quizzes.html">Quiz library</a>
+    <a href="learning-map.html">Visual map</a>
+  </div></details>
 
-  <!-- QUICK -->
-  <h2>⚡ Quick practice</h2>
-  <div class="card quicklinks">
-    <a href="flashcards.html">🃏 Flip flashcards</a>
-    <a href="exercise.html">🏋️ Build exercises</a>
-    <a href="quizzes.html">📊 Take a quiz</a>
-    <a href="learning-map.html">🗺️ See the big picture</a>
-    <a href="pretest.html">🧪 Re-take the pre-test</a>
-  </div>
-
-  <footer>Follows your current lesson by default — press ◀ ▶ to work ahead on any lesson's 5 steps (they save per lesson; only your ⭐ NOW lesson closes). · 2026-07-08</footer>
-</div>
+  <footer>Your work saves with the lesson you are viewing. Only the current lesson closes the course path.</footer>
+</main>
 
 <div id="toast">Copied — paste it to your tutor 👍</div>
 
@@ -211,7 +210,17 @@ var WL = next ? (WATCH[next.id]||[["curriculum.html#u-"+next.id,"Open this lesso
 document.getElementById("levelnow").textContent = next ? ("Now in: "+next.lvl) : "🎉 All lessons done!";
 // ---- the lesson card: shows your CURRENT lesson; ◀ ▶ browse back or peek ahead ----
 var curIdx = next ? PATH.indexOf(next) : -1;   // -1 = every lesson is done
-var vi = curIdx;                               // which lesson the card is showing right now
+var requestedUnit=(location.search.match(/[?&]unit=([^&]+)/)||[])[1];
+try{requestedUnit=requestedUnit?decodeURIComponent(requestedUnit):null;}catch(e){requestedUnit=null;}
+var requestedIdx=requestedUnit?PATH.findIndex(function(item){return item.id===requestedUnit;}):-1;
+var vi = requestedIdx>=0?requestedIdx:curIdx;   // which lesson the card is showing right now
+function updateFocus(u){
+  var flow=document.getElementById("lesson-flow"),action=document.getElementById("focus-action");
+  if(!flow||!action||!u||!window.CCAFFlow){if(flow)flow.textContent="";if(action)action.textContent="";return;}
+  var nextAction=CCAFFlow.next(u.id),active=nextAction.id==="complete"?"review":nextAction.id;
+  CCAFFlow.mount(flow,{unit:u.id,stage:active});
+  CCAFFlow.mountNext(action,u.id,{context:nextAction.id==="complete"?"All lesson activities are saved.":"Your next required activity."});
+}
 function renderLesson(){
   var pos=document.getElementById("lpos");
   document.getElementById("lprev").disabled=(vi===0);
@@ -228,7 +237,7 @@ function renderLesson(){
     document.getElementById("nextnotes").href="notes.html";
     qE.href="pretest.html"; qE.textContent="🧪 Re-take the pre-test";
     aE.setAttribute("data-q","I've finished all the units. Build me a timed exam-readiness plan for CCA-F: which quizzes to redo, how to review wrong answers, and a mock-exam routine.");
-    wE.innerHTML=""; hE.innerHTML="Use ◀ to revisit any lesson."; bk.style.display="none";
+    wE.innerHTML=""; hE.innerHTML="Use Browse another lesson to revisit one."; bk.style.display="none";updateFocus(null);
   }else{
     var u=PATH[vi], isCur=(vi===curIdx), isDone=!!done[u.id];
     pos.textContent="Lesson "+(vi+1)+" of "+TOTAL;
@@ -245,7 +254,7 @@ function renderLesson(){
       : (isDone
         ? 'You finished this one ✓ — rewatch it, retake its quiz, or un-mark it on the <a href="timeline.html">timeline</a>.'
         : 'Working ahead is safe 👀 — the 5 steps below belong to THIS lesson and save as you tick. Only your ⭐ NOW lesson can close, so nothing closes by accident.');
-    bk.style.display=isCur?"none":"block";
+    bk.style.display=isCur?"none":"block";updateFocus(u);
   }
 }
 document.getElementById("lprev").addEventListener("click",function(){ vi=(vi===-1)?TOTAL-1:Math.max(0,vi-1); renderLesson(); buildSteps(); });
@@ -316,7 +325,7 @@ try{
 
 // ---- daily 5 steps (shared key with the dashboard) ----
 var PIPE=[
- {label:"🎥 Watch / listen (15–25 min)", d:"This lesson's videos are right here 👇 Captions on; pause and sketch.",
+ {label:"🎥 Learn: watch + notes", d:"Watch or listen first, then read the short notes.",
   ask:"What exactly should I watch today for my current unit, and where? Give the course + lesson + a one-line focus."},
  {label:"✏️ Draw it as boxes + arrows", d:"From memory, redraw this lesson's idea. Use the color key.",
   ask:"Describe the ONE boxes-and-arrows diagram for my current lesson so I can copy it."},
@@ -324,7 +333,7 @@ var PIPE=[
   ask:"Give me today's tiny build task — the smallest real thing I can do in ~20 min for my current unit, with starter steps."},
  {label:"🗣️ Explain it out loud (60 sec)", d:"Say it in plain words, no notes.",
   ask:"I'll explain my current lesson in my own words — quiz and grade me, and tell me what I missed."},
- {label:"🃏 3 flashcards + 1 mistake card", d:"3 Q→A cards + 1 card for something you got wrong.",
+ {label:"🃏 Review 3 cards + 1 mistake card", d:"Reveal each answer, rate it, then move to the next card.",
   ask:"Turn my current lesson into 3 short flashcards (Q then A) plus 1 mistake card."}
 ];
 var _n=new Date(),today=_n.getFullYear()+"-"+String(_n.getMonth()+1).padStart(2,"0")+"-"+String(_n.getDate()).padStart(2,"0"); // local date, not UTC
@@ -341,8 +350,9 @@ function pbar(){
   var vu=viewedU(), uid=viewedId();
   var checks=stepChecks(uid);
   var n=checks.filter(Boolean).length;
-  document.getElementById("pipeprog").textContent="This lesson: "+n+" / "+PIPE.length+" done"+(n===PIPE.length?"  🎉":"");
+  document.getElementById("pipeprog").textContent="Habits: "+n+" / "+PIPE.length+" done"+(n===PIPE.length?"  🎉":"");
   document.getElementById("pipebar").style.width=(n/PIPE.length*100)+"%";
+  if(vu)updateFocus(vu);
   var de=document.getElementById("doneearly");
   if(!de)return;
   if(n!==PIPE.length||!vu||done[vu.id]){de.style.display="none";de.innerHTML="";return;}
@@ -360,7 +370,7 @@ function pbar(){
     var up=null;
     for(var uk=curIdx+1;uk>=0&&uk<PATH.length;uk++){ if(!done[PATH[uk].id]){ up=PATH[uk]; break; } } // next lesson = the next NOT-done one
     var advToday=false; try{var av=JSON.parse(localStorage.getItem("ccaf-advanced")||"{}");advToday=!!(av&&av.date===today);}catch(e){}
-    de.innerHTML="<b>🎉 All 5 steps done!</b>"+
+    de.innerHTML="<b>All 5 practice habits are done.</b>"+
       (ready
         ?'<p class="hint" style="margin:.4em 0 .5em">All evidence is complete'+qtxt+'. "'+vu.t+'" is ready to close.</p>'
         :need)+
@@ -371,7 +381,7 @@ function pbar(){
       (ready&&!advToday?'<button type="button" class="b go" id="nextUnitBtn" style="border:0;cursor:pointer;font:inherit">Close it and start '+(up?('the next lesson: '+up.t):'the final review')+' →</button>':"")+
       '</div>'+
       (ready&&advToday?'<p class="hint" style="margin:.4em 0 0">You already closed a lesson today. This ready lesson stays saved for the next session.</p>':"")+
-      '<p class="hint" style="margin:.6em 0 0">Or stop here — 5/5 is a full day; the <a href="timeline.html">timeline</a> keeps your place'+(up?', or press <b>Next ▶</b> up top to 🔭 work ahead on '+up.t:'')+'.</p>';
+      '<p class="hint" style="margin:.6em 0 0">Or stop here. The <a href="timeline.html">timeline</a> keeps your place'+(up?', or use the lesson browser above to work ahead on '+up.t:'')+'.</p>';
     var nb=document.getElementById("nextUnitBtn");
     if(nb){nb.addEventListener("click",function(){
       nb.disabled=true; // double-clicks do nothing
@@ -386,7 +396,7 @@ function pbar(){
       location.href="today.html?started="+encodeURIComponent(up?up.id:"end");
     });}
   } else { // 🔭 working ahead — everything saves; closing waits for the NOW lesson (council rule)
-    de.innerHTML='<b>💾 All 5 steps done — saved!</b>'+
+    de.innerHTML='<b>All 5 practice habits are saved.</b>'+
       (ready?'<p class="hint" style="margin:.4em 0 .5em">All mastery evidence is saved. It unlocks after your current lesson closes.</p>':need)+
       '<div class="btnrow">'+
       (isProj
@@ -419,22 +429,16 @@ function buildSteps(){ // rebuild the 5 rows for the lesson the pager is showing
   sh.innerHTML="";
   PIPE.forEach(function(it,i){
     var w=document.createElement("div");w.className="step";
-    var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!checks[i];
+    var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!checks[i];cb.id="step-"+uid+"-"+i;
     var body=document.createElement("div");
-    body.innerHTML='<div class="lab">'+it.label+'</div><div class="d">'+it.d+'</div>';
+    var labId=cb.id+"-label",descId=cb.id+"-desc";
+    body.innerHTML='<div class="lab" id="'+labId+'">'+it.label+'</div><div class="d" id="'+descId+'">'+it.d+'</div>';
+    cb.setAttribute("aria-labelledby",labId);cb.setAttribute("aria-describedby",descId);
     if(i===0){
-      if(window.CCAFMediaUI){
-        var media=document.createElement("div");media.innerHTML=CCAFMediaUI.lessonHTML(uid,{compact:true,showReferences:true,title:"Watch, then open your notes"});body.appendChild(media);
-      }else{
-        wl.forEach(function(v,wi){
-          var row=document.createElement("div");
-          var a=document.createElement("a");a.className="watchlink";a.href=v[0];
-          if(/^https?:/.test(v[0])){a.target="_blank";a.rel="noopener";}
-          a.textContent="▶ "+(wl.length>1?(wi+1)+" · ":"")+v[1];
-          row.appendChild(a);body.appendChild(row);
-          if(v[2]){var focus=document.createElement("div");focus.className="d";focus.textContent=v[2];row.appendChild(focus);}
-        });
-      }
+      var learnLink=document.createElement("a");learnLink.className="watchlink";learnLink.href=window.CCAFFlow?CCAFFlow.route(uid,"learn"):(wl[0]?wl[0][0]:"curriculum.html#u-"+uid);learnLink.textContent="Open the visual lesson and notes";body.appendChild(learnLink);
+    }
+    if(i===1){
+      var drawLink=document.createElement("a");drawLink.className="watchlink";drawLink.href="draw.html?unit="+encodeURIComponent(uid);drawLink.textContent="Open the sketchpad";body.appendChild(drawLink);
     }
     if(i===2 && BUILDX[uid]){
       var bl=document.createElement("a");bl.className="watchlink";bl.href=BUILDX[uid][0];

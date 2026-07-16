@@ -26,7 +26,7 @@
   .modetag{font-size:.78rem;font-weight:800;padding:4px 12px;border-radius:999px}
   .modetag.browse{background:#EAF2FB;color:var(--accent)}
   .modetag.learn{background:#E9F6EF;color:var(--green)}
-  /* Learn mode */
+  /* Quiz mode */
   .qcard{background:var(--card);border:2px solid var(--line);border-radius:8px;padding:26px 24px;text-align:center;font-size:1.3rem;font-weight:700;line-height:1.5;margin:10px 0}
   .opts{display:flex;flex-direction:column;gap:10px;margin-top:16px}
   .opt{text-align:left;border:2px solid var(--line);background:#fff;border-radius:8px;padding:14px 16px;font:inherit;font-size:1rem;line-height:1.45;cursor:pointer;color:var(--ink)}
@@ -43,16 +43,17 @@
 <nav class="top" id="site-nav"></nav>
 <script src="course-data.js"></script>
 <script src="nav.js"></script>
-<div class="wrap">
+<main class="wrap" id="main-content">
   <div id="picker" style="display:none">
-    <h1>🃏 Flashcards</h1>
-    <p class="sub"><b>🃏 Flashcards</b> — flip through at your own pace, no pressure, look as many times as you like. <b>🧠 Learn</b> — a real test: pick the right answer, misses come back for another round, until every card sticks (needs 2 corrects to master, Quizlet-style).</p>
+    <h1>🃏 Flashcard library</h1>
+    <p class="sub">Optional decks for extra practice. <b>Browse</b> lets you flip cards. <b>Quiz me</b> checks your memory until each card sticks.</p>
+    <div class="callout info"><b>Following a lesson?</b> Use its <a href="review.html">Review queue</a>. That is the required final step in the lesson path.</div>
     <div class="card" id="decklist"></div>
   </div>
 
   <!-- BROWSE MODE -->
   <div id="browse" style="display:none">
-    <div class="modehead"><span class="modetag browse">🃏 Flashcards</span><span class="hint" id="btitle"></span></div>
+    <div class="modehead"><span class="modetag browse">Browse</span><span class="hint" id="btitle"></span></div>
     <p class="sub"><a href="flashcards.html">← All decks</a> · <span id="bpos"></span></p>
     <div class="side" id="bside" aria-live="polite">Tap the card to flip</div>
     <div class="fwrap"><button class="flash" id="bcard" type="button" aria-pressed="false"></button></div>
@@ -69,7 +70,7 @@
 
   <!-- LEARN MODE -->
   <div id="learn" style="display:none">
-    <div class="modehead"><span class="modetag learn">🧠 Learn</span><span class="hint" id="ltitle"></span></div>
+    <div class="modehead"><span class="modetag learn">Quiz me</span><span class="hint" id="ltitle"></span></div>
     <p class="sub"><a href="flashcards.html">← All decks</a> · <span id="lprogress"></span></p>
     <div class="bar" style="margin-bottom:10px"><span id="lbar" style="width:0%"></span></div>
 
@@ -93,7 +94,7 @@
       <button class="small" id="lReset">↺ Reset learn progress</button>
     </div>
   </div>
-</div>
+</main>
 <script src="flashcards.js"></script>
 <script>
 function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
@@ -129,8 +130,8 @@ function showPicker(){
     var row=document.createElement("div");row.className="deckpick";
     row.innerHTML='<div class="body"><b>'+d.emoji+' '+d.title+'</b><div class="hint">'+t+' cards · 🧠 Learn: '+lm+'/'+t+' mastered · 📅 added '+(d.date||'')+'</div></div>'+
       '<div class="deckbtns">'+(GUIDES[k]?'<a class="take" style="background:#E8740C;color:#fff" href="'+GUIDES[k].href+'">'+GUIDES[k].label+'</a>':'')+
-      '<a class="take browse" href="flashcards.html?deck='+k+'&mode=browse">🃏 Flashcards</a>'+
-      '<a class="take learn" href="flashcards.html?deck='+k+'&mode=learn">🧠 Learn'+(lm>0?" ("+lm+"/"+t+")":"")+'</a></div>';
+      '<a class="take browse" href="flashcards.html?deck='+k+'&mode=browse">Browse</a>'+
+      '<a class="take learn" href="flashcards.html?deck='+k+'&mode=learn">Quiz me'+(lm>0?" ("+lm+"/"+t+")":"")+'</a></div>';
     host.appendChild(row);
   });
 }

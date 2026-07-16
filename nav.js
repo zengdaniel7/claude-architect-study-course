@@ -60,11 +60,12 @@
     try{document.dispatchEvent(new CustomEvent("ccaf-sync-mode"));}catch(e){}}
   // Restore without blocking first paint. Embedded previews can deadlock on a
   // synchronous XHR here, leaving a titled but completely blank tab.
-  var t=null,restoring=true,proto=null,set0=null,rm0=null,lastIssued=0;
+  var t=null,restoring=true,proto=null,set0=null,rm0=null,lastIssued=0,dirty=false,saveCapable=false;
+  var SESSION_KEY="ccaf-sync-checked-v3";
   function rawSet(k,v){try{if(set0)set0.call(localStorage,k,v);else localStorage.setItem(k,v);}catch(e){}}
   function nextTs(){var stored=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10)||0;lastIssued=Math.max(Date.now(),stored+1,lastIssued+1);return lastIssued;}
   function push(){
-    if(restoring)return;
+    if(restoring||!saveCapable)return;
     clearTimeout(t);t=setTimeout(function(){
     var ts=nextTs();
     fetch("/__save",{method:"POST",headers:{"Content-Type":"application/json"},
@@ -75,8 +76,9 @@
     }).then(function(result){
       var accepted=Number(result.ts)||ts,current=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10)||0;
       accepted=Math.max(accepted,current);rawSet("ccaf-sync-ts",String(accepted));
-      window.CCAF_SYNC.ts=Math.max(window.CCAF_SYNC.ts||0,accepted);announce("file");
-    }).catch(function(){announce("nofile");});
+      window.CCAF_SYNC.ts=Math.max(window.CCAF_SYNC.ts||0,accepted);dirty=false;announce("file");
+      try{sessionStorage.setItem(SESSION_KEY,"file");}catch(e){}
+    }).catch(function(){dirty=false;saveCapable=false;announce("nofile");try{sessionStorage.setItem(SESSION_KEY,"nofile");}catch(e){}});
   },400);}
   // Storage objects turn direct property writes into stored items, so the
   // hook must go on Storage.prototype, not on localStorage itself.
@@ -84,9 +86,9 @@
     proto=Object.getPrototypeOf(localStorage);
     set0=proto.setItem;rm0=proto.removeItem;
     function touched(){
-      if(restoring)return;
+      if(restoring||!saveCapable)return;
       // local state is now the newest truth — an older file must never clobber it on a later load
-      rawSet("ccaf-sync-ts",String(Date.now()));
+      dirty=true;rawSet("ccaf-sync-ts",String(Date.now()));
       push();
     }
     proto.setItem=function(k,v){set0.apply(this,arguments);
@@ -95,7 +97,7 @@
       if(this===localStorage&&String(k).indexOf("ccaf-")===0&&k!=="ccaf-sync-ts")touched();};
     // navigating right after a click must not lose the click: flush the snapshot as the page unloads
     window.addEventListener("pagehide",function(){
-      if(restoring)return;
+      if(restoring||!saveCapable||!dirty)return;
       try{
         var ts=nextTs();
         if(navigator.sendBeacon)navigator.sendBeacon("/__save",new Blob([JSON.stringify({ts:ts,data:snap()})],{type:"application/json"}));
@@ -103,11 +105,20 @@
     });
   }catch(e){}
 
+  // A tab only needs to compare browser progress with the file once. Repeating
+  // the probe on every page made normal navigation feel like a reload loop.
+  var checked="";try{checked=sessionStorage.getItem(SESSION_KEY)||"";}catch(e){}
+  if(checked){saveCapable=checked==="file";restoring=false;announce(checked);return;}
+
   var ctl=(typeof AbortController!=="undefined")?new AbortController():null;
   var opts={cache:"no-store"};if(ctl)opts.signal=ctl.signal;
   var abortTimer=setTimeout(function(){if(ctl)ctl.abort();},1500);
-  fetch("my-progress.json?nocache="+Date.now(),opts)
-    .then(function(r){if(!r.ok)throw new Error("progress unavailable");return r.json();})
+  // Only serve.py exposes this endpoint. Plain http.server gets one harmless
+  // 404 per tab, then stays browser-only instead of flooding unsupported POSTs.
+  fetch("/__health",opts)
+    .then(function(r){if(!r.ok)throw new Error("file saving unavailable");return r.json();})
+    .then(function(health){if(!health||health.save!==true)throw new Error("file saving unavailable");saveCapable=true;return fetch("my-progress.json?nocache="+Date.now(),opts);})
+    .then(function(r){return r.ok?r.json().catch(function(){return {};}):{};})
     .then(function(f){
       clearTimeout(abortTimer);
       var mine=parseInt(localStorage.getItem("ccaf-sync-ts")||"0",10),didRestore=false;
@@ -117,12 +128,12 @@
         rawSet("ccaf-sync-ts",String(f.ts));
         window.CCAF_SYNC.ts=f.ts;window.CCAF_SYNC.restored=true;didRestore=true;
       }
-      restoring=false;announce("file");
+      restoring=false;announce("file");try{sessionStorage.setItem(SESSION_KEY,"file");}catch(e){}
       // Page scripts may already have read the old local state. One reload is
       // enough; the saved timestamp prevents a loop on the second load.
-      if(didRestore)setTimeout(function(){location.reload();},0);else push();
+      if(didRestore)setTimeout(function(){location.reload();},0);
     })
-    .catch(function(){clearTimeout(abortTimer);restoring=false;announce("nofile");push();});
+    .catch(function(){clearTimeout(abortTimer);saveCapable=false;restoring=false;announce("nofile");try{sessionStorage.setItem(SESSION_KEY,"nofile");}catch(e){}});
 })();
 
 (function(){ // completion-gate upgrade: strict about the future, GENEROUS about the past.
@@ -248,15 +259,87 @@
   window.CCAF={ORDER:ORDER,TITLES:TITLES,COURSE:COURSE,cur:cur,today:tod,getSteps:getSteps,setStep:setStep,stepsFor:stepsFor,syncPipeline:syncPipeline,recordEvidence:recordEvidence,mastery:mastery,mergeQuizResult:mergeQuizResult};
 })();
 
+(function(global){ // ---- one lesson path shared by every learning surface ----
+  var STAGES=[
+    {id:"learn",label:"Learn",step:0},
+    {id:"draw",label:"Draw",step:1},
+    {id:"build",label:"Build",step:2},
+    {id:"teach",label:"Teach",step:3},
+    {id:"quiz",label:"Quiz"},
+    {id:"review",label:"Review",step:4}
+  ];
+  function addUnit(href,id){
+    if(!href)return "today.html";
+    if(!/^(quiz|pretest)\.html/.test(href))return href;
+    return href+(href.indexOf("?")>=0?"&":"?")+"unit="+encodeURIComponent(id);
+  }
+  function unit(id){return global.CCAF_COURSE&&global.CCAF_COURSE.map?global.CCAF_COURSE.map[id]:null;}
+  function route(id,stage){
+    var u=unit(id);if(!u)return "today.html";
+    if(stage==="learn")return u.notes||("notes.html?unit="+encodeURIComponent(id));
+    if(stage==="draw")return "draw.html?unit="+encodeURIComponent(id);
+    if(stage==="build")return "exercise.html?id="+encodeURIComponent(u.exercise);
+    if(stage==="teach")return "teachback.html?unit="+encodeURIComponent(id);
+    if(stage==="quiz")return addUnit(u.quiz,id);
+    if(stage==="review")return "review.html?unit="+encodeURIComponent(id);
+    return "today.html?unit="+encodeURIComponent(id);
+  }
+  function states(id){
+    var checks=global.CCAF?global.CCAF.getSteps(id):[false,false,false,false,false];
+    var mastery=global.CCAF?global.CCAF.mastery(id):null;
+    return {
+      learn:!!checks[0],draw:!!checks[1],
+      build:!!(mastery&&mastery.buildOK),teach:!!(mastery&&mastery.teachOK),
+      quiz:!!(mastery&&mastery.quizOK),review:!!checks[4]
+    };
+  }
+  function next(id){
+    var done=states(id);
+    for(var i=0;i<STAGES.length;i++)if(!done[STAGES[i].id])return {id:STAGES[i].id,label:STAGES[i].label,href:route(id,STAGES[i].id)};
+    return {id:"complete",label:"Finish lesson",href:"today.html?unit="+encodeURIComponent(id)};
+  }
+  function mount(target,options){
+    var host=typeof target==="string"?document.getElementById(target):target;
+    options=options||{};var id=options.unit,u=unit(id);if(!host||!u)return;
+    var done=states(id),count=STAGES.filter(function(s){return done[s.id];}).length;
+    host.textContent="";host.className="lesson-flow-shell"+(options.compact?" compact":"");
+    var head=document.createElement("div");head.className="lesson-flow-head";
+    var title=document.createElement("b");title.textContent="Lesson path";
+    var summary=document.createElement("span");summary.textContent=count+" of "+STAGES.length+" complete";
+    head.appendChild(title);head.appendChild(summary);host.appendChild(head);
+    var track=document.createElement("nav");track.className="lesson-flow-track";track.setAttribute("aria-label",u.title+" lesson path");
+    STAGES.forEach(function(stage,index){
+      var link=document.createElement("a");link.className="lesson-stage"+(done[stage.id]?" is-done":"")+(options.stage===stage.id?" is-current":"");
+      link.href=route(id,stage.id);if(options.stage===stage.id)link.setAttribute("aria-current","step");
+      var mark=document.createElement("span");mark.className="lesson-stage-mark";mark.setAttribute("aria-hidden","true");mark.textContent=done[stage.id]?"✓":String(index+1);
+      var label=document.createElement("span");label.textContent=stage.label;
+      link.appendChild(mark);link.appendChild(label);track.appendChild(link);
+    });
+    host.appendChild(track);
+  }
+  function mountNext(target,id,options){
+    var host=typeof target==="string"?document.getElementById(target):target;if(!host||!unit(id))return;
+    options=options||{};var action=options.stage?{id:options.stage,label:STAGES.filter(function(s){return s.id===options.stage;})[0].label,href:route(id,options.stage)}:next(id);
+    host.textContent="";host.className="study-actionbar";
+    var context=document.createElement("span");context.className="study-action-context";context.textContent=options.context||"Ready for the next step?";
+    var link=document.createElement("a");link.className="study-primary-action";link.href=action.href;link.textContent=(options.label||("Next: "+action.label))+" →";
+    host.appendChild(context);host.appendChild(link);
+  }
+  global.CCAFFlow={stages:STAGES,route:route,states:states,next:next,mount:mount,mountNext:mountNext};
+})(window);
+
 (function(){
   var PRIMARY=[
-    {href:"dashboard.html",   label:"🏠 Home",     cls:"home", m:["dashboard.html",""]},
-    {href:"today.html",       label:"▶️ Lesson",   m:["today.html"]},
-    {href:"curriculum.html",  label:"📚 Learn",    m:["curriculum.html"]},
-    {href:"quizzes.html",     label:"🎯 Practice", m:["quizzes.html","quiz.html","pretest.html","flashcards.html","exercise.html","repair-map.html"]},
-    {href:"timeline.html",    label:"🛤️ Timeline", m:["timeline.html"]}
+    {href:"dashboard.html",   label:"Home",     cls:"home nav-core", m:["dashboard.html",""]},
+    {href:"today.html",       label:"Today",    cls:"nav-core", m:["today.html"]},
+    {href:"curriculum.html",  label:"Course",   cls:"nav-wide", m:["curriculum.html"]},
+    {href:"quizzes.html",     label:"Practice", cls:"nav-wide", m:["quizzes.html","quiz.html","pretest.html","flashcards.html","exercise.html","repair-map.html"]},
+    {href:"timeline.html",    label:"Progress", cls:"nav-wide", m:["timeline.html"]}
   ];
   var MORE=[
+    {href:"curriculum.html",   label:"Course",mobile:true},
+    {href:"quizzes.html",      label:"Practice",mobile:true},
+    {href:"timeline.html",     label:"Progress",mobile:true},
     {href:"notes.html",        label:"📖 Lesson notes"},
     {href:"video-library.html",label:"🎥 Video library"},
     {href:"concept-map.html",  label:"Concept map"},
@@ -275,11 +358,13 @@
   var st=document.createElement("style");
   st.textContent=
    "nav.top{position:sticky;top:0;z-index:40;background:rgba(243,247,248,.96);border-bottom:2px solid var(--line);padding:10px 0}"+
-   "nav.top .wrap{display:flex;flex-wrap:wrap;gap:6px;align-items:center}"+
+   "nav.top .wrap{display:flex;gap:6px;align-items:center}"+
    "nav.top a{display:inline-block;text-decoration:none;color:var(--ink);font-weight:700;font-size:.82rem;padding:6px 11px;border-radius:6px;border:1px solid var(--line);background:#fff}"+
    "nav.top a:hover{border-color:var(--accent);color:var(--accent)}"+
-   "nav.top a.home{background:var(--accent);color:#fff;border-color:var(--accent)}"+
+   "nav.top a.home.here{background:var(--accent);color:#fff;border-color:var(--accent)}"+
    "nav.top a.here{background:var(--ink);color:#fff;border-color:var(--ink)}"+
+   ".skip-link{position:fixed;left:12px;top:8px;z-index:100;transform:translateY(-160%);background:#fff;color:var(--ink);padding:8px 12px;border:2px solid var(--accent);font-weight:800}"+
+   ".skip-link:focus{transform:none}"+
    ".nav-more{position:relative;display:inline-block}"+
    ".nav-morebtn{font:inherit;font-weight:700;font-size:.82rem;padding:6px 11px;border-radius:6px;border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}"+
    ".nav-morebtn:hover{border-color:var(--accent);color:var(--accent)}"+
@@ -288,33 +373,29 @@
    ".nav-menu.open{display:flex}"+
    ".nav-menu a{white-space:normal;overflow-wrap:anywhere;padding:8px 12px;border-radius:6px;text-decoration:none;color:var(--ink);font-weight:700;font-size:.86rem;border:0;background:transparent}"+
    ".nav-menu a:hover{background:#EAF0F2}"+
-   ".nav-menu a.here{background:var(--ink);color:#fff}";
+   ".nav-menu a.here{background:var(--ink);color:#fff}"+
+   ".nav-mobile-only{display:none}"+
+   "@media(max-width:680px){nav.top{padding:7px 0}nav.top .wrap{padding:0 12px}.nav-wide{display:none!important}.nav-mobile-only{display:block}.nav-more{margin-left:auto}.nav-morebtn{min-height:42px}.nav-menu{position:fixed;left:12px;right:12px;top:58px;max-height:calc(100vh - 72px);overflow:auto}.nav-menu a{min-height:44px;display:flex;align-items:center}}";
   document.head.appendChild(st);
 
   function here(m){return m.indexOf(cur)>=0;}
   var inMore=MORE.some(function(x){return x.href.toLowerCase()===cur;});
 
-  var html='<div class="wrap">';
-  if(cur!=="dashboard.html")html+='<a href="dashboard.html" id="navBack">← Back</a>';
+  var html='<a class="skip-link" href="#main-content">Skip to content</a><div class="wrap">';
   PRIMARY.forEach(function(p){
     var c=[]; if(p.cls)c.push(p.cls); if(here(p.m))c.push("here");
     html+='<a class="'+c.join(" ")+'" href="'+p.href+'"'+(here(p.m)?' aria-current="page"':'')+'>'+p.label+'</a>';
   });
-  html+='<div class="nav-more"><button type="button" class="nav-morebtn'+(inMore?" here":"")+'" id="navMoreBtn" aria-expanded="false" aria-controls="navMenu" aria-haspopup="true">More ▾</button><div class="nav-menu" id="navMenu" hidden>';
-  MORE.forEach(function(x){var active=x.href.toLowerCase()===cur;html+='<a href="'+x.href+'"'+(active?' class="here" aria-current="page"':'')+'>'+x.label+'</a>'; });
+  html+='<div class="nav-more"><button type="button" class="nav-morebtn'+(inMore?" here":"")+'" id="navMoreBtn" aria-expanded="false" aria-controls="navMenu" aria-haspopup="true"><span aria-hidden="true">☰</span> Menu</button><div class="nav-menu" id="navMenu" hidden>';
+  MORE.forEach(function(x){var active=x.href.toLowerCase()===cur;html+='<a href="'+x.href+'" class="'+(x.mobile?'nav-mobile-only ':'')+(active?'here':'')+'"'+(active?' aria-current="page"':'')+'>'+x.label+'</a>'; });
   html+='</div></div></div>';
 
   var host=document.getElementById("site-nav");
   if(!host) return;
   host.innerHTML=html;
-
-  var back=document.getElementById("navBack");
-  if(back)back.addEventListener("click",function(e){
-    try{
-      var ref=new URL(document.referrer);
-      if(ref.origin===location.origin&&/\/[A-Za-z0-9][A-Za-z0-9._-]*\.html$/.test(ref.pathname)&&history.length>1){e.preventDefault();history.back();}
-    }catch(error){}
-  });
+  function markMain(){var main=document.querySelector("main")||document.querySelector("body > .wrap");if(main&&!main.id)main.id="main-content";}
+  markMain();
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",markMain);
 
   var btn=document.getElementById("navMoreBtn"), menu=document.getElementById("navMenu");
   if(btn&&menu){

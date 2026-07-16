@@ -158,8 +158,8 @@ check(nav.includes("lastIssued+1") && nav.includes("result.ts"), "client save re
 check(nav.includes("ev.build.data.exercise===unit.exercise"), "mastery requires the unit's exact fixed build");
 check(nav.includes("mergeQuizResult") && nav.includes("q.qualified"), "earned zero-guess quiz qualification survives later practice attempts");
 check(nav.includes('aria-expanded="false"') && nav.includes('e.key==="Escape"'), "shared More menu exposes keyboard disclosure behavior");
-check(nav.includes('if(cur!=="dashboard.html")') && nav.includes('id="navBack"'), "shared navigation avoids a duplicate Back control on Home");
-check(nav.includes("ref.origin===location.origin") && nav.includes("history.back()"), "shared Back link only follows same-origin course history");
+check(!nav.includes('id="navBack"') && nav.includes("skip-link"), "shared navigation avoids a second, unpredictable Back control");
+check(nav.includes('label:"Today"') && nav.includes('label:"Course"') && nav.includes('label:"Practice"'), "shared navigation keeps stable learner destinations");
 check(read("dashboard.html").includes("Matching items in this browser will be replaced"), "progress import confirms replacement before writing");
 check(read("today.html").includes("Course data did not load"), "lesson page fails visibly instead of using a partial curriculum");
 check(read("curriculum.html").includes("rich.title=u.title") && read("curriculum.html").includes("rich.quiz[0]=u.quiz"), "rich curriculum summaries hydrate from the authoritative manifest");

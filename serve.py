@@ -117,6 +117,14 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if not self._authorized():
             self.send_error(403); return
+        if urlsplit(self.path).path == "/__health":
+            response = b'{"save":true}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(response)))
+            self.end_headers()
+            self.wfile.write(response)
+            return
         if self._private_path():
             self.send_error(404); return
         super().do_GET()
@@ -160,11 +168,15 @@ class Handler(SimpleHTTPRequestHandler):
             )
         self.send_header("Referrer-Policy", "no-referrer")
         self.send_header("X-Content-Type-Options", "nosniff")
-        # Local study pages change frequently; embedded previews must not keep
-        # a stale script after a repair or progress migration.
+        # Revalidate course files instead of downloading every asset again on
+        # every page. Progress stays private and is never cached.
         path = self.path.split("?")[0]
-        if path.endswith((".html", ".js", ".css", ".json")):
+        if path in {"/my-progress.json", "/my-progress.backup.json", "/__save", "/__health"}:
             self.send_header("Cache-Control", "no-store")
+        elif path.endswith((".html", ".js", ".css", ".json")):
+            self.send_header("Cache-Control", "no-cache")
+        elif path.endswith((".woff", ".woff2", ".png", ".jpg", ".jpeg", ".webp", ".gif", ".mp3", ".wav")):
+            self.send_header("Cache-Control", "public, max-age=3600")
         SimpleHTTPRequestHandler.end_headers(self)
 
     def log_message(self, *args):

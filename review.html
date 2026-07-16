@@ -3,64 +3,168 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Review queue | CCA-F</title>
+<title>Review cards | CCA-F</title>
 <link rel="stylesheet" href="study.css">
 <style>
-  .reviewcard{background:#fff;border:3px solid var(--accent);padding:26px 24px;min-height:240px;display:flex;flex-direction:column;justify-content:center;margin:18px 0}
-  .front{font-size:1.35rem;font-weight:800;line-height:1.45}
-  .back{display:none;border-top:2px solid var(--line);margin-top:20px;padding-top:18px;font-size:1.08rem}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
-  button,.action{font:inherit;font-weight:800;border:0;padding:11px 18px;cursor:pointer;text-decoration:none;display:inline-block}
-  .show{background:var(--accent);color:#fff}.again{background:var(--red);color:#fff}.hard{background:var(--yellow);color:#332700}.good{background:var(--green);color:#fff}.plain{background:#fff;border:2px solid var(--line);color:var(--ink)}
-  .source{font-size:.78rem;font-weight:800;color:var(--muted)}
-  #done{display:none;border-left:7px solid var(--green);background:#EAF7EF;padding:18px 20px}
+  .review-head{padding:26px 0 4px}
+  .review-head h1{margin-bottom:2px}
+  .review-shell{margin:16px 0 20px}
+  .review-progress-row{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:.86rem;font-weight:800;color:var(--muted)}
+  .review-progress{height:12px;background:#DCE5E8;border-radius:7px;overflow:hidden;margin:8px 0 14px}
+  .review-progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .18s ease}
+  .reviewcard{background:#fff;border:2px solid var(--accent);border-radius:8px;padding:24px;min-height:clamp(190px,28vh,260px);display:grid;align-content:center;margin:0}
+  .source{font-size:.76rem;font-weight:800;color:var(--muted);margin-bottom:6px}
+  .front{font-size:1.35rem;font-weight:800;line-height:1.4;margin:0}
+  .back{display:none;border-top:2px solid var(--line);margin-top:20px;padding-top:16px;font-size:1.08rem}
+  .answer-label{display:block;color:var(--accent);font-size:.76rem;font-weight:800;margin-bottom:5px}
+  .review-controls{margin-top:12px}
+  button,.action{font:inherit;font-weight:800;border-radius:7px;padding:11px 18px;cursor:pointer;text-decoration:none}
+  .show,.next-card{border:0;background:var(--accent);color:#fff;min-height:50px}
+  .next-card{width:100%;margin-top:12px}
+  .next-card:disabled{background:#D7E0E3;color:#64747D;cursor:not-allowed}
+  .grade-fieldset{border:0;padding:0;margin:0}
+  .grade-fieldset legend{font-weight:800;margin-bottom:8px}
+  .grade-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+  .grade{border:2px solid var(--line);background:#fff;color:var(--ink);text-align:left;min-height:68px}
+  .grade span{display:block;font-size:.76rem;font-weight:700;color:var(--muted);margin-top:2px}
+  .grade.again{border-left:7px solid var(--red)}
+  .grade.hard{border-left:7px solid var(--yellow)}
+  .grade.good{border-left:7px solid var(--green)}
+  .grade[aria-pressed="true"]{border-color:var(--accent);background:#E8F2F4;box-shadow:0 0 0 2px var(--accent)}
+  .review-help{margin-top:14px}
+  .review-exit{display:flex;gap:14px;flex-wrap:wrap;font-size:.86rem;margin:14px 0}
+  .review-exit a{font-weight:800}
+  #done{display:none;border-left:7px solid var(--green);background:#EAF7EF;padding:18px 20px;margin:18px 0}
+  #choice-status{min-height:1.4em;margin:8px 0 0;color:var(--muted);font-size:.82rem}
+  @media(max-width:560px){
+    .reviewcard{padding:20px;min-height:210px}.grade-grid{grid-template-columns:1fr}.grade{min-height:54px}.grade span{display:inline;margin-left:8px}
+  }
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
 <script src="course-data.js"></script>
 <script src="nav.js"></script>
-<main class="wrap">
-  <header style="padding:28px 0 5px">
-    <h1>Review queue</h1>
+<main class="wrap" id="main-content">
+  <header class="review-head">
+    <p class="hint" id="unit-name"></p>
+    <h1>Review cards</h1>
     <p class="sub" id="summary">Loading cards</p>
   </header>
-  <div class="callout info"><b>Short rule:</b> wrong returns tomorrow; hard returns in 2 days; got it stretches from 4 days toward 30. A correct guess still returns for review.</div>
-  <div id="session">
-    <div class="reviewcard">
+
+  <div id="lesson-flow"></div>
+
+  <section class="review-shell" id="session" aria-label="Card review">
+    <div class="review-progress-row"><span id="position">Card 1</span><span id="remaining"></span></div>
+    <div class="review-progress" aria-hidden="true"><span id="progressbar"></span></div>
+    <article class="reviewcard" id="card">
       <div class="source" id="source"></div>
-      <div class="front" id="front"></div>
-      <div class="back" id="back"></div>
+      <h2 class="front" id="front" tabindex="-1"></h2>
+      <div class="back" id="back"><span class="answer-label">Answer</span><span id="answer"></span></div>
+    </article>
+
+    <div class="review-controls" id="before">
+      <button class="show" id="show" type="button">Reveal answer</button>
     </div>
-    <div class="actions" id="before"><button class="show" id="show" type="button">Show answer</button></div>
-    <div class="actions" id="after" style="display:none">
-      <button class="again" data-grade="again" type="button">Again</button>
-      <button class="hard" data-grade="hard" type="button">Hard</button>
-      <button class="good" data-grade="good" type="button">Got it</button>
+
+    <div class="review-controls" id="after" style="display:none">
+      <fieldset class="grade-fieldset" id="grade-prompt" tabindex="-1">
+        <legend>How well did you know it?</legend>
+        <div class="grade-grid">
+          <button class="grade again" data-grade="again" type="button" aria-pressed="false">Again <span>Review tomorrow</span></button>
+          <button class="grade hard" data-grade="hard" type="button" aria-pressed="false">Hard <span>Review in 2 days</span></button>
+          <button class="grade good" data-grade="good" type="button" aria-pressed="false">Got it <span>Review in 4+ days</span></button>
+        </div>
+      </fieldset>
+      <p id="choice-status" role="status" aria-live="polite"></p>
+      <button class="next-card" id="next-card" type="button" disabled>Choose one to continue</button>
     </div>
-  </div>
-  <div id="done" role="status" aria-live="polite" tabindex="-1"></div>
-  <div class="actions"><a class="action plain" href="today.html">Back to lesson</a><a class="action plain" href="quizzes.html">Practice hub</a></div>
+  </section>
+
+  <section id="done" role="status" aria-live="polite" tabindex="-1"></section>
+  <div id="next-step"></div>
+
+  <details class="review-help">
+    <summary>How review timing works</summary>
+    <div class="body prose"><p><b>Again</b> returns tomorrow. <b>Hard</b> returns in 2 days. <b>Got it</b> starts at 4 days and stretches toward 30. A correct guess still belongs in review.</p></div>
+  </details>
+  <nav class="review-exit" aria-label="Leave review"><a id="lesson-link" href="today.html">Return to lesson</a><a href="quizzes.html">Practice library</a></nav>
 </main>
 <script>
 (function(){
   function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
   function day(n){return Date.now()+n*24*60*60*1000;}
   var C=window.CCAF_COURSE,filter=param("unit"),cards=[];
-  Object.keys(C.cards).forEach(function(u){if(filter&&u!==filter)return;(C.cards[u]||[]).forEach(function(x,i){cards.push({id:"concept-"+u+"-"+i,unit:u,front:"What is "+x[0]+"?",back:x[1],source:"lesson concept"});});});
-  try{var mistakes=JSON.parse(localStorage.getItem("ccaf-mistake-cards")||"{}");Object.keys(mistakes).forEach(function(k){var x=mistakes[k];if(!filter||x.unit===filter)cards.push(x);});}catch(e){}
+  Object.keys(C.cards).forEach(function(u){
+    if(filter&&u!==filter)return;
+    (C.cards[u]||[]).forEach(function(x,i){cards.push({id:"concept-"+u+"-"+i,unit:u,front:"What is "+x[0]+"?",back:x[1],source:"lesson concept"});});
+  });
+  try{
+    var mistakes=JSON.parse(localStorage.getItem("ccaf-mistake-cards")||"{}");
+    Object.keys(mistakes).forEach(function(k){var x=mistakes[k];if(!filter||x.unit===filter)cards.push(x);});
+  }catch(e){}
   var sched={};try{sched=JSON.parse(localStorage.getItem("ccaf-review")||"{}");}catch(e){}
   var now=Date.now(),due=cards.filter(function(c){return !sched[c.id]||Number(sched[c.id].due||0)<=now;});
   if(!due.length&&filter)due=cards.slice(0,3);
-  var i=0,rated=0,cur=null;
-  var session=document.getElementById("session"),done=document.getElementById("done"),front=document.getElementById("front"),back=document.getElementById("back"),source=document.getElementById("source");
-  function draw(){
-    if(i>=due.length){session.style.display="none";done.style.display="block";done.innerHTML="<b>Review complete.</b><br>"+rated+" card"+(rated===1?"":"s")+" scheduled."+(filter&&rated>=3?" Your flashcard step is complete.":"");done.focus();if(filter&&rated>=3&&window.CCAF){CCAF.setStep(filter,4,true);CCAF.recordEvidence(filter,"review",{complete:true,count:rated});}return;}
-    cur=due[i];front.textContent=cur.front;back.textContent=cur.back;back.style.display="none";document.getElementById("before").style.display="flex";document.getElementById("after").style.display="none";source.textContent=(C.map[cur.unit]?C.map[cur.unit].title:cur.unit)+" | "+(cur.source||"review");document.getElementById("summary").textContent=(due.length-i)+" due card"+((due.length-i)===1?"":"s")+(filter?" for "+C.map[filter].title:"");
+
+  var i=0,rated=0,cur=null,selectedGrade=null;
+  var session=document.getElementById("session"),done=document.getElementById("done");
+  var front=document.getElementById("front"),back=document.getElementById("back"),answer=document.getElementById("answer"),source=document.getElementById("source");
+  var before=document.getElementById("before"),after=document.getElementById("after"),nextButton=document.getElementById("next-card"),choiceStatus=document.getElementById("choice-status");
+  var title=filter&&C.map[filter]?C.map[filter].title:"All lessons";
+  document.getElementById("unit-name").textContent=title;
+  document.getElementById("lesson-link").href=filter?"today.html?unit="+encodeURIComponent(filter):"today.html";
+  if(filter&&window.CCAFFlow)CCAFFlow.mount("lesson-flow",{unit:filter,stage:"review"});
+
+  function finish(){
+    session.style.display="none";done.style.display="block";
+    done.textContent="";var strong=document.createElement("b");strong.textContent="Review complete.";
+    done.appendChild(strong);done.appendChild(document.createElement("br"));
+    done.appendChild(document.createTextNode(rated+" card"+(rated===1?"":"s")+" scheduled."));
+    if(filter&&rated>=3&&window.CCAF){
+      CCAF.setStep(filter,4,true);CCAF.recordEvidence(filter,"review",{complete:true,count:rated});
+      if(window.CCAFFlow){CCAFFlow.mount("lesson-flow",{unit:filter,stage:"review"});CCAFFlow.mountNext("next-step",filter,{context:"Review saved."});}
+    }
+    done.focus();
   }
-  document.getElementById("show").addEventListener("click",function(){back.style.display="block";document.getElementById("before").style.display="none";document.getElementById("after").style.display="flex";});
-  document.querySelectorAll("[data-grade]").forEach(function(b){b.addEventListener("click",function(){var g=b.getAttribute("data-grade"),old=sched[cur.id]||{interval:0,streak:0};if(g==="again"){old.interval=1;old.streak=0;}else if(g==="hard"){old.interval=2;old.streak=Math.max(0,old.streak||0);}else{old.streak=(old.streak||0)+1;old.interval=old.interval?Math.min(30,Math.max(4,old.interval*2)):4;}old.due=day(old.interval);old.last=Date.now();old.grade=g;old.unit=cur.unit;sched[cur.id]=old;localStorage.setItem("ccaf-review",JSON.stringify(sched));rated++;i++;draw();});});
-  if(!due.length){session.style.display="none";done.style.display="block";done.innerHTML="<b>Nothing is due today.</b><br>Your next scheduled cards will appear here automatically.";}else draw();
+  function draw(){
+    if(i>=due.length){finish();return;}
+    cur=due[i];selectedGrade=null;
+    front.textContent=cur.front;answer.textContent=cur.back;back.style.display="none";
+    before.style.display="block";after.style.display="none";choiceStatus.textContent="";
+    document.querySelectorAll("[data-grade]").forEach(function(button){button.setAttribute("aria-pressed","false");});
+    nextButton.disabled=true;nextButton.textContent="Choose one to continue";
+    source.textContent=(C.map[cur.unit]?C.map[cur.unit].title:cur.unit)+" | "+(cur.source||"review");
+    document.getElementById("position").textContent="Card "+(i+1)+" of "+due.length;
+    document.getElementById("remaining").textContent=(due.length-i)+" left";
+    document.getElementById("progressbar").style.width=Math.round(i/due.length*100)+"%";
+    document.getElementById("summary").textContent=due.length+" card"+(due.length===1?"":"s")+" in this review";
+    if(i>0)front.focus();
+  }
+  function saveGrade(){
+    var old=sched[cur.id]||{interval:0,streak:0};
+    if(selectedGrade==="again"){old.interval=1;old.streak=0;}
+    else if(selectedGrade==="hard"){old.interval=2;old.streak=Math.max(0,old.streak||0);}
+    else{old.streak=(old.streak||0)+1;old.interval=old.interval?Math.min(30,Math.max(4,old.interval*2)):4;}
+    old.due=day(old.interval);old.last=Date.now();old.grade=selectedGrade;old.unit=cur.unit;sched[cur.id]=old;
+    localStorage.setItem("ccaf-review",JSON.stringify(sched));rated++;i++;draw();
+  }
+  document.getElementById("show").addEventListener("click",function(){
+    back.style.display="block";before.style.display="none";after.style.display="block";document.getElementById("grade-prompt").focus();
+  });
+  document.querySelectorAll("[data-grade]").forEach(function(button){button.addEventListener("click",function(){
+    selectedGrade=button.getAttribute("data-grade");
+    document.querySelectorAll("[data-grade]").forEach(function(item){item.setAttribute("aria-pressed",String(item===button));});
+    var label=selectedGrade==="again"?"Again":selectedGrade==="hard"?"Hard":"Got it";
+    choiceStatus.textContent=label+" selected. Continue when you are ready.";
+    nextButton.disabled=false;nextButton.textContent=i===due.length-1?"Finish review":"Next card";
+  });});
+  nextButton.addEventListener("click",function(){if(selectedGrade)saveGrade();});
+
+  if(!due.length){
+    session.style.display="none";done.style.display="block";done.innerHTML="<b>Nothing is due today.</b><br>Your next scheduled cards will appear here automatically.";
+    if(filter&&window.CCAFFlow)CCAFFlow.mountNext("next-step",filter,{context:"No cards are due."});
+  }else draw();
 })();
 </script>
 </body>

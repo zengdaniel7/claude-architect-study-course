@@ -20,6 +20,8 @@
   .stepbox{display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-size:.8rem}
   .stepbox input{width:20px;height:20px;accent-color:#2F9E63;cursor:pointer}
   .dayrow .dsum{margin-left:auto;font-size:.78rem;color:var(--muted);font-weight:700}
+  .routine-toggle{display:flex;align-items:center;justify-content:space-between;gap:10px;flex:1 1 auto;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:700;text-align:left;padding:7px 4px;cursor:pointer}
+  .routine-toggle:hover,.routine-toggle:focus-visible{color:var(--accent)}
 </style>
 </head>
 <body>
@@ -27,7 +29,7 @@
 <script src="course-data.js"></script>
 <script src="nav.js"></script>
 
-<div class="wrap">
+<main class="wrap" id="main-content">
   <h1>📋 Weekly Pipeline & Progress</h1>
   <p class="sub" id="today"></p>
 
@@ -43,13 +45,13 @@
     </div>
     <div class="bar" style="margin:12px 0"><span id="wbar" style="width:0%"></span></div>
     <div id="week"></div>
-    <p class="hint" style="margin:.6em 0 0">Steps: 🎥 watch · ✏️ draw · 🔨 build · 🗣️ explain · 🃏 flashcards — tick them on any day (backfill is fine). Today's row syncs with the Lesson page.</p>
+    <p class="hint" style="margin:.6em 0 0">Habits: learn · draw · build · teach · review. Tick them on any day; backfill is fine. Today's row syncs with your lesson.</p>
     <p style="margin:.4em 0 0"><button id="wtoday" style="border:0;background:var(--accent);color:#fff;font:inherit;font-weight:700;font-size:.8rem;padding:6px 14px;border-radius:7px;cursor:pointer">↩ jump back to this week</button></p>
   </div>
 
   <!-- TODAY DETAIL -->
   <h2>🔁 Today's routine, step by step <span class="hint" id="dcount"></span></h2>
-  <p class="hint">Tap a step's name (or ▸) for exactly what to do. This is the same 5 steps as today's row above.</p>
+  <p class="hint">Open a habit for exactly what to do. These are the same five checks as today's row.</p>
   <div class="card"><div id="daily"></div>
     <div class="bar"><span id="dbar" style="width:0%"></span></div>
   </div>
@@ -76,13 +78,13 @@
   <div style="margin-top:14px"><a class="btn green" href="pretest.html">🧪 Take the Pre-Test →</a></div>
 
   <footer>Mirrors Daily Pipeline.md · your written backup lives in Obsidian.</footer>
-</div>
-<div id="toast" style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;opacity:0;transition:.25s;pointer-events:none">Copied 👍</div>
+</main>
+<div id="toast" role="status" aria-live="polite" style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;opacity:0;transition:.25s;pointer-events:none">Copied 👍</div>
 
 <script>
 /* ---- shared bits ---- */
 var STEP_ICONS=["🎥","✏️","🔨","🗣️","🃏"];
-var STEP_NAMES=["watch","draw","build","explain","cards"];
+var STEP_NAMES=["learn","draw","build","teach","review"];
 function fmt(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");} // local date
 var todayStr=fmt(new Date());
 document.getElementById("today").textContent="Today is "+todayStr+" · steps follow your lesson — unfinished ones carry over.";
@@ -151,6 +153,7 @@ function renderWeek(){
         (function(i){
           var box=document.createElement("label");box.className="stepbox";box.title=STEP_NAMES[i];
           var cb=document.createElement("input");cb.type="checkbox";cb.checked=!!checks[i];
+          cb.setAttribute("aria-label",DOW[d]+" "+dstr+": mark "+STEP_NAMES[i]+" complete");
           if(checks[i])n++;
           cb.addEventListener("change",function(){setStep(dstr,i,cb.checked);});
           var ic=document.createElement("span");ic.textContent=STEP_ICONS[i];
@@ -172,11 +175,11 @@ document.getElementById("wtoday").addEventListener("click",function(){offset=0;r
 
 /* ---- today's routine, detailed (edits the same today entry) ---- */
 var DAILY=[
- {label:"🎥 Watch / listen (15–25 min)",details:"<b>What:</b> watch ONE short lesson on today's topic.<br><b>Where:</b> <a href='resources.html'>Resources</a> → Anthropic Academy, in order.<br><b>How:</b> captions on; pause every 5 min and sketch.",ask:"What exactly should I watch today, and where? Course + lesson + a one-line focus."},
+ {label:"🎥 Learn: watch / listen",details:"<b>What:</b> watch one short lesson, then use its visual notes.<br><b>Where:</b> open <a href='today.html'>Today's lesson</a>.<br><b>How:</b> captions on; pause and sketch.",ask:"What exactly should I watch today, and where? Course + lesson + a one-line focus."},
  {label:"✏️ Draw it as boxes + arrows",details:"<b>What:</b> redraw the idea from memory.<br><b>How:</b> use the color key. Rough is fine.",ask:"What should I draw today? Describe the ONE diagram that captures today's topic."},
  {label:"🔨 Build one tiny example (real code)",details:"<b>What:</b> smallest working version — real code or an on-site <a href='exercise.html'>build exercise</a>.<br><b>Where:</b> VS Code, or run <code>claude-cheap</code> to practice cheaply.",ask:"Give me today's tiny build task — smallest real thing I can code in ~20 min, with steps."},
  {label:"🗣️ Explain it out loud (60 sec)",details:"<b>What:</b> say today's idea in plain words, no notes.<br><b>Why:</b> if you can't say it simply, you don't own it yet.",ask:"I'll explain today's topic in my own words — quiz and grade my explanation."},
- {label:"🃏 3 flashcards + 1 mistake card",details:"<b>What:</b> 3 Q→A cards + 1 'mistake card'.<br><b>Where:</b> <a href='https://apps.ankiweb.net' target='_blank' rel='noopener'>Anki</a> or Flashcards.md.",ask:"Turn today's topic into 3 short flashcards plus 1 mistake card."}
+ {label:"🃏 Review lesson cards",details:"<b>What:</b> reveal, rate, then use Next card.<br><b>Where:</b> the lesson's <a href='review.html'>Review queue</a>.",ask:"Run my lesson review and help me make one mistake card."}
 ];
 var dEls=[];
 function dbarSync(){
@@ -195,18 +198,22 @@ DAILY.forEach(function(it,i){
   var wrap=document.createElement("div");wrap.style.borderBottom="1px dashed var(--line)";
   var row=document.createElement("div");row.style.cssText="display:flex;align-items:center;gap:11px;padding:9px 0";
   var cb=document.createElement("input");cb.type="checkbox";cb.style.cssText="width:21px;height:21px;flex:0 0 auto;accent-color:#2F9E63";
-  var nm=document.createElement("span");nm.textContent=it.label;nm.style.cssText="flex:1 1 auto;font-weight:600;cursor:pointer";
-  var ch=document.createElement("span");ch.textContent="▸";ch.style.cssText="cursor:pointer;color:var(--accent);font-weight:800;font-size:1.1rem";
+  cb.setAttribute("aria-label","Mark "+it.label.replace(/^\S+\s+/,"")+" complete");
+  var nm=document.createElement("button");nm.type="button";nm.className="routine-toggle";nm.setAttribute("aria-expanded","false");
+  var label=document.createElement("span");label.textContent=it.label;
+  var ch=document.createElement("span");ch.textContent="▸";ch.setAttribute("aria-hidden","true");ch.style.cssText="color:var(--accent);font-weight:800;font-size:1.1rem";
+  nm.appendChild(label);nm.appendChild(ch);
   var pan=document.createElement("div");pan.style.cssText="display:none;padding:0 0 12px 32px;font-size:.9rem";
+  pan.id="routine-panel-"+i;nm.setAttribute("aria-controls",pan.id);
   pan.innerHTML=it.details+"<br>";
   var b=document.createElement("button");b.className="ask2";b.textContent="💬 Ask my tutor about this step";b.setAttribute("data-q",it.ask);
   b.style.cssText="margin-top:8px;background:var(--accent);color:#fff;border:0;border-radius:7px;font:inherit;font-weight:700;font-size:.8rem;padding:6px 12px;cursor:pointer";
   pan.appendChild(b);
   cb.addEventListener("change",function(){setStep(todayStr,i,cb.checked);});
-  function tog(){var o=pan.style.display==="block";pan.style.display=o?"none":"block";ch.textContent=o?"▸":"▾";}
-  nm.addEventListener("click",tog);ch.addEventListener("click",tog);
-  row.appendChild(cb);row.appendChild(nm);row.appendChild(ch);wrap.appendChild(row);wrap.appendChild(pan);dhost.appendChild(wrap);
-  dEls.push({cb:cb,nm:nm});
+  function tog(){var o=pan.style.display==="block";pan.style.display=o?"none":"block";ch.textContent=o?"▸":"▾";nm.setAttribute("aria-expanded",String(!o));}
+  nm.addEventListener("click",tog);
+  row.appendChild(cb);row.appendChild(nm);wrap.appendChild(row);wrap.appendChild(pan);dhost.appendChild(wrap);
+  dEls.push({cb:cb,nm:label});
 });
 renderWeek();
 dbarSync();

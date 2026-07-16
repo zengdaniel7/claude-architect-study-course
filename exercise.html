@@ -38,6 +38,7 @@
   .exlist a.start{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;font-weight:800;padding:9px 18px;border-radius:7px;font-size:.88rem}
   #toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(40px);background:var(--ink);color:#fff;padding:12px 20px;border-radius:8px;font-weight:700;opacity:0;transition:.25s;pointer-events:none;z-index:60}
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .tutor-actions{margin-top:14px}.tutor-actions .actions{margin:4px 0 10px}
   @media(max-width:620px){.modepick{grid-template-columns:1fr}}
 </style>
 </head>
@@ -46,7 +47,7 @@
 <script src="course-data.js"></script>
 <script src="nav.js"></script>
 
-<div class="wrap" id="app"></div>
+<main class="wrap" id="app"></main>
 
 <div id="toast">Copied 👍</div>
 
@@ -89,7 +90,15 @@
   var SKEY="ccaf-ex-"+ex.id;
   var st={a:{}};
   try{var s=JSON.parse(localStorage.getItem(SKEY)||"{}");if(s&&typeof s==="object"){st=s;st.a=st.a||{};}}catch(_){}
-  function save(){st.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(st));}catch(_){}}
+  var saveTimer=null;
+  function saveNow(){clearTimeout(saveTimer);st.ts=Date.now();try{localStorage.setItem(SKEY,JSON.stringify(st));}catch(_){}}
+  function save(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,300);}
+  window.addEventListener("pagehide",saveNow);
+
+  var creditUnit=null;
+  if(window.CCAF&&CCAF.COURSE&&CCAF.COURSE.map){
+    (ex.units||[]).some(function(id){if(CCAF.COURSE.map[id]&&CCAF.COURSE.map[id].exercise===ex.id){creditUnit=id;return true;}return false;});
+  }
 
   // ordered list of every answer field (step fields first, then quiz questions)
   var FIELDS=[];
@@ -100,8 +109,8 @@
     '<p class="chiprow"><span class="chip">'+ex.mins+'</span><span class="chip">'+ex.level+'</span><span class="chip">💾 saves as you type</span></p>'+
     '<p class="lead"><b>Goal:</b> '+ex.goal+'</p>'+
     '<p class="hint">'+ex.why+'</p>'+
-    '<div class="flow">The loop: <b>1 · do each step here</b> → <b>2 · 🧠 instant check</b> → <b>3 · 📤 report to Claude</b> → course upgrades itself</div>'+
-    '</header>';
+    '<div class="flow"><b>1 · Do</b> → <b>2 · Check</b> → <b>3 · Save</b></div>'+
+    '</header>'+(creditUnit?'<div id="lesson-flow"></div>':'');
 
   var boxNum=0;
   ex.steps.forEach(function(s,i){
@@ -112,8 +121,8 @@
     }
     if(s.field){
       boxNum++;
-      h+='<div class="ansblock"><div class="anslab"><span class="num">'+boxNum+'</span>'+s.field.label+'</div>'+
-         '<textarea class="ans" data-f="'+s.field.id+'" placeholder=""></textarea></div>';
+      h+='<div class="ansblock"><label class="anslab" for="ans-'+s.field.id+'"><span class="num">'+boxNum+'</span>'+s.field.label+'</label>'+
+         '<textarea class="ans" id="ans-'+s.field.id+'" data-f="'+s.field.id+'" placeholder=""></textarea></div>';
     }
     if(s.hints&&s.hints.length){
       h+='<button type="button" class="hintbtn" data-hint="'+i+'">Show hint 1 of '+s.hints.length+'</button><div class="hintbox" id="hint'+i+'"></div>';
@@ -125,8 +134,8 @@
     h+='<div class="quizcard"><h3>'+ex.quiz.title+'</h3><p class="hint" style="margin:.2em 0 0">'+ex.quiz.intro+'</p>';
     ex.quiz.questions.forEach(function(q){
       boxNum++;
-      h+='<div class="ansblock"><div class="anslab"><span class="num" style="background:var(--green)">'+boxNum+'</span>'+q.q+'</div>'+
-         '<textarea class="ans" data-f="'+q.id+'" placeholder=""></textarea></div>';
+      h+='<div class="ansblock"><label class="anslab" for="ans-'+q.id+'"><span class="num" style="background:var(--green)">'+boxNum+'</span>'+q.q+'</label>'+
+         '<textarea class="ans" id="ans-'+q.id+'" data-f="'+q.id+'" placeholder=""></textarea></div>';
     });
     h+='</div>';
   }
@@ -136,16 +145,19 @@
       '<label><input type="radio" name="mode" value="guided"><span><b>With guidance</b><br><span class="hint">Hints, worked answer, or tutor help were needed.</span></span></label>'+
       '<label><input type="radio" name="mode" value="independent"><span><b>Independent redo</b><br><span class="hint">I completed a fresh version without hints or copying values.</span></span></label>'+
     '</div>'+
-    '<p style="margin:0"><b>1. Check:</b> Copy your answers and rubric. Paste them into your tutor for a grade.</p>'+
-    '<p><b>2. Save:</b> Copy the report for your course tutor. Mark done records the Build step.</p>'+
     '<div class="actions">'+
-      '<button class="bigbtn check" id="btncheck">🧠 Copy answers + rubric → paste to any AI</button>'+
-      '<button class="bigbtn report" id="btnreport">📤 Copy report → paste to Claude</button>'+
-      '<button class="bigbtn done'+(st.done?' is-done':'')+'" id="btndone">'+(st.done?'✓ Done':'Mark done')+'</button>'+
-    '</div><div id="finishmsg" role="status" aria-live="polite" tabindex="-1"></div></div>';
+      '<button class="bigbtn done'+(st.done?' is-done':'')+'" id="btndone">'+(st.done?'✓ Build saved':'Save build')+'</button>'+
+    '</div><div id="finishmsg" role="status" aria-live="polite" tabindex="-1"></div>'+
+    '<details class="tutor-actions"><summary>Ask a tutor to grade this build</summary><div class="actions body">'+
+      '<button class="bigbtn check" id="btncheck">Copy answers + rubric</button>'+
+      '<button class="bigbtn report" id="btnreport">Copy course report</button>'+
+    '</div></details></div>';
+
+  if(creditUnit)h+='<div id="next-step"></div>';
 
   h+='<footer><a href="exercise.html">← all exercises</a> · answers live only in this browser · built by your Claude tutor</footer>';
   app.innerHTML=h;
+  if(creditUnit&&window.CCAFFlow)CCAFFlow.mount("lesson-flow",{unit:creditUnit,stage:"build"});
 
   // prompts go in via textContent (no HTML-escaping worries)
   ex.steps.forEach(function(s,i){ if(s.prompt){document.getElementById("pb"+i).textContent=s.prompt;} });
@@ -204,10 +216,6 @@
   });
 
   var doneBtn=document.getElementById("btndone");
-  var creditUnit=null;
-  if(window.CCAF&&CCAF.COURSE&&CCAF.COURSE.map){
-    (ex.units||[]).some(function(id){if(CCAF.COURSE.map[id]&&CCAF.COURSE.map[id].exercise===ex.id){creditUnit=id;return true;}return false;});
-  }
   doneBtn.addEventListener("click",function(){
     var msg=document.getElementById("finishmsg");
     if(!st.done){
@@ -219,23 +227,25 @@
         return;
       }
     }
-    st.done=!st.done;save();
+    st.done=!st.done;saveNow();
     doneBtn.classList.toggle("is-done",st.done);
-    doneBtn.textContent=st.done?"✓ Done":"Mark done";
+    doneBtn.textContent=st.done?"✓ Build saved":"Save build";
     if(st.done){
       var uid=creditUnit,_ct=uid||ex.title;
       try{if(uid&&window.CCAF){CCAF.setStep(uid,2,true);CCAF.recordEvidence(uid,"build",{exercise:ex.id,mode:st.mode,complete:true});_ct=CCAF.TITLES[uid]||_ct;}}catch(_){}
       msg.style.display="block";msg.style.borderLeftColor=st.mode==="independent"?"var(--green)":"var(--yellow)";msg.style.background=st.mode==="independent"?"#EAF7EF":"#FFF4D6";
       msg.innerHTML=!uid?"<b>Optional practice saved.</b> This exercise does not replace the fixed build for a lesson.":(st.mode==="independent"?"<b>Independent build evidence saved.</b> This can count toward mastery.":"<b>Guided build saved.</b> Good learning evidence. Do a fresh independent redo later for mastery.");
       msg.focus();
+      if(uid&&window.CCAFFlow){CCAFFlow.mount("lesson-flow",{unit:uid,stage:"build"});CCAFFlow.mountNext("next-step",uid,st.mode==="independent"?{stage:"teach",context:"Independent build saved.",label:"Next: teach it back"}:{stage:"build",context:"Guided attempt saved. Redo once without hints.",label:"Redo independently"});}
       flash('Build saved for "'+_ct+'"');
     }else{
       if(creditUnit&&window.CCAF){
         try{var ev=JSON.parse(localStorage.getItem("ccaf-evidence")||"{}");if(ev[creditUnit]&&ev[creditUnit].build&&ev[creditUnit].build.data&&ev[creditUnit].build.data.exercise===ex.id){delete ev[creditUnit].build;localStorage.setItem("ccaf-evidence",JSON.stringify(ev));CCAF.setStep(creditUnit,2,false);}}catch(_){}
       }
-      msg.style.display="block";msg.innerHTML=creditUnit?"<b>Build unmarked.</b> Its lesson evidence was cleared.":"<b>Optional practice unmarked.</b> No lesson mastery was changed.";msg.focus();
+      msg.style.display="block";msg.innerHTML=creditUnit?"<b>Build unmarked.</b> Its lesson evidence was cleared.":"<b>Optional practice unmarked.</b> No lesson mastery was changed.";if(document.getElementById("next-step"))document.getElementById("next-step").textContent="";if(creditUnit&&window.CCAFFlow)CCAFFlow.mount("lesson-flow",{unit:creditUnit,stage:"build"});msg.focus();
     }
   });
+  if(st.done&&creditUnit&&window.CCAFFlow){CCAFFlow.mountNext("next-step",creditUnit,st.mode==="independent"?{stage:"teach",context:"Independent build saved.",label:"Next: teach it back"}:{stage:"build",context:"Guided attempt saved. Redo once without hints.",label:"Redo independently"});}
 })();
 </script>
 </body>

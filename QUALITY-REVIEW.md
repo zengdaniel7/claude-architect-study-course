@@ -52,15 +52,15 @@ Branch: `codex/site-quality-review`
 
 9. **Shared navigation had patchwork Back/Home behavior.**
    - The old Back action could leave the course; its first repair duplicated Home.
-   - Fixed with one Home control on the dashboard and an internal-only Back control on inner pages.
-   - Code: `nav.js:298-317`.
+   - The later UX pass replaced it with stable Home, Today, Course, Practice, Progress, and Menu destinations.
+   - See `UX-FLOW-REVIEW.md` for the current journey contract.
 
 ## Verification
 
-- Course integrity: **820 checks passed**.
+- Course integrity: **825 checks passed**.
 - JavaScript syntax: **15 files passed**.
-- Server safety: **7 tests passed**.
-- Browser journeys: **14 desktop flows passed**.
+- Server safety: **9 tests passed**.
+- Browser journeys: **20 desktop flows and 1 phone flow passed**.
 - Phone reflow: **passed** across Dashboard, Today, Timeline, Curriculum, Notes, Quiz, Build, Teach-back, and Review.
 - Manual browser pass: Dashboard, Today, Notes, and Quiz rendered without console errors; quiz keyboard focus was visibly clear.
 - Protected content: no diff in exam facts, course data, unit data, lesson notes, quiz answers, exercises, or video mappings.

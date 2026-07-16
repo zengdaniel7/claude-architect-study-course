@@ -101,11 +101,26 @@ class ServeTests(unittest.TestCase):
         status, headers, _ = self.request("GET", "/dashboard.html")
         lowered = {key.lower(): value for key, value in headers.items()}
         self.assertEqual(status, 200)
-        self.assertEqual(lowered.get("cache-control"), "no-store")
+        self.assertEqual(lowered.get("cache-control"), "no-cache")
         self.assertEqual(lowered.get("x-content-type-options"), "nosniff")
         self.assertEqual(lowered.get("referrer-policy"), "no-referrer")
         self.assertEqual(self.request("GET", "/.git/config")[0], 404)
         self.assertEqual(self.request("GET", "/my-progress.backup.json")[0], 404)
+
+    def test_progress_is_never_cached_and_static_assets_can_revalidate(self):
+        Path(serve.SAVE).write_text('{"ts":0,"data":{}}')
+        status, headers, _ = self.request("GET", "/my-progress.json")
+        self.assertEqual(status, 200)
+        self.assertEqual(dict(headers).get("Cache-Control"), "no-store")
+        status, headers, _ = self.request("GET", "/study.css")
+        self.assertEqual(status, 200)
+        self.assertEqual(dict(headers).get("Cache-Control"), "no-cache")
+
+    def test_health_endpoint_identifies_the_quiet_saving_server(self):
+        status, headers, body = self.request("GET", "/__health")
+        self.assertEqual(status, 200)
+        self.assertEqual(json.loads(body), {"save": True})
+        self.assertEqual(dict(headers).get("Cache-Control"), "no-store")
 
     def test_access_token_protects_remote_mode(self):
         self.server.access_token = "test-token"
