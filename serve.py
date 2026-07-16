@@ -91,6 +91,23 @@ def write_progress(payload):
                 pass
 
 class Handler(SimpleHTTPRequestHandler):
+    def _send_progress(self, include_body=True):
+        try:
+            with open(SAVE, "rb") as handle:
+                response = handle.read(MAX_BODY + 1)
+        except FileNotFoundError:
+            self.send_error(404); return
+        except OSError:
+            self.send_error(500); return
+        if len(response) > MAX_BODY:
+            self.send_error(413); return
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(response)))
+        self.end_headers()
+        if include_body:
+            self.wfile.write(response)
+
     def _private_path(self):
         path = unquote(urlsplit(self.path).path)
         parts = [part for part in path.split("/") if part]
@@ -117,7 +134,10 @@ class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
         if not self._authorized():
             self.send_error(403); return
-        if urlsplit(self.path).path == "/__health":
+        path = urlsplit(self.path).path
+        if path == "/my-progress.json":
+            self._send_progress(); return
+        if path == "/__health":
             response = b'{"save":true}'
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -132,6 +152,8 @@ class Handler(SimpleHTTPRequestHandler):
     def do_HEAD(self):
         if not self._authorized():
             self.send_error(403); return
+        if urlsplit(self.path).path == "/my-progress.json":
+            self._send_progress(include_body=False); return
         if self._private_path():
             self.send_error(404); return
         super().do_HEAD()

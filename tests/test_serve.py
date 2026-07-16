@@ -109,9 +109,10 @@ class ServeTests(unittest.TestCase):
 
     def test_progress_is_never_cached_and_static_assets_can_revalidate(self):
         Path(serve.SAVE).write_text('{"ts":0,"data":{}}')
-        status, headers, _ = self.request("GET", "/my-progress.json")
+        status, headers, body = self.request("GET", "/my-progress.json")
         self.assertEqual(status, 200)
         self.assertEqual(dict(headers).get("Cache-Control"), "no-store")
+        self.assertEqual(json.loads(body), {"ts": 0, "data": {}})
         status, headers, _ = self.request("GET", "/study.css")
         self.assertEqual(status, 200)
         self.assertEqual(dict(headers).get("Cache-Control"), "no-cache")
