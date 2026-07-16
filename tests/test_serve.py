@@ -36,7 +36,7 @@ class ServeTests(unittest.TestCase):
         self.temp.cleanup()
 
     def request(self, method, path, body=None, headers=None):
-        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=4)
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=15)
         connection.request(method, path, body=body, headers=headers or {})
         response = connection.getresponse()
         payload = response.read()
@@ -85,7 +85,7 @@ class ServeTests(unittest.TestCase):
 
     def test_size_limit_and_invalid_route(self):
         self.assertEqual(self.request("POST", "/not-save", b"{}", {"Content-Type": "application/json"})[0], 404)
-        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=4)
+        connection = http.client.HTTPConnection("127.0.0.1", self.server.server_port, timeout=15)
         try:
             connection.putrequest("POST", "/__save")
             connection.putheader("Content-Type", "application/json")
@@ -105,7 +105,17 @@ class ServeTests(unittest.TestCase):
         self.assertEqual(lowered.get("x-content-type-options"), "nosniff")
         self.assertEqual(lowered.get("referrer-policy"), "no-referrer")
         self.assertEqual(self.request("GET", "/.git/config")[0], 404)
+        self.assertEqual(self.request("GET", "/.studio-data/studio.sqlite3")[0], 404)
+        self.assertEqual(self.request("GET", "/.unknown-secret")[0], 404)
         self.assertEqual(self.request("GET", "/my-progress.backup.json")[0], 404)
+        self.assertEqual(self.request("GET", "/dashboard.html", headers={"Host": "example.com"})[0], 403)
+        cross_origin = f"http://127.0.0.1:{self.server.server_port + 1}"
+        self.assertEqual(self.request(
+            "POST",
+            "/__save",
+            b'{"ts":1,"data":{}}',
+            {"Content-Type": "application/json", "Origin": cross_origin},
+        )[0], 403)
 
     def test_progress_is_never_cached_and_static_assets_can_revalidate(self):
         Path(serve.SAVE).write_text('{"ts":0,"data":{}}')

@@ -58,7 +58,7 @@ def validate_progress(payload):
 
 def write_progress(payload):
     tmp = f"{SAVE}.{os.getpid()}.{threading.get_ident()}.tmp"
-    backup_tmp = BAK + ".tmp"
+    backup_tmp = f"{BAK}.{os.getpid()}.{threading.get_ident()}.tmp"
     try:
         with open(tmp, "w", encoding="utf-8") as handle:
             json.dump(payload, handle, indent=1)
@@ -91,6 +91,31 @@ def write_progress(payload):
                 pass
 
 class Handler(SimpleHTTPRequestHandler):
+    def _host_allowed(self):
+        try:
+            raw = self.headers.get("Host", "")
+            parsed = urlsplit(f"http://{raw}")
+            host = (parsed.hostname or "").lower()
+        except ValueError:
+            return False
+        allowed = getattr(self.server, "allowed_hosts", {"localhost", "127.0.0.1", "::1"})
+        return host in allowed
+
+    def _origin_allowed(self):
+        origin = self.headers.get("Origin")
+        if not origin:
+            return True
+        try:
+            parsed_origin = urlsplit(origin)
+            parsed_host = urlsplit(f"http://{self.headers.get('Host', '')}")
+            return (
+                parsed_origin.scheme == "http"
+                and parsed_origin.hostname == parsed_host.hostname
+                and (parsed_origin.port or 80) == (parsed_host.port or 80)
+            )
+        except ValueError:
+            return False
+
     def _send_progress(self, include_body=True):
         try:
             with open(SAVE, "rb") as handle:
@@ -111,8 +136,8 @@ class Handler(SimpleHTTPRequestHandler):
     def _private_path(self):
         path = unquote(urlsplit(self.path).path)
         parts = [part for part in path.split("/") if part]
-        blocked = {".git", ".agents", ".claude", "my-progress.backup.json", "my-progress.json.tmp"}
-        return any(part in blocked or part.endswith(".tmp") for part in parts)
+        blocked = {".git", ".agents", ".claude", ".studio-data", "my-progress.backup.json", "my-progress.json.tmp"}
+        return any(part.startswith(".") or part in blocked or part.endswith(".tmp") for part in parts)
 
     def _authorized(self):
         token = getattr(self.server, "access_token", None)
@@ -132,6 +157,8 @@ class Handler(SimpleHTTPRequestHandler):
             return False
 
     def do_GET(self):
+        if not self._host_allowed():
+            self.send_error(403); return
         if not self._authorized():
             self.send_error(403); return
         path = urlsplit(self.path).path
@@ -150,6 +177,8 @@ class Handler(SimpleHTTPRequestHandler):
         super().do_GET()
 
     def do_HEAD(self):
+        if not self._host_allowed():
+            self.send_error(403); return
         if not self._authorized():
             self.send_error(403); return
         if urlsplit(self.path).path == "/my-progress.json":
@@ -159,6 +188,8 @@ class Handler(SimpleHTTPRequestHandler):
         super().do_HEAD()
 
     def do_POST(self):
+        if not self._host_allowed() or not self._origin_allowed():
+            self.send_error(403); return
         if not self._authorized():
             self.send_error(403); return
         if self.path.split("?")[0] != "/__save":
@@ -218,4 +249,5 @@ if __name__ == "__main__":
     )
     server = ThreadingHTTPServer((host, port), Handler)
     server.access_token = access_token
+    server.allowed_hosts = {"localhost", "127.0.0.1", "::1", host.lower(), display_host.lower()}
     server.serve_forever()

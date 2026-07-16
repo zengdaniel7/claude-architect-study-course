@@ -1,0 +1,141 @@
+import { buildStages, demoSession } from "./content";
+import type { AttemptResponse, ReviewCard, SessionState, StageId, TutorResult } from "./types";
+
+let instanceToken = "";
+let demoMode = false;
+export interface OllamaState {
+  available: boolean;
+  status: "ready" | "protected" | "unavailable";
+  reason?: string | null;
+}
+
+let initialization: Promise<{ session: SessionState; demo: boolean; ollama: OllamaState }> | null = null;
+
+async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = new Headers(init.headers);
+  if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
+  if (instanceToken) headers.set("X-CCA-Instance", instanceToken);
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), path === "/api/tutor/turn" ? 46_000 : 10_000);
+  const forwardAbort = () => controller.abort(init.signal?.reason);
+  init.signal?.addEventListener("abort", forwardAbort, { once: true });
+  try {
+    const response = await fetch(path, { ...init, headers, signal: controller.signal });
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    return response.json() as Promise<T>;
+  } finally {
+    window.clearTimeout(timeout);
+    init.signal?.removeEventListener("abort", forwardAbort);
+  }
+}
+
+export async function initializeApi(): Promise<{ session: SessionState; demo: boolean; ollama: OllamaState }> {
+  if (!initialization) {
+    initialization = (async () => {
+      demoMode = false;
+      try {
+        const bootstrap = await request<{ instanceToken: string; ollama?: OllamaState }>("/api/bootstrap");
+        instanceToken = bootstrap.instanceToken;
+        const session = await request<SessionState>("/api/session/current");
+        return {
+          session,
+          demo: false,
+          ollama: bootstrap.ollama ?? { available: false, status: "unavailable", reason: "Ollama status was not returned." }
+        };
+      } catch (error) {
+        instanceToken = "";
+        if (["127.0.0.1", "localhost", "::1"].includes(window.location.hostname)) throw error;
+        demoMode = true;
+        return { session: demoSession(), demo: true, ollama: { available: false, status: "unavailable", reason: "AI is disabled in preview mode." } };
+      }
+    })();
+  }
+  return initialization;
+}
+
+export async function submitAttempt(
+  session: SessionState,
+  stage: StageId,
+  payload: Record<string, unknown>,
+  confidence?: string
+): Promise<AttemptResponse> {
+  if (!demoMode) {
+    return request<AttemptResponse>("/api/attempts", {
+      method: "POST",
+      body: JSON.stringify({ unitId: session.unitId, stage, confidence, payload })
+    });
+  }
+
+  const nextIndex = Math.min(session.stageIndex + 1, 5);
+  const isDone = session.stageIndex === 5;
+  const next = {
+    ...session,
+    stageIndex: nextIndex,
+    stage: (isDone ? "review" : ["learn", "draw", "build", "teach", "quiz", "review"][nextIndex]) as StageId,
+    stages: buildStages(nextIndex),
+    progressPercent: isDone ? 100 : Math.round((nextIndex / 6) * 100),
+    mastery: isDone ? "mastered" as const : "practiced" as const
+  };
+  return {
+    session: next,
+    feedback: {
+      tone: "success",
+      title: isDone ? "W1 complete" : "Saved",
+      message: isDone ? "Your demo lesson is complete." : "Your work is saved in this preview session."
+    }
+  };
+}
+
+export async function askTutor(
+  unitId: string,
+  activityId: string,
+  mode: "hint" | "simplify" | "classify",
+  learnerText = "",
+  turnId?: string,
+  signal?: AbortSignal
+): Promise<TutorResult> {
+  if (demoMode) {
+    return {
+      advisory: true,
+      summary: "A path is the route through folders to one item.",
+      nextNudge: "Start at your home folder, then name each folder you open before the file.",
+      sourceIds: ["course:w1"],
+      uncertain: false,
+      fallback: true
+    };
+  }
+  return request<TutorResult>("/api/tutor/turn", {
+    method: "POST",
+    body: JSON.stringify({ unitId, activityId, mode, learnerText, turnId }),
+    signal
+  });
+}
+
+export async function cancelTutor(turnId: string): Promise<void> {
+  if (demoMode) return;
+  await request(`/api/tutor/cancel/${encodeURIComponent(turnId)}`, { method: "POST" });
+}
+
+export async function fetchPendingReview(): Promise<{ reviewId: string; cards: ReviewCard[] } | null> {
+  if (demoMode) return null;
+  const response = await request<{ reviews: { id: string; packet?: { cards?: ReviewCard[] } }[] }>("/api/reviews/pending");
+  const review = response.reviews.find((item) => Array.isArray(item.packet?.cards) && item.packet.cards.length > 0);
+  return review ? { reviewId: review.id, cards: review.packet?.cards ?? [] } : null;
+}
+
+export async function recordContentGap(unitId: string, activityId: string, note: string): Promise<void> {
+  if (demoMode) return;
+  await request("/api/content-gaps", {
+    method: "POST",
+    body: JSON.stringify({ unitId, activityId, note })
+  });
+}
+
+export async function prepareFrontierReview() {
+  if (demoMode) return { prepared: false, demo: true };
+  return request<{ prepared: boolean; reviewId: string }>("/api/reviews/prepare", { method: "POST" });
+}
+
+export function isDemoMode() {
+  return demoMode;
+}

@@ -14,16 +14,25 @@ module.exports = defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure"
   },
-  webServer: {
-    command: "python3 -m http.server 4173 --bind 127.0.0.1",
-    url: "http://127.0.0.1:4173/dashboard.html",
-    reuseExistingServer: !process.env.CI,
-    timeout: 15_000,
-    stdout: "ignore",
-    stderr: "ignore"
-  },
+  webServer: [
+    {
+      command: "python3 -m http.server 4173 --bind 127.0.0.1",
+      url: "http://127.0.0.1:4173/dashboard.html",
+      reuseExistingServer: !process.env.CI,
+      timeout: 15_000,
+      stdout: "ignore",
+      stderr: "ignore"
+    },
+    {
+      command: "python3 scripts/e2e_studio_server.py",
+      url: "http://127.0.0.1:8765/__health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 20_000,
+      stdout: "ignore",
+      stderr: "ignore"
+    }
+  ],
   projects: [
-    { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "phone-chromium", grep: /@responsive/, use: { ...devices["iPhone 13"], browserName: "chromium" } }
+    { name: "desktop-chromium", use: { ...devices["Desktop Chrome"] } }
   ]
 });

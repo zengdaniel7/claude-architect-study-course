@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review flow comparison</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; background: #dce4e7; color: #23313a; font: 18px/1.5 Arial, sans-serif; }
+    h1 { margin: 0 0 18px; font-size: 28px; }
+    main { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    figure { margin: 0; padding: 12px; border: 1px solid #aebdc3; background: white; }
+    figcaption { margin-bottom: 10px; font-weight: 700; }
+    img { display: block; width: 100%; height: 760px; object-fit: contain; object-position: top center; background: #f3f7f8; }
+  </style>
+</head>
+<body>
+  <h1>Review flow: reported problem and verified repair</h1>
+  <main>
+    <figure>
+      <figcaption>Before: no visible next-card path</figcaption>
+      <img src="reference-legacy-review.png" alt="Original legacy review queue screenshot">
+    </figure>
+    <figure>
+      <figcaption>After: reveal, rate, then a clear Finish review action</figcaption>
+      <img src="18-review-after.jpg" alt="Rebuilt Study Studio review screen">
+    </figure>
+  </main>
+</body>
+</html>

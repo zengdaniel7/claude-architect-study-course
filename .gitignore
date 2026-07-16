@@ -3,6 +3,9 @@ my-progress.backup.json
 my-progress.json.tmp
 .DS_Store
 node_modules/
+.venv/
+.studio-data/
+studio/dist/
 test-results/
 playwright-report/
 __pycache__/
