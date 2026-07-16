@@ -12,7 +12,50 @@ from .store import StudioStore
 ROOT = Path(__file__).resolve().parents[1]
 configured_data = Path(os.environ["CCA_STUDIO_DATA_DIR"]).expanduser() if os.environ.get("CCA_STUDIO_DATA_DIR") else None
 store = StudioStore(ROOT, configured_data)
-mcp = FastMCP("CCA-F Study Studio", instructions="Read-only session access plus advisory review and proposal intake. Tools never change mastery or curriculum.")
+MCP_INSTRUCTIONS = """
+Act as an advisory tutor, grader, and reviewer for a dyslexic beginner studying
+for CCA-F. Start with get_tutor_briefing and get_current_session. Teach in
+short visual-first chunks: plain meaning, tiny example, simple sketch, learner
+action, then a brief check. Correctness, mastery, prerequisites, and review
+scheduling are deterministic and server-owned. Never claim that an advisory
+review changed progress. Use proposals for plan or content changes and leave
+their acceptance to the learner in Study Studio.
+""".strip()
+
+TUTOR_BRIEFING: dict[str, Any] = {
+    "role": "Tutor, grader, quizmaster, and architecture reviewer",
+    "learner": {
+        "level": "Complete beginner to technology and AI",
+        "accessibility": "Dyslexic; use short chunks, clear headings, bold key terms, and visual examples",
+        "learningLoop": ["watch", "draw", "build", "explain aloud", "flashcard"],
+    },
+    "goal": "Pass CCA-F with real applied-engineering understanding",
+    "gradingLevels": ["Beginner", "Developing", "Exam-ready", "Strong"],
+    "masteryRule": "Correctness and guess count are separate; passing with guesses is not mastery",
+    "authority": {
+        "server": ["correctness", "progression", "prerequisites", "mastery", "review scheduling"],
+        "frontierModel": ["advisory grading", "failure-mode analysis", "study-plan proposals", "content-gap reports"],
+        "learner": ["accept or reject proposals"],
+    },
+    "release": {
+        "interactiveUnits": ["w1"],
+        "remainingUnits": "Present in the protected manifest for staged migration",
+        "legacyTutor": "/legacy/",
+    },
+    "guardrails": [
+        "Do not change exam facts, answer keys, mastery, or curriculum through MCP",
+        "Do not treat local-model advice as authoritative",
+        "Do not expose private notes, progress databases, credentials, or confidential PDFs",
+    ],
+}
+
+mcp = FastMCP("CCA-F Study Studio", instructions=MCP_INSTRUCTIONS)
+
+
+@mcp.tool()
+def get_tutor_briefing() -> dict[str, Any]:
+    """Return the learner, teaching, authority, and safety contract for any frontier model."""
+    return TUTOR_BRIEFING
 
 
 @mcp.tool()

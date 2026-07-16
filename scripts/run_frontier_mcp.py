@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""Launch the Study Studio stdio MCP server from its fast local runtime."""
+
+from __future__ import annotations
+
+import os
+import sys
+
+from start_studio import APP, DATA, REQUIREMENTS, VENV, file_digest, sync_app
+
+
+def fail(message: str) -> int:
+    print(message, file=sys.stderr, flush=True)
+    return 2
+
+
+def main() -> int:
+    runtime = VENV / "bin" / "python"
+    marker = VENV / ".requirements-sha256"
+    expected = file_digest(REQUIREMENTS)
+    installed = marker.read_text(encoding="utf-8").strip() if marker.is_file() else ""
+    if not runtime.is_file() or installed != expected:
+        return fail("Study Studio runtime is not ready. Launch 'Start CCA-F Study Studio.command' once, then reconnect the MCP server.")
+
+    try:
+        sync_app()
+    except OSError as error:
+        return fail(f"Could not refresh the Study Studio MCP app: {error}")
+
+    environment = os.environ.copy()
+    existing_path = environment.get("PYTHONPATH")
+    environment["PYTHONPATH"] = str(APP) if not existing_path else f"{APP}{os.pathsep}{existing_path}"
+    environment["CCA_STUDIO_DATA_DIR"] = str(DATA)
+    os.execve(
+        str(runtime),
+        [str(runtime), "-m", "studio_server.mcp_server"],
+        environment,
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
