@@ -43,12 +43,23 @@ test("Studio completes W1 without copy and paste", async ({ page }) => {
 });
 
 test("Studio reflows at Mac split-view widths", async ({ page }) => {
-  for (const width of [800, 1024, 1440, 1728]) {
+  for (const width of [800, 1024, 1262, 1440, 1728]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(STUDIO);
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-    expect(overflow, `horizontal overflow at ${width}px`).toBe(false);
+    const homeOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(homeOverflow, `home overflow at ${width}px`).toBe(false);
     await expect(page.getByRole("main")).toBeVisible();
+
+    await page.goto(`${STUDIO}#/session`);
+    const lessonOverflow = await page.evaluate(() => {
+      const frame = document.querySelector(".path-visual");
+      return {
+        document: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        pathFrame: frame ? frame.scrollWidth > frame.clientWidth + 1 : true
+      };
+    });
+    expect(lessonOverflow.document, `lesson overflow at ${width}px`).toBe(false);
+    expect(lessonOverflow.pathFrame, `path frame overflow at ${width}px`).toBe(false);
   }
 });
 
