@@ -18,13 +18,21 @@ test("Studio reflows at Mac split-view widths", async ({ page }) => {
       if (!frame) {
         throw new Error("Path frame missing");
       }
+      const splitLabels = Array.from(document.querySelectorAll(".path-node:not(.path-node--file) > span"))
+        .filter((label) => {
+          const lineHeight = Number.parseFloat(getComputedStyle(label).lineHeight);
+          return Number.isFinite(lineHeight) && label.getBoundingClientRect().height > lineHeight * 1.5;
+        })
+        .map((label) => label.textContent);
       return {
         document: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-        pathFrame: frame.scrollWidth > frame.clientWidth + 1
+        pathFrame: frame.scrollWidth > frame.clientWidth + 1,
+        splitLabels
       };
     });
     expect(lessonOverflow.document, `lesson overflow at ${width}px`).toBe(false);
     expect(lessonOverflow.pathFrame, `path frame overflow at ${width}px`).toBe(false);
+    expect(lessonOverflow.splitLabels, `ordinary path labels split at ${width}px`).toEqual([]);
   }
 });
 

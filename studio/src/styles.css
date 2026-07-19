@@ -149,11 +149,12 @@ code { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; back
 .scene-heading { max-width: 65ch; margin-bottom: 26px; }
 .scene-heading > p { color: var(--muted); }
 .path-visual { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1.2fr); align-items: center; gap: 10px; margin: 0 0 26px; padding: 26px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
-.path-node { display: grid; min-width: 0; justify-items: center; min-height: 126px; align-content: center; padding: 14px 10px; border: 2px solid var(--line); border-radius: 7px; background: var(--bg); text-align: center; }
+.path-node { display: grid; min-width: 0; justify-items: center; min-height: 126px; align-content: center; padding: 14px 6px; border: 2px solid var(--line); border-radius: 7px; background: var(--bg); text-align: center; }
 .path-node svg { margin-bottom: 7px; color: var(--yellow); }
 .path-node--file { border-color: var(--accent); background: var(--accent-soft); }
 .path-node--file svg { color: var(--accent); }
-.path-node span { max-width: 100%; overflow-wrap: anywhere; font-weight: 700; }
+.path-node span { max-width: 100%; overflow-wrap: normal; word-break: normal; font-size: 0.9rem; font-weight: 700; }
+.path-node--file span { overflow-wrap: anywhere; }
 .path-node small { max-width: 100%; overflow-wrap: anywhere; color: var(--muted); font-size: 0.7rem; }
 .path-arrow { color: var(--muted); }
 .path-visual figcaption { grid-column: 1 / -1; margin-top: 8px; color: var(--muted); font-size: 0.78rem; text-align: center; }
