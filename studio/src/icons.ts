@@ -26,6 +26,7 @@ export { default as Headphones } from "lucide-react/dist/esm/icons/headphones.mj
 export { default as HelpCircle } from "lucide-react/dist/esm/icons/help-circle.mjs";
 export { default as Home } from "lucide-react/dist/esm/icons/home.mjs";
 export { default as Info } from "lucide-react/dist/esm/icons/info.mjs";
+export { default as Inbox } from "lucide-react/dist/esm/icons/inbox.mjs";
 export { default as Library } from "lucide-react/dist/esm/icons/library.mjs";
 export { default as Lightbulb } from "lucide-react/dist/esm/icons/lightbulb.mjs";
 export { default as LinkIcon } from "lucide-react/dist/esm/icons/link.mjs";
@@ -33,6 +34,8 @@ export { default as LoaderCircle } from "lucide-react/dist/esm/icons/loader-circ
 export { default as LockKeyhole } from "lucide-react/dist/esm/icons/lock-keyhole.mjs";
 export { default as Mic } from "lucide-react/dist/esm/icons/mic.mjs";
 export { default as MonitorUp } from "lucide-react/dist/esm/icons/monitor-up.mjs";
+export { default as Download } from "lucide-react/dist/esm/icons/download.mjs";
+export { default as Upload } from "lucide-react/dist/esm/icons/upload.mjs";
 export { default as PanelLeftClose } from "lucide-react/dist/esm/icons/panel-left-close.mjs";
 export { default as PanelLeftOpen } from "lucide-react/dist/esm/icons/panel-left-open.mjs";
 export { default as PanelRightClose } from "lucide-react/dist/esm/icons/panel-right-close.mjs";

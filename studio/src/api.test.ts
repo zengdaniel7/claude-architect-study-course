@@ -28,6 +28,8 @@ describe("API initialization", () => {
     const result = await initializeApi();
     expect(result.demo).toBe(true);
     expect(result.session.progressPercent).toBe(0);
+    const attempt = await (await import("./api")).submitAttempt(result.session, "learn", { understoodPath: true });
+    expect(attempt.feedback.message).toMatch(/not saved/i);
   });
 
   it("reconciles a timed-out attempt with its saved receipt before retrying", async () => {

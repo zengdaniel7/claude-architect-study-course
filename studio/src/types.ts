@@ -109,3 +109,35 @@ export interface ReviewRatingResponse {
   stateVersion: number;
   replayed?: boolean;
 }
+
+export interface BackupInspection {
+  importToken: string;
+  valid: boolean;
+  schemaVersion: number;
+  databaseId: string;
+  stateDigest: string;
+  warning: string;
+}
+
+export interface MigrationReport {
+  status?: "pending_confirmation" | "imported" | "not_found";
+  sourceFound: boolean;
+  sourceSha256?: string;
+  sourceUnchanged: boolean;
+  w1CandidateChecks?: boolean[];
+}
+
+export interface FrontierInboxItem {
+  id: string;
+  kind: string;
+  summary: string;
+  status: "pending" | "accepted" | "rejected";
+  createdAt: string;
+  decidedAt?: string | null;
+  advisoryOnly: true;
+}
+
+export interface FrontierInboxDetail extends FrontierInboxItem {
+  payload: Record<string, unknown>;
+  decision?: { id: string; decision: "accepted" | "rejected"; note?: string | null; decided_at: string } | null;
+}

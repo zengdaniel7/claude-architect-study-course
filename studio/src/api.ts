@@ -1,6 +1,6 @@
 import { buildStages, demoSession } from "./content";
 import { PUBLIC_PREVIEW } from "./preview";
-import type { AttemptResponse, ReviewCard, ReviewRating, ReviewRatingResponse, SessionState, StageId, TutorResult } from "./types";
+import type { AttemptResponse, BackupInspection, FrontierInboxDetail, FrontierInboxItem, MigrationReport, ReviewCard, ReviewRating, ReviewRatingResponse, SessionState, StageId, TutorResult } from "./types";
 
 let instanceToken = "";
 let demoMode = false;
@@ -19,6 +19,11 @@ class ApiRequestError extends Error {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const response = await requestResponse(path, init);
+  return response.json() as Promise<T>;
+}
+
+async function requestResponse(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
   if (instanceToken) headers.set("X-CCA-Instance", instanceToken);
@@ -29,11 +34,16 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   try {
     const response = await fetch(path, { ...init, headers, signal: controller.signal });
     if (!response.ok) throw new ApiRequestError(response.status, `${response.status} ${response.statusText}`);
-    return response.json() as Promise<T>;
+    return response;
   } finally {
     window.clearTimeout(timeout);
     init.signal?.removeEventListener("abort", forwardAbort);
   }
+}
+
+export async function fetchCurrentSession(): Promise<SessionState> {
+  if (demoMode) return demoSession();
+  return request<SessionState>("/api/session/current");
 }
 
 export async function initializeApi(): Promise<{ session: SessionState; demo: boolean; ollama: OllamaState }> {
@@ -109,7 +119,7 @@ export async function submitAttempt(
     feedback: {
       tone: "success",
       title: isDone ? "W1 complete" : "Saved",
-      message: isDone ? "Your demo lesson is complete." : "Your work is saved in this preview session."
+      message: isDone ? "Your preview lesson is complete. Progress is not saved." : "This preview action is temporary. Progress is not saved."
     },
     attemptId,
     stateVersion: next.stateVersion,
@@ -210,6 +220,62 @@ export async function rateReviewCard(
     },
     stateVersion: nextSession.stateVersion
   };
+}
+
+function requireLocalMode() {
+  if (demoMode) throw new Error("This control is available only in local mode.");
+}
+
+export async function downloadBackup(): Promise<{ blob: Blob; filename: string }> {
+  requireLocalMode();
+  const response = await requestResponse("/api/backups/export");
+  const disposition = response.headers.get("content-disposition") ?? "";
+  const filename = disposition.match(/filename=\"?([^\";]+)\"?/)?.[1] ?? "ccaf-study-studio.ccaf-backup";
+  return { blob: await response.blob(), filename };
+}
+
+export async function inspectBackup(file: File): Promise<BackupInspection> {
+  requireLocalMode();
+  return request<BackupInspection>("/api/backups/import/inspect", {
+    method: "POST",
+    headers: { "Content-Type": "application/octet-stream" },
+    body: file
+  });
+}
+
+export async function commitBackup(importToken: string): Promise<{ imported: boolean; databaseId: string; stateDigest: string }> {
+  requireLocalMode();
+  return request("/api/backups/import/commit", { method: "POST", body: JSON.stringify({ importToken }) });
+}
+
+export async function fetchMigrationReport(): Promise<MigrationReport> {
+  requireLocalMode();
+  return request<MigrationReport>("/api/migration/report");
+}
+
+export async function commitLegacyImport(sourceSha256: string): Promise<{ imported: boolean; changed: boolean; session: SessionState }> {
+  requireLocalMode();
+  return request("/api/migration/legacy/commit", { method: "POST", body: JSON.stringify({ sourceSha256 }) });
+}
+
+export async function fetchFrontierInbox(): Promise<FrontierInboxItem[]> {
+  requireLocalMode();
+  const response = await request<{ items: FrontierInboxItem[] }>("/api/frontier/inbox");
+  return response.items;
+}
+
+export async function fetchFrontierInboxDetail(proposalId: string): Promise<FrontierInboxDetail> {
+  requireLocalMode();
+  const response = await request<{ item: FrontierInboxDetail }>(`/api/frontier/inbox/${encodeURIComponent(proposalId)}`);
+  return response.item;
+}
+
+export async function decideProposal(proposalId: string, decision: "accepted" | "rejected") {
+  requireLocalMode();
+  return request<{ proposal: { id: string; status: "accepted" | "rejected"; advisoryOnly: true } }>(`/api/proposals/${encodeURIComponent(proposalId)}/decision`, {
+    method: "POST",
+    body: JSON.stringify({ decision })
+  });
 }
 
 export async function recordContentGap(unitId: string, activityId: string, note: string): Promise<void> {

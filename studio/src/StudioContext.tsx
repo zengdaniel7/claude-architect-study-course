@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { askTutor, cancelTutor, initializeApi, prepareFrontierReview, rateReviewCard as persistReviewCard, recordContentGap, submitAttempt } from "./api";
+import { askTutor, cancelTutor, fetchCurrentSession, initializeApi, prepareFrontierReview, rateReviewCard as persistReviewCard, recordContentGap, submitAttempt } from "./api";
 import type { OllamaState } from "./api";
 import type { AttemptResponse, Feedback, ReviewCard, ReviewRating, ReviewRatingResponse, SessionState, StageId, TutorResult } from "./types";
 
@@ -20,6 +20,7 @@ interface StudioContextValue {
   closeTutor: () => void;
   reportGap: () => Promise<void>;
   clearFeedback: () => void;
+  refreshSession: () => Promise<void>;
   prepareReview: () => Promise<{ prepared: boolean; reviewId?: string; demo?: boolean }>;
 }
 
@@ -213,6 +214,11 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
     }
   }, [session?.stage]);
 
+  const refreshSession = useCallback(async () => {
+    const nextSession = await fetchCurrentSession();
+    setSession(nextSession);
+  }, []);
+
   const value = useMemo<StudioContextValue>(() => ({
     session,
     loading,
@@ -230,8 +236,9 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
     closeTutor,
     reportGap,
     clearFeedback: () => setFeedback(null),
-    prepareReview
-  }), [session, loading, startupError, saving, demo, ollamaAvailable, ollama, feedback, tutorResult, tutorState, completeStage, rateReviewCard, getTutorHelp, closeTutor, reportGap, prepareReview]);
+    prepareReview,
+    refreshSession
+  }), [session, loading, startupError, saving, demo, ollamaAvailable, ollama, feedback, tutorResult, tutorState, completeStage, rateReviewCard, getTutorHelp, closeTutor, reportGap, prepareReview, refreshSession]);
 
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>;
 }

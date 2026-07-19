@@ -5,6 +5,7 @@ import {
   ChevronRight,
   GraduationCap,
   Home,
+  Inbox,
   Library,
   PanelLeftClose,
   PanelLeftOpen,
@@ -29,6 +30,7 @@ export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
   const { session, demo, startupError } = useStudio();
   const location = useLocation();
+  const localMode = !demo && !PUBLIC_PREVIEW;
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -41,8 +43,8 @@ export function AppShell() {
           <span className="brand__mark" aria-hidden="true"><BookOpen size={22} /></span>
           <span className="brand__text"><strong>CCA-F</strong><small>Study Studio</small></span>
         </div>
-        <nav className="sidebar__nav">
-          {links.map(({ to, label, icon: Icon }) => (
+          <nav className="sidebar__nav">
+          {(localMode ? [...links.slice(0, 4), { to: "/frontier", label: "Frontier Inbox", icon: Inbox }, links[4]] : links).map(({ to, label, icon: Icon }) => (
             <NavLink key={to} to={to} end={to === "/"} className={({ isActive }) => isActive ? "nav-item nav-item--active" : "nav-item"} title={collapsed ? label : undefined}>
               <Icon size={21} aria-hidden="true" />
               <span>{label}</span>

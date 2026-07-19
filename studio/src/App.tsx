@@ -3,6 +3,7 @@ import { AppShell } from "./components/organisms/AppShell";
 import { ArchivePage } from "./pages/ArchivePage";
 import { ComponentGalleryPage } from "./pages/ComponentGalleryPage";
 import { CoursePage } from "./pages/CoursePage";
+import { FrontierInboxPage } from "./pages/FrontierInboxPage";
 import { HomePage } from "./pages/HomePage";
 import { LibraryPage } from "./pages/LibraryPage";
 import { ReviewHubPage } from "./pages/ReviewHubPage";
@@ -19,6 +20,7 @@ export function App() {
         <Route path="review" element={<ReviewHubPage />} />
         <Route path="archive" element={<ArchivePage />} />
         <Route path="library" element={<LibraryPage />} />
+        <Route path="frontier" element={<FrontierInboxPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="components" element={<ComponentGalleryPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

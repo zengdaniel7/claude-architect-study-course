@@ -7,6 +7,7 @@ test("Studio reflows at Mac split-view widths", async ({ page }) => {
   for (const width of [800, 1024, 1262, 1440, 1728]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(STUDIO);
+    await expect(page.getByRole("link", { name: "Frontier Inbox" })).toBeVisible();
     const homeOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
     expect(homeOverflow, `home overflow at ${width}px`).toBe(false);
     await expect(page.getByRole("main")).toBeVisible();
