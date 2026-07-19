@@ -3,6 +3,31 @@ const { test, expect } = require("@playwright/test");
 const STUDIO = `${process.env.CCA_STUDIO_E2E_URL || "http://127.0.0.1:8765"}/`;
 const answers = [2, 1, 0, 0, 0];
 
+test("Studio reflows at Mac split-view widths", async ({ page }) => {
+  for (const width of [800, 1024, 1262, 1440, 1728]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(STUDIO);
+    const homeOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(homeOverflow, `home overflow at ${width}px`).toBe(false);
+    await expect(page.getByRole("main")).toBeVisible();
+
+    await page.goto(`${STUDIO}#/session`);
+    await expect(page.locator(".path-visual"), `path frame missing at ${width}px`).toBeVisible();
+    const lessonOverflow = await page.evaluate(() => {
+      const frame = document.querySelector(".path-visual");
+      if (!frame) {
+        throw new Error("Path frame missing");
+      }
+      return {
+        document: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        pathFrame: frame.scrollWidth > frame.clientWidth + 1
+      };
+    });
+    expect(lessonOverflow.document, `lesson overflow at ${width}px`).toBe(false);
+    expect(lessonOverflow.pathFrame, `path frame overflow at ${width}px`).toBe(false);
+  }
+});
+
 test("Studio completes W1 without copy and paste", async ({ page }) => {
   await page.goto(STUDIO);
   await page.getByRole("link", { name: "Continue lesson" }).click();
@@ -40,27 +65,6 @@ test("Studio completes W1 without copy and paste", async ({ page }) => {
   await page.getByRole("button", { name: "Finish review" }).click();
   await expect(page.getByRole("heading", { name: "Files, folders, and plain text complete" })).toBeVisible();
   await expect(page.getByText("100% complete", { exact: true })).toBeVisible();
-});
-
-test("Studio reflows at Mac split-view widths", async ({ page }) => {
-  for (const width of [800, 1024, 1262, 1440, 1728]) {
-    await page.setViewportSize({ width, height: 900 });
-    await page.goto(STUDIO);
-    const homeOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-    expect(homeOverflow, `home overflow at ${width}px`).toBe(false);
-    await expect(page.getByRole("main")).toBeVisible();
-
-    await page.goto(`${STUDIO}#/session`);
-    const lessonOverflow = await page.evaluate(() => {
-      const frame = document.querySelector(".path-visual");
-      return {
-        document: document.documentElement.scrollWidth > document.documentElement.clientWidth,
-        pathFrame: frame ? frame.scrollWidth > frame.clientWidth + 1 : true
-      };
-    });
-    expect(lessonOverflow.document, `lesson overflow at ${width}px`).toBe(false);
-    expect(lessonOverflow.pathFrame, `path frame overflow at ${width}px`).toBe(false);
-  }
 });
 
 test("Studio honors keyboard focus and reduced motion", async ({ page }) => {
