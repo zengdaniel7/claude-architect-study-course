@@ -29,4 +29,41 @@ describe("API initialization", () => {
     expect(result.demo).toBe(true);
     expect(result.session.progressPercent).toBe(0);
   });
+
+  it("reconciles a timed-out attempt with its saved receipt before retrying", async () => {
+    const attemptId = "11111111-1111-4111-8111-111111111111";
+    const session = {
+      unitId: "w1",
+      title: "Files, folders, and plain text",
+      stage: "learn" as const,
+      stageIndex: 0,
+      stages: [],
+      progressPercent: 0,
+      dueReviews: 0,
+      weeklyTopThree: [],
+      legacyImported: false,
+      stateVersion: 4,
+      manifestHash: "a".repeat(64)
+    };
+    const receipt = {
+      session,
+      feedback: { tone: "success" as const, title: "Saved", message: "Recorded" },
+      attemptId,
+      stateVersion: 5,
+      manifestHash: "a".repeat(64)
+    };
+    const fetch = vi.fn()
+      .mockRejectedValueOnce(new DOMException("timed out", "AbortError"))
+      .mockResolvedValueOnce({ ok: true, json: async () => receipt });
+    vi.stubGlobal("fetch", fetch);
+    const { submitAttempt } = await import("./api");
+
+    await expect(submitAttempt(session, "learn", { understoodPath: true }, undefined, attemptId)).resolves.toEqual(receipt);
+    expect(JSON.parse(fetch.mock.calls[0][1].body)).toMatchObject({
+      attemptId,
+      clientStateVersion: 4,
+      manifestHash: "a".repeat(64)
+    });
+    expect(fetch.mock.calls[1][0]).toBe(`/api/attempts/${attemptId}`);
+  });
 });

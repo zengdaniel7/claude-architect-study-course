@@ -53,6 +53,8 @@ export function demoSession(): SessionState {
       "Explain the file path in your own words"
     ],
     legacyImported: false,
+    stateVersion: 0,
+    manifestHash: "preview",
     mastery: "seen"
   };
 }

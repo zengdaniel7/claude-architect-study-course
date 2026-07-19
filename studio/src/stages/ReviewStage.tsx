@@ -3,55 +3,49 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useStudio } from "../StudioContext";
 import { fetchPendingReview } from "../api";
 import { manifest } from "../content";
-import type { ReviewCard } from "../types";
+import type { ReviewCard, ReviewRating } from "../types";
 import { Button } from "../components/atoms/Button";
 import { useSceneFocus } from "../useSceneFocus";
 
-function loadCards(): ReviewCard[] {
-  try {
-    const saved = JSON.parse(sessionStorage.getItem("ccaf-studio-review-cards") ?? "[]") as ReviewCard[];
-    if (saved.length) return saved;
-  } catch {
-    // Use the source-backed fallback card below.
-  }
+interface PendingRating {
+  cardId: string;
+  rating: ReviewRating;
+  ratingId: string;
+  elapsedMs: number;
+}
+
+function previewCards(): ReviewCard[] {
   const fallback = manifest.cards.w1?.[0] ?? ["File", "One saved item, such as tiny-order.json."];
-  return [{ id: "w1-fallback", front: `What is a ${fallback[0].toLowerCase()}?`, back: fallback[1], source: "Lesson concept" }];
+  return [{ id: "w1-preview", front: `What is a ${fallback[0].toLowerCase()}?`, back: fallback[1], source: "Lesson concept" }];
 }
 
 export function ReviewStage() {
-  const { completeStage, demo, saving } = useStudio();
-  const initial = useMemo(loadCards, []);
+  const { rateReviewCard, demo, saving } = useStudio();
+  const initial = useMemo(previewCards, []);
   const [queue, setQueue] = useState(initial);
-  const [reviewId, setReviewId] = useState(() => sessionStorage.getItem("ccaf-studio-review-id") ?? "");
+  const [reviewId, setReviewId] = useState("");
   const [loadingCards, setLoadingCards] = useState(!demo);
   const [loadError, setLoadError] = useState("");
-  const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
-  const [grade, setGrade] = useState<"again" | "hard" | "good" | null>(null);
+  const [grade, setGrade] = useState<ReviewRating | null>(null);
+  const [pendingRating, setPendingRating] = useState<PendingRating | null>(null);
   const [submitState, setSubmitState] = useState<"idle" | "success" | "error">("idle");
   const submitStatusRef = useRef<HTMLElement>(null);
-  const card = queue[index];
-  useSceneFocus(`review-${index}`);
+  const cardStartedAt = useRef(Date.now());
+  const card = queue[0];
+  useSceneFocus(`review-${card?.id ?? "empty"}-${card?.repetitions ?? 0}`);
 
   useEffect(() => {
     if (demo) {
+      setReviewId("demo-review");
       setLoadingCards(false);
       return;
     }
     let active = true;
     fetchPendingReview().then((review) => {
       if (!active) return;
-      if (review?.cards.length) {
-        setQueue(review.cards);
-        setIndex(0);
-        setRevealed(false);
-        setGrade(null);
-        setReviewId(review.reviewId);
-        sessionStorage.setItem("ccaf-studio-review-cards", JSON.stringify(review.cards));
-        sessionStorage.setItem("ccaf-studio-review-id", review.reviewId);
-      } else {
-        setLoadError("The saved review card could not be found. Restart Study Studio, then return here.");
-      }
+      setQueue(review?.cards ?? []);
+      setReviewId(review?.reviewId ?? "");
       setLoadingCards(false);
     }).catch(() => {
       if (!active) return;
@@ -62,42 +56,46 @@ export function ReviewStage() {
   }, [demo]);
 
   useEffect(() => {
+    cardStartedAt.current = Date.now();
+  }, [card?.id, card?.repetitions]);
+
+  useEffect(() => {
     if (submitState !== "idle") submitStatusRef.current?.focus({ preventScroll: true });
   }, [submitState]);
 
-  async function next() {
-    if (!grade || !card) return;
-    let nextQueue = queue;
-    if (grade === "again") nextQueue = [...queue, card];
-    setQueue(nextQueue);
-    if (index < nextQueue.length - 1) {
-      setIndex((value) => value + 1);
-      setRevealed(false);
-      setGrade(null);
+  async function saveRating() {
+    if (!grade || !card || !reviewId) return;
+    const request = pendingRating?.cardId === card.id && pendingRating.rating === grade
+      ? pendingRating
+      : {
+          cardId: card.id,
+          rating: grade,
+          ratingId: crypto.randomUUID(),
+          elapsedMs: Math.min(3_600_000, Math.max(0, Date.now() - cardStartedAt.current))
+        };
+    setPendingRating(request);
+    setSubmitState("idle");
+    const response = await rateReviewCard(reviewId, card.id, request.rating, request.elapsedMs, request.ratingId, queue);
+    if (!response) {
+      setSubmitState("error");
       return;
     }
-    try {
-      const response = await completeStage("review", { reviewId: reviewId || "demo-review", reviewed: nextQueue.length, finalGrade: grade });
-      if (response) {
-        sessionStorage.removeItem("ccaf-studio-review-cards");
-        sessionStorage.removeItem("ccaf-studio-review-id");
-        setSubmitState("success");
-      } else {
-        setSubmitState("error");
-      }
-    } catch {
-      setSubmitState("error");
-    }
+    setQueue(response.queue);
+    setRevealed(false);
+    setGrade(null);
+    setPendingRating(null);
+    if (response.reviewComplete) setSubmitState("success");
   }
 
   if (loadingCards) return <div className="loading-view" role="status">Loading your saved review card…</div>;
-  if (loadError && !demo) return <div className="empty-state" role="status"><h1>Review is still saved</h1><p>{loadError}</p></div>;
+  if (loadError && !demo) return <div className="empty-state" role="alert"><h1>Review is still saved</h1><p>{loadError}</p></div>;
+  if (!card && submitState === "success") return <section ref={submitStatusRef} className="review-submit-status review-submit-status--success" role="status" tabIndex={-1}><strong>Review saved.</strong><span>The saved queue is complete.</span></section>;
   if (!card) return <div className="empty-state" role="status"><h1>No review card is due</h1><p>Return to Home and continue your course.</p></div>;
-  const actionLabel = grade === "again" ? "Review again" : index === queue.length - 1 ? "Finish review" : "Next card";
+  const retrying = Boolean(pendingRating);
   return (
     <section className="lesson-scene review-scene" aria-labelledby="review-title">
       <div className="scene-heading">
-        <span className="eyebrow">Card {index + 1} of {queue.length}</span>
+        <span className="eyebrow">{queue.length} card{queue.length === 1 ? "" : "s"} due</span>
         <h1 id="review-title">Review one idea</h1>
         <p>Say your answer before revealing the back.</p>
       </div>
@@ -120,11 +118,11 @@ export function ReviewStage() {
       )}
 
       <div className="scene-actionbar">
-        <p>{revealed ? grade === "again" ? "This card will repeat now." : "Choose a rating, then continue." : "Reveal only after trying to answer."}</p>
-        {revealed ? <Button kind="primary" icon={grade === "again" || index === queue.length - 1 ? <RotateCcw size={18} /> : <ArrowRight size={18} />} disabled={!grade || saving || submitState === "success"} onClick={() => void next()}>{saving ? "Saving…" : actionLabel}</Button> : null}
+        <p>{revealed ? grade === "again" ? "This card will repeat in the saved queue." : "Choose a rating, then save it." : "Reveal only after trying to answer."}</p>
+        {revealed ? <Button kind="primary" icon={grade === "again" ? <RotateCcw size={18} /> : <ArrowRight size={18} />} disabled={!grade || saving || submitState === "success"} onClick={() => void saveRating()}>{saving ? "Saving…" : retrying ? "Retry rating" : "Save rating"}</Button> : null}
       </div>
-      {submitState === "success" ? <section ref={submitStatusRef} className="review-submit-status review-submit-status--success" role="status" tabIndex={-1}><strong>Review saved.</strong><span>Opening your W1 archive.</span></section> : null}
-      {submitState === "error" ? <section ref={submitStatusRef} className="review-submit-status review-submit-status--error" role="alert" tabIndex={-1}><strong>Review was not saved.</strong><span>Your rating is still selected. Try again.</span></section> : null}
+      {submitState === "success" ? <section ref={submitStatusRef} className="review-submit-status review-submit-status--success" role="status" tabIndex={-1}><strong>Review saved.</strong><span>The saved queue is complete.</span></section> : null}
+      {submitState === "error" ? <section ref={submitStatusRef} className="review-submit-status review-submit-status--error" role="alert" tabIndex={-1}><strong>Rating was not saved.</strong><span>Your selected rating is ready to retry.</span></section> : null}
     </section>
   );
 }

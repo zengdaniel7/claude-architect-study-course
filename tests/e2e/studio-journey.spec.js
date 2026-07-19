@@ -83,7 +83,13 @@ test("Studio completes W1 without copy and paste", async ({ page }) => {
 
   await page.getByRole("button", { name: "Show answer" }).click();
   await page.getByLabel("Got it").check();
-  await page.getByRole("button", { name: "Finish review" }).click();
+  const ratingRequest = page.waitForRequest(/\/api\/reviews\/[^/]+\/cards\/[^/]+$/);
+  await page.getByRole("button", { name: "Save rating" }).click();
+  const request = await ratingRequest;
+  const rating = request.postDataJSON();
+  expect(rating).toMatchObject({ rating: "good" });
+  expect(rating.ratingId).toMatch(/^[0-9a-f-]{36}$/);
+  expect(rating.elapsedMs).toEqual(expect.any(Number));
   await expect(page.getByRole("heading", { name: "Files, folders, and plain text complete" })).toBeVisible();
   await page.getByRole("link", { name: "Open W1 archive" }).click();
   await expect(page.getByRole("heading", { name: "W1 archive" })).toBeVisible();

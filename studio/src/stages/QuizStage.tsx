@@ -2,7 +2,7 @@ import { ArrowRight, CheckCircle2, HelpCircle, XCircle } from "../icons";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useStudio } from "../StudioContext";
 import { manifest } from "../content";
-import type { Confidence, ReviewCard } from "../types";
+import type { Confidence } from "../types";
 import { Button } from "../components/atoms/Button";
 import { useSceneFocus } from "../useSceneFocus";
 
@@ -45,12 +45,6 @@ export function QuizStage() {
       setChecked(false);
       return;
     }
-    const reviewCards: ReviewCard[] = nextAnswers.flatMap((answer, answerIndex) => {
-      if (answer.correct && answer.confidence !== "guess") return [];
-      const source = questions[answerIndex];
-      return [{ id: `w1-${answerIndex}`, front: source.q, back: `${source.opts[source.ans]} — ${source.why}`, source: answer.correct ? "Correct guess" : "Missed question" }];
-    });
-    sessionStorage.setItem("ccaf-studio-review-cards", JSON.stringify(reviewCards));
     await completeStage("quiz", {
       answers: nextAnswers.map((answer, answerIndex) => ({ choice: answer.choice, confidence: answer.confidence, questionIndex: answerIndex }))
     });

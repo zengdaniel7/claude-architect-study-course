@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { askTutor, cancelTutor, initializeApi, prepareFrontierReview, recordContentGap, submitAttempt } from "./api";
+import { askTutor, cancelTutor, initializeApi, prepareFrontierReview, rateReviewCard as persistReviewCard, recordContentGap, submitAttempt } from "./api";
 import type { OllamaState } from "./api";
-import type { AttemptResponse, Feedback, SessionState, StageId, TutorResult } from "./types";
+import type { AttemptResponse, Feedback, ReviewCard, ReviewRating, ReviewRatingResponse, SessionState, StageId, TutorResult } from "./types";
 
 interface StudioContextValue {
   session: SessionState | null;
@@ -15,6 +15,7 @@ interface StudioContextValue {
   tutorResult: TutorResult | null;
   tutorState: "off" | "waking" | "thinking" | "ready" | "error";
   completeStage: (stage: StageId, payload: Record<string, unknown>, confidence?: string) => Promise<AttemptResponse | null>;
+  rateReviewCard: (reviewId: string, cardId: string, rating: ReviewRating, elapsedMs: number, ratingId: string, queue: ReviewCard[]) => Promise<ReviewRatingResponse | null>;
   getTutorHelp: (mode: "hint" | "simplify" | "classify", learnerText?: string) => Promise<void>;
   closeTutor: () => void;
   reportGap: () => Promise<void>;
@@ -37,6 +38,7 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
   const [tutorState, setTutorState] = useState<StudioContextValue["tutorState"]>("off");
   const activeTutor = useRef<{ turnId: string; controller: AbortController } | null>(null);
   const savingRef = useRef(false);
+  const pendingAttempt = useRef<{ key: string; attemptId: string } | null>(null);
 
   useEffect(() => {
     document.documentElement.dataset.largeText = localStorage.getItem("ccaf-studio-large-text") === "on" ? "true" : "false";
@@ -67,10 +69,14 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
   const completeStage = useCallback(async (stage: StageId, payload: Record<string, unknown>, confidence?: string) => {
     if (!session) throw new Error("Session is not ready.");
     if (savingRef.current) return null;
+    const key = JSON.stringify({ stage, payload, confidence, stateVersion: session.stateVersion, manifestHash: session.manifestHash });
+    const attemptId = pendingAttempt.current?.key === key ? pendingAttempt.current.attemptId : crypto.randomUUID();
+    pendingAttempt.current = { key, attemptId };
     savingRef.current = true;
     setSaving(true);
     try {
-      const response = await submitAttempt(session, stage, payload, confidence);
+      const response = await submitAttempt(session, stage, payload, confidence, attemptId);
+      pendingAttempt.current = null;
       setSession(response.session);
       setFeedback(response.feedback);
       return response;
@@ -78,8 +84,31 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
       setFeedback({
         tone: "repair",
         title: "Not saved yet",
-        message: "Your work is still on this screen. Check that Study Studio is running, then try again.",
+        message: "Your work is still on this screen. Study Studio checked its saved receipt before offering another try.",
         nextAction: stage
+      });
+      return null;
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
+    }
+  }, [session]);
+
+  const rateReviewCard = useCallback(async (reviewId: string, cardId: string, rating: ReviewRating, elapsedMs: number, ratingId: string, queue: ReviewCard[]) => {
+    if (!session || savingRef.current) return null;
+    savingRef.current = true;
+    setSaving(true);
+    try {
+      const response = await persistReviewCard(session, reviewId, cardId, rating, elapsedMs, ratingId, queue);
+      setSession(response.session);
+      setFeedback(response.feedback);
+      return response;
+    } catch {
+      setFeedback({
+        tone: "repair",
+        title: "Rating not saved yet",
+        message: "Your selected rating is still ready to retry.",
+        nextAction: "review"
       });
       return null;
     } finally {
@@ -196,12 +225,13 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
     tutorResult,
     tutorState,
     completeStage,
+    rateReviewCard,
     getTutorHelp,
     closeTutor,
     reportGap,
     clearFeedback: () => setFeedback(null),
     prepareReview
-  }), [session, loading, startupError, saving, demo, ollamaAvailable, ollama, feedback, tutorResult, tutorState, completeStage, getTutorHelp, closeTutor, reportGap, prepareReview]);
+  }), [session, loading, startupError, saving, demo, ollamaAvailable, ollama, feedback, tutorResult, tutorState, completeStage, rateReviewCard, getTutorHelp, closeTutor, reportGap, prepareReview]);
 
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>;
 }

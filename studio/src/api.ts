@@ -1,6 +1,6 @@
 import { buildStages, demoSession } from "./content";
 import { PUBLIC_PREVIEW } from "./preview";
-import type { AttemptResponse, ReviewCard, SessionState, StageId, TutorResult } from "./types";
+import type { AttemptResponse, ReviewCard, ReviewRating, ReviewRatingResponse, SessionState, StageId, TutorResult } from "./types";
 
 let instanceToken = "";
 let demoMode = false;
@@ -12,6 +12,12 @@ export interface OllamaState {
 
 let initialization: Promise<{ session: SessionState; demo: boolean; ollama: OllamaState }> | null = null;
 
+class ApiRequestError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message);
+  }
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = new Headers(init.headers);
   if (init.body && !headers.has("Content-Type")) headers.set("Content-Type", "application/json");
@@ -22,7 +28,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   init.signal?.addEventListener("abort", forwardAbort, { once: true });
   try {
     const response = await fetch(path, { ...init, headers, signal: controller.signal });
-    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    if (!response.ok) throw new ApiRequestError(response.status, `${response.status} ${response.statusText}`);
     return response.json() as Promise<T>;
   } finally {
     window.clearTimeout(timeout);
@@ -59,13 +65,33 @@ export async function submitAttempt(
   session: SessionState,
   stage: StageId,
   payload: Record<string, unknown>,
-  confidence?: string
+  confidence?: string,
+  attemptId = crypto.randomUUID()
 ): Promise<AttemptResponse> {
   if (!demoMode) {
-    return request<AttemptResponse>("/api/attempts", {
-      method: "POST",
-      body: JSON.stringify({ unitId: session.unitId, stage, confidence, payload })
-    });
+    try {
+      return await request<AttemptResponse>("/api/attempts", {
+        method: "POST",
+        body: JSON.stringify({
+          unitId: session.unitId,
+          stage,
+          confidence,
+          payload,
+          attemptId,
+          clientStateVersion: session.stateVersion,
+          manifestHash: session.manifestHash
+        })
+      });
+    } catch (error) {
+      if (!isAmbiguousRequestFailure(error)) throw error;
+      try {
+        const receipt = await fetchAttemptReceipt(attemptId);
+        if (receipt) return receipt;
+      } catch {
+        // The original error is more useful if receipt reconciliation also cannot reach the server.
+      }
+      throw error;
+    }
   }
 
   const nextIndex = Math.min(session.stageIndex + 1, 5);
@@ -84,8 +110,24 @@ export async function submitAttempt(
       tone: "success",
       title: isDone ? "W1 complete" : "Saved",
       message: isDone ? "Your demo lesson is complete." : "Your work is saved in this preview session."
-    }
+    },
+    attemptId,
+    stateVersion: next.stateVersion,
+    manifestHash: next.manifestHash
   };
+}
+
+function isAmbiguousRequestFailure(error: unknown) {
+  return error instanceof TypeError || (error instanceof DOMException && error.name === "AbortError");
+}
+
+export async function fetchAttemptReceipt(attemptId: string): Promise<AttemptResponse | null> {
+  try {
+    return await request<AttemptResponse>(`/api/attempts/${encodeURIComponent(attemptId)}`);
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === 404) return null;
+    throw error;
+  }
 }
 
 export async function askTutor(
@@ -123,6 +165,51 @@ export async function fetchPendingReview(): Promise<{ reviewId: string; cards: R
   const response = await request<{ reviews: { id: string; packet?: { cards?: ReviewCard[] } }[] }>("/api/reviews/pending");
   const review = response.reviews.find((item) => Array.isArray(item.packet?.cards) && item.packet.cards.length > 0);
   return review ? { reviewId: review.id, cards: review.packet?.cards ?? [] } : null;
+}
+
+export async function rateReviewCard(
+  session: SessionState,
+  reviewId: string,
+  cardId: string,
+  rating: ReviewRating,
+  elapsedMs: number,
+  ratingId: string,
+  demoQueue: ReviewCard[] = []
+): Promise<ReviewRatingResponse> {
+  if (!demoMode) {
+    return request<ReviewRatingResponse>(`/api/reviews/${encodeURIComponent(reviewId)}/cards/${encodeURIComponent(cardId)}`, {
+      method: "POST",
+      body: JSON.stringify({ ratingId, rating, elapsedMs })
+    });
+  }
+  const card = demoQueue.find((item) => item.id === cardId);
+  const queue = demoQueue.filter((item) => item.id !== cardId);
+  if (rating === "again" && card) queue.push({ ...card, repetitions: (card.repetitions ?? 0) + 1 });
+  const reviewComplete = queue.length === 0;
+  const nextSession: SessionState = reviewComplete ? {
+    ...session,
+    stages: buildStages(6),
+    progressPercent: 100,
+    mastery: "mastered",
+    stateVersion: session.stateVersion + 1
+  } : session;
+  return {
+    ratingId,
+    reviewId,
+    cardId,
+    rating,
+    repeat: rating === "again",
+    reviewComplete,
+    remaining: queue.length,
+    queue,
+    session: nextSession,
+    feedback: {
+      tone: "success",
+      title: reviewComplete ? "Review saved" : rating === "again" ? "Again saved" : "Rating saved",
+      message: reviewComplete ? "Your demo review is complete." : "Your next review card is ready."
+    },
+    stateVersion: nextSession.stateVersion
+  };
 }
 
 export async function recordContentGap(unitId: string, activityId: string, note: string): Promise<void> {

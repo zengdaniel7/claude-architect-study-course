@@ -1,6 +1,7 @@
 export type StageId = "learn" | "draw" | "build" | "teach" | "quiz" | "review";
 export type StageStatus = "complete" | "current" | "upcoming" | "needs-review";
 export type Confidence = "know" | "maybe" | "guess";
+export type ReviewRating = "again" | "hard" | "good";
 
 export interface StageState {
   id: StageId;
@@ -18,6 +19,8 @@ export interface SessionState {
   dueReviews: number;
   weeklyTopThree: string[];
   legacyImported: boolean;
+  stateVersion: number;
+  manifestHash: string;
   mastery?: "seen" | "practiced" | "mastered";
 }
 
@@ -32,6 +35,10 @@ export interface AttemptResponse {
   session: SessionState;
   feedback: Feedback;
   result?: Record<string, unknown>;
+  attemptId: string;
+  stateVersion: number;
+  manifestHash: string;
+  replayed?: boolean;
 }
 
 export interface TutorResult {
@@ -85,4 +92,20 @@ export interface ReviewCard {
   front: string;
   back: string;
   source: string;
+  repetitions?: number;
+}
+
+export interface ReviewRatingResponse {
+  ratingId: string;
+  reviewId: string;
+  cardId: string;
+  rating: ReviewRating;
+  repeat: boolean;
+  reviewComplete: boolean;
+  remaining: number;
+  queue: ReviewCard[];
+  session: SessionState;
+  feedback: Feedback;
+  stateVersion: number;
+  replayed?: boolean;
 }
