@@ -10,6 +10,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+from build_legacy_archive import build_archive, verify_archive
+from release_identity import backend_content_hash, verify_release
+
 
 ROOT = Path(__file__).resolve().parents[1]
 CACHE = Path.home() / "Library" / "Caches" / "CCA-F Study Studio"
@@ -17,6 +20,7 @@ DATA = Path.home() / "Library" / "Application Support" / "CCA-F Study Studio"
 VENV = CACHE / "runtime"
 SITE = CACHE / "site"
 APP = CACHE / "app"
+ARCHIVE = CACHE / "legacy"
 REQUIREMENTS = ROOT / "requirements.txt"
 
 
@@ -61,19 +65,40 @@ def file_digest(path: Path) -> str:
 def metadata_digest(root: Path, files: list[Path]) -> str:
     value = hashlib.sha256()
     for item in sorted(files):
-        stat = item.stat()
         value.update(str(item.relative_to(root)).encode("utf-8"))
-        value.update(f"{stat.st_size}:{stat.st_mtime_ns}".encode("ascii"))
+        value.update(b"\0")
+        value.update(hashlib.sha256(item.read_bytes()).digest())
     return value.hexdigest()
 
 
-def replace_tree(temporary: Path, target: Path) -> None:
+def replace_tree(temporary: Path, target: Path, verifier=None) -> None:
+    """Promote a verified staged directory while retaining the prior release."""
+    if verifier is not None:
+        verifier(temporary)
     previous = target.with_name(f"{target.name}.previous")
-    shutil.rmtree(previous, ignore_errors=True)
-    if target.exists():
-        target.rename(previous)
-    temporary.rename(target)
-    shutil.rmtree(previous, ignore_errors=True)
+    older_previous = target.with_name(f"{target.name}.previous.old")
+    shutil.rmtree(older_previous, ignore_errors=True)
+    if previous.exists():
+        previous.rename(older_previous)
+    moved_previous = False
+    promoted = False
+    try:
+        if target.exists():
+            target.rename(previous)
+            moved_previous = True
+        temporary.rename(target)
+        promoted = True
+        if verifier is not None:
+            verifier(target)
+    except Exception:
+        if promoted and target.exists():
+            shutil.rmtree(target, ignore_errors=True)
+        if not target.exists() and previous.exists():
+            previous.rename(target)
+        if older_previous.exists() and not previous.exists():
+            older_previous.rename(previous)
+        raise
+    shutil.rmtree(older_previous, ignore_errors=True)
 
 
 def ensure_runtime() -> Path:
@@ -101,52 +126,85 @@ def ensure_runtime() -> Path:
     return runtime_python
 
 
-def sync_site() -> None:
-    source = ROOT / "studio" / "dist"
-    files = [item for item in source.rglob("*") if item.is_file()]
+def sync_site(source: Path | None = None, target: Path | None = None) -> dict[str, object]:
+    source = (source or ROOT / "studio" / "dist").resolve()
+    target = (target or SITE).resolve()
     if not (source / "index.html").is_file():
         raise SystemExit("The Studio build is missing. Run `pnpm run studio:build` once, then launch again.")
-    source_hash = metadata_digest(source, files)
-    marker = SITE / ".site-signature"
-    if marker.is_file() and marker.read_text(encoding="utf-8").strip() == source_hash:
-        return
+    try:
+        source_release = verify_release(source, ROOT)
+    except ValueError as error:
+        raise SystemExit(f"Studio build identity is invalid: {error}") from error
+    source_id = str(source_release["releaseId"])
+    try:
+        current_release = verify_release(target, ROOT)
+    except ValueError:
+        current_release = None
+    if current_release and current_release.get("releaseId") == source_id:
+        return current_release
     temporary = CACHE / f"site-{os.getpid()}.tmp"
     shutil.rmtree(temporary, ignore_errors=True)
-    shutil.copytree(source, temporary)
-    (temporary / ".site-signature").write_text(source_hash, encoding="utf-8")
-    replace_tree(temporary, SITE)
+    try:
+        shutil.copytree(source, temporary)
+    except Exception:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    replace_tree(temporary, target, verifier=lambda path: verify_release(path, ROOT))
+    return source_release
 
 
 def sync_app() -> None:
     server = ROOT / "studio_server"
     runner = ROOT / "scripts" / "run_studio_runtime.py"
     manifest = ROOT / "studio" / "src" / "content" / "course-manifest.json"
-    files = [item for item in server.rglob("*.py") if "__pycache__" not in item.parts] + [runner, manifest]
-    source_hash = metadata_digest(ROOT, files)
+    source_hash = backend_content_hash(ROOT)
     marker = APP / ".app-signature"
     if marker.is_file() and marker.read_text(encoding="utf-8").strip() == source_hash:
         return
     temporary = CACHE / f"app-{os.getpid()}.tmp"
     shutil.rmtree(temporary, ignore_errors=True)
-    shutil.copytree(server, temporary / "studio_server", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
-    target_manifest = temporary / "studio" / "src" / "content" / "course-manifest.json"
-    target_manifest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(manifest, target_manifest)
-    shutil.copy2(runner, temporary / "run_studio_runtime.py")
+    try:
+        shutil.copytree(server, temporary / "studio_server", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+        target_manifest = temporary / "studio" / "src" / "content" / "course-manifest.json"
+        target_manifest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(manifest, target_manifest)
+        shutil.copy2(runner, temporary / "run_studio_runtime.py")
+    except Exception:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
     (temporary / ".app-signature").write_text(source_hash, encoding="utf-8")
     replace_tree(temporary, APP)
+
+
+def sync_archive() -> None:
+    temporary = CACHE / f"legacy-{os.getpid()}.tmp"
+    shutil.rmtree(temporary, ignore_errors=True)
+    try:
+        build_archive(ROOT, temporary)
+    except Exception:
+        shutil.rmtree(temporary, ignore_errors=True)
+        raise
+    replace_tree(temporary, ARCHIVE, verifier=verify_archive)
 
 
 def main() -> None:
     runtime_python = ensure_runtime()
     sync_app()
-    sync_site()
+    sync_archive()
+    release = sync_site()
+    app_signature = APP / ".app-signature"
+    if not app_signature.is_file() or app_signature.read_text(encoding="utf-8").strip() != release["backendContentSha256"]:
+        raise SystemExit("Cached Study Studio app identity does not match the verified release. Rebuild the cache and retry.")
     environment = os.environ.copy()
     environment.update({
-        "CCA_STUDIO_SOURCE_ROOT": str(ROOT),
+        "CCA_STUDIO_SOURCE_ROOT": str(ARCHIVE),
         "CCA_STUDIO_APP_DIR": str(APP),
         "CCA_STUDIO_DATA_DIR": str(DATA),
         "CCA_STUDIO_DIST_DIR": str(SITE),
+        "CCA_STUDIO_RELEASE_ID": str(release["releaseId"]),
+        "CCA_STUDIO_APP_ID": str(release["appId"]),
+        "CCA_STUDIO_MANIFEST_HASH": str(release["manifestHash"]),
+        "CCA_STUDIO_BACKEND_HASH": str(release["backendContentSha256"]),
     })
     os.execve(
         str(runtime_python),

@@ -13,12 +13,17 @@ import uvicorn
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+if str(ROOT / "scripts") not in sys.path:
+    sys.path.insert(0, str(ROOT / "scripts"))
 
+from build_legacy_archive import build_archive
 from studio_server.app import create_app
 
 
 if __name__ == "__main__":
     with tempfile.TemporaryDirectory(prefix="ccaf-studio-e2e-") as data:
-        app = create_app(ROOT, Path(data), ROOT / "studio" / "dist")
+        archive = Path(data) / "legacy"
+        build_archive(ROOT, archive)
+        app = create_app(archive, Path(data), ROOT / "studio" / "dist")
         port = int(os.environ.get("CCA_STUDIO_E2E_PORT", "8765"))
         uvicorn.run(app, host="127.0.0.1", port=port, log_level="warning")
