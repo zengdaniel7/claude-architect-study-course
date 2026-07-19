@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle2, RotateCcw } from "../icons";
+import { ArrowRight, CheckCircle2 } from "../icons";
 import { Link } from "react-router-dom";
 import { useStudio } from "../StudioContext";
 import { FeedbackBanner } from "../components/molecules/FeedbackBanner";
@@ -34,10 +34,9 @@ export function SessionPage() {
           <CheckCircle2 size={42} aria-hidden="true" />
           <span className="eyebrow">W1 mastered</span>
           <h1 id="completion-title">Files, folders, and plain text complete</h1>
-          <p>You finished Learn, Draw, Build, Teach, Quiz, and Review. Your saved evidence stays available for a later deep review.</p>
+          <p>You finished Learn, Draw, Build, Teach, Quiz, and Review. Your saved evidence stays available in the W1 archive.</p>
           <div className="completion-actions">
-            <Link className="button button--primary" to="/course"><span>View course map</span><ArrowRight size={18} aria-hidden="true" /></Link>
-            <Link className="button" to="/review"><RotateCcw size={18} aria-hidden="true" /><span>Review queue</span></Link>
+            <Link className="button button--primary" to="/archive"><span>Open W1 archive</span><ArrowRight size={18} aria-hidden="true" /></Link>
           </div>
         </section>
       </div>

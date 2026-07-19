@@ -52,7 +52,7 @@ export function LearnStage() {
 
       <div className="support-row">
         <Button kind="quiet" icon={<Headphones size={19} />} onClick={readAloud}>Read this aloud</Button>
-        <a className="text-link" href={unit.watch[1]?.[0]} target="_blank" rel="noreferrer"><LinkIcon size={17} aria-hidden="true" /> File-extension visual lesson</a>
+        <a className="text-link" href={unit.watch[1]?.[0]} target="_blank" rel="noreferrer"><LinkIcon size={17} aria-hidden="true" /> File-extension visual lesson <span className="new-tab-note">(opens in a new tab)</span></a>
       </div>
 
       <div className="scene-actionbar">

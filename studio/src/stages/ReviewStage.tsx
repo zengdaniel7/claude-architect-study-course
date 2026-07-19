@@ -1,5 +1,5 @@
 import { ArrowRight, RotateCcw } from "../icons";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useStudio } from "../StudioContext";
 import { fetchPendingReview } from "../api";
 import { manifest } from "../content";
@@ -28,6 +28,8 @@ export function ReviewStage() {
   const [index, setIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [grade, setGrade] = useState<"again" | "hard" | "good" | null>(null);
+  const [submitState, setSubmitState] = useState<"idle" | "success" | "error">("idle");
+  const submitStatusRef = useRef<HTMLElement>(null);
   const card = queue[index];
   useSceneFocus(`review-${index}`);
 
@@ -59,6 +61,10 @@ export function ReviewStage() {
     return () => { active = false; };
   }, [demo]);
 
+  useEffect(() => {
+    if (submitState !== "idle") submitStatusRef.current?.focus({ preventScroll: true });
+  }, [submitState]);
+
   async function next() {
     if (!grade || !card) return;
     let nextQueue = queue;
@@ -70,10 +76,17 @@ export function ReviewStage() {
       setGrade(null);
       return;
     }
-    const response = await completeStage("review", { reviewId: reviewId || "demo-review", reviewed: nextQueue.length, finalGrade: grade });
-    if (response) {
-      sessionStorage.removeItem("ccaf-studio-review-cards");
-      sessionStorage.removeItem("ccaf-studio-review-id");
+    try {
+      const response = await completeStage("review", { reviewId: reviewId || "demo-review", reviewed: nextQueue.length, finalGrade: grade });
+      if (response) {
+        sessionStorage.removeItem("ccaf-studio-review-cards");
+        sessionStorage.removeItem("ccaf-studio-review-id");
+        setSubmitState("success");
+      } else {
+        setSubmitState("error");
+      }
+    } catch {
+      setSubmitState("error");
     }
   }
 
@@ -108,8 +121,10 @@ export function ReviewStage() {
 
       <div className="scene-actionbar">
         <p>{revealed ? grade === "again" ? "This card will repeat now." : "Choose a rating, then continue." : "Reveal only after trying to answer."}</p>
-        {revealed ? <Button kind="primary" icon={grade === "again" || index === queue.length - 1 ? <RotateCcw size={18} /> : <ArrowRight size={18} />} disabled={!grade || saving} onClick={() => void next()}>{saving ? "Saving…" : actionLabel}</Button> : null}
+        {revealed ? <Button kind="primary" icon={grade === "again" || index === queue.length - 1 ? <RotateCcw size={18} /> : <ArrowRight size={18} />} disabled={!grade || saving || submitState === "success"} onClick={() => void next()}>{saving ? "Saving…" : actionLabel}</Button> : null}
       </div>
+      {submitState === "success" ? <section ref={submitStatusRef} className="review-submit-status review-submit-status--success" role="status" tabIndex={-1}><strong>Review saved.</strong><span>Opening your W1 archive.</span></section> : null}
+      {submitState === "error" ? <section ref={submitStatusRef} className="review-submit-status review-submit-status--error" role="alert" tabIndex={-1}><strong>Review was not saved.</strong><span>Your rating is still selected. Try again.</span></section> : null}
     </section>
   );
 }

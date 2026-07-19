@@ -1,4 +1,5 @@
 import { buildStages, demoSession } from "./content";
+import { PUBLIC_PREVIEW } from "./preview";
 import type { AttemptResponse, ReviewCard, SessionState, StageId, TutorResult } from "./types";
 
 let instanceToken = "";
@@ -32,7 +33,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 export async function initializeApi(): Promise<{ session: SessionState; demo: boolean; ollama: OllamaState }> {
   if (!initialization) {
     initialization = (async () => {
-      demoMode = false;
+      demoMode = PUBLIC_PREVIEW;
+      if (demoMode) {
+        return { session: demoSession(), demo: true, ollama: { available: false, status: "unavailable", reason: "AI is disabled in preview mode." } };
+      }
       try {
         const bootstrap = await request<{ instanceToken: string; ollama?: OllamaState }>("/api/bootstrap");
         instanceToken = bootstrap.instanceToken;
@@ -44,9 +48,7 @@ export async function initializeApi(): Promise<{ session: SessionState; demo: bo
         };
       } catch (error) {
         instanceToken = "";
-        if (["127.0.0.1", "localhost", "::1"].includes(window.location.hostname)) throw error;
-        demoMode = true;
-        return { session: demoSession(), demo: true, ollama: { available: false, status: "unavailable", reason: "AI is disabled in preview mode." } };
+        throw error;
       }
     })();
   }
@@ -132,6 +134,8 @@ export async function recordContentGap(unitId: string, activityId: string, note:
 }
 
 export async function prepareFrontierReview() {
+  // Frontier Inbox is intentionally not rendered until the backend exposes typed items,
+  // ownership, timestamps, and read-state semantics rather than only packet preparation.
   if (demoMode) return { prepared: false, demo: true };
   return request<{ prepared: boolean; reviewId: string }>("/api/reviews/prepare", { method: "POST" });
 }

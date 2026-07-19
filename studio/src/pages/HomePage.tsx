@@ -26,7 +26,7 @@ export function HomePage() {
           <h1 id="home-title">{session.title}</h1>
           <p>{reviewDue ? `${session.dueReviews} saved card${session.dueReviews === 1 ? " is" : "s are"} ready for a short review.` : mastered ? "All six lesson stages are complete. Your evidence and zero-guess result stay saved." : <>Your next step is <b>{currentLabel}</b>. Completed work stays saved.</>}</p>
         </div>
-        <Link className="button button--primary button--large" to={reviewDue ? "/session" : mastered ? "/course" : "/session"}><span>{reviewDue ? "Start review" : mastered ? "View course map" : "Continue lesson"}</span><ArrowRight size={20} aria-hidden="true" /></Link>
+        <Link className="button button--primary button--large" to={reviewDue ? "/session" : mastered ? "/archive" : "/session"}><span>{reviewDue ? "Start review" : mastered ? "Open W1 archive" : "Continue lesson"}</span><ArrowRight size={20} aria-hidden="true" /></Link>
       </section>
 
       <ProgressRail stages={session.stages} percent={session.progressPercent} />

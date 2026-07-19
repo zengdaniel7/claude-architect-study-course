@@ -88,6 +88,7 @@ code { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; back
 .window-bar__lesson span { max-width: 42ch; overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .window-bar__lesson small { color: var(--muted); font-size: 0.72rem; }
 .legacy-link { justify-self: end; color: var(--muted); font-size: 0.76rem; font-weight: 700; }
+.preview-notice { position: sticky; top: var(--topbar); z-index: 19; padding: 5px 24px; border-bottom: 1px solid #d6aa32; background: var(--yellow-soft); color: #5d4400; font-size: 0.72rem; font-weight: 700; line-height: 1.4; text-align: center; }
 .icon-button { display: inline-grid; place-items: center; width: 40px; height: 40px; flex: 0 0 40px; padding: 0; border: 0; border-radius: 7px; background: transparent; color: var(--ink); cursor: pointer; }
 .icon-button:hover { background: var(--surface); }
 
@@ -181,9 +182,9 @@ code { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; back
 .spin { animation: spin 1s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.feedback { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 22px; padding: 14px 16px; border: 1px solid; border-radius: var(--radius); }
+.feedback { position: fixed; top: calc(var(--topbar) + 12px); right: 20px; z-index: 30; display: flex; align-items: flex-start; width: min(34rem, calc(100vw - var(--sidebar) - 40px)); gap: 10px; margin: 0; padding: 10px 12px; border: 1px solid; border-radius: var(--radius); box-shadow: 0 4px 14px rgba(35, 49, 58, 0.14); }
 .feedback > div { flex: 1; }
-.feedback p { margin: 2px 0 0; }
+.feedback p { margin: 0; font-size: 0.78rem; }
 .feedback--success { border-color: #a9d9bc; background: var(--green-soft); color: #175b36; }
 .feedback--repair { border-color: #e5a9a4; background: var(--red-soft); color: #6e2323; }
 .feedback--info { border-color: #a9c6e5; background: var(--blue-soft); color: #174e7f; }
@@ -254,6 +255,9 @@ code { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; back
 .review-card h2 { max-width: 32ch; margin-top: 10px; font-size: 1.7rem; }
 .review-card__answer { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
 .review-actions { margin-top: 16px; }
+.review-submit-status { display: grid; gap: 2px; margin-top: 14px; padding: 12px 14px; border-left: 4px solid; font-size: 0.82rem; }
+.review-submit-status--success { border-color: var(--green); background: var(--green-soft); color: #175b36; }
+.review-submit-status--error { border-color: var(--red); background: var(--red-soft); color: #6e2323; }
 
 .completion-view { max-width: 65ch; margin: 56px auto 0; padding: 32px 0; border-top: 4px solid var(--green); border-bottom: 1px solid var(--line); }
 .completion-view > svg { margin-bottom: 12px; color: var(--green); }
@@ -275,6 +279,9 @@ code { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; back
 .course-row--complete .course-row__index, .course-row--complete .course-row__state { color: var(--green); }
 .course-row--upcoming { opacity: 0.75; }
 .queue-summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 24px; border: 1px solid var(--line); border-radius: var(--radius); background: white; }
+.archive-summary { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; max-width: 65ch; padding: 20px 0; border-top: 3px solid var(--green); border-bottom: 1px solid var(--line); }
+.archive-summary > svg { color: var(--green); }
+.archive-summary p { margin: 2px 0 0; color: var(--muted); }
 .queue-summary > svg { color: var(--accent); }
 .queue-summary strong { font-size: 1.25rem; }
 .queue-summary p { margin: 3px 0 0; color: var(--muted); }
@@ -300,9 +307,11 @@ html[data-large-text="true"] body { font-size: 23px; }
 html[data-quiet-motion="true"] *, html[data-quiet-motion="true"] *::before, html[data-quiet-motion="true"] *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 
 @media (max-width: 1100px) {
-  :root { --sidebar: 76px; }
-  .brand__text, .nav-item span, .mode-label { display: none; }
-  .nav-item { justify-content: center; padding: 8px; }
+  :root { --sidebar: 176px; }
+  .app-shell--collapsed { --sidebar: 176px; }
+  .app-shell--collapsed .brand__text, .app-shell--collapsed .nav-item span, .app-shell--collapsed .mode-label { display: grid; }
+  .app-shell--collapsed .nav-item { justify-content: flex-start; padding: 8px 10px; }
+  .sidebar__collapse { display: none; }
   .lesson-layout { grid-template-columns: minmax(0, 1fr); }
   .tutor-drawer { position: static; }
   .path-visual { grid-template-columns: 1fr auto 1fr; }
@@ -331,16 +340,21 @@ html[data-quiet-motion="true"] *, html[data-quiet-motion="true"] *::before, html
 }
 
 @media (max-width: 620px) {
-  :root { --sidebar: 64px; --topbar: 58px; }
-  .app-shell--collapsed { --sidebar: 64px; }
-  .sidebar { padding-left: 8px; padding-right: 8px; }
-  .brand { padding-left: 5px; padding-right: 5px; }
-  .brand__mark { width: 38px; }
+  :root { --sidebar: 100%; --topbar: 58px; }
+  .app-shell, .app-shell--collapsed { grid-template-columns: 1fr; }
+  .sidebar { position: static; width: 100%; height: auto; min-height: 0; padding: 8px 14px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .brand { min-height: 42px; padding: 0 0 8px; }
+  .brand__mark { width: 34px; height: 34px; flex-basis: 34px; }
+  .sidebar__nav { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; padding: 8px 0; }
+  .nav-item, .app-shell--collapsed .nav-item { min-height: 42px; gap: 7px; padding: 7px 8px; font-size: 0.74rem; white-space: normal; }
+  .sidebar__footer { display: none; }
   .window-bar { grid-template-columns: 44px minmax(0, 1fr); min-height: var(--topbar); padding: 7px 10px; }
   .window-bar__trail { display: none; }
   .window-bar__lesson { justify-items: start; }
   .window-bar__lesson span { max-width: 18ch; }
   .legacy-link { display: none; }
+  .preview-notice { top: var(--topbar); padding-left: 14px; padding-right: 14px; }
+  .feedback { top: calc(var(--topbar) + 8px); right: 10px; width: calc(100vw - 20px); }
   .studio-main { padding: 20px 14px 64px; }
   .home-focus h1, h1 { font-size: 1.65rem; }
   .progress-rail { padding: 14px; }

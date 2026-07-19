@@ -14,6 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useStudio } from "../../StudioContext";
+import { PREVIEW_NOTICE, PUBLIC_PREVIEW } from "../../preview";
 import { Button } from "../atoms/Button";
 
 const links = [
@@ -50,7 +51,7 @@ export function AppShell() {
         </nav>
         <div className="sidebar__footer">
           {demo ? <span className="mode-label">Preview mode</span> : <span className="mode-label mode-label--local">Local mode</span>}
-          <button className="icon-button" type="button" onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? "Show sidebar labels" : "Collapse sidebar"} title={collapsed ? "Show sidebar labels" : "Collapse sidebar"}>
+          <button className="icon-button sidebar__collapse" type="button" onClick={() => setCollapsed((value) => !value)} aria-label={collapsed ? "Show sidebar labels" : "Collapse sidebar"} title={collapsed ? "Show sidebar labels" : "Collapse sidebar"}>
             {collapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
           </button>
         </div>
@@ -67,6 +68,7 @@ export function AppShell() {
           </div>
           {demo ? <span className="legacy-link">AI-disabled preview</span> : <a className="legacy-link" href="legacy/today.html">Legacy tutor</a>}
         </header>
+        {PUBLIC_PREVIEW ? <div className="preview-notice" role="status">{PREVIEW_NOTICE}</div> : null}
         <main id="studio-main" className="studio-main" tabIndex={-1}>
           {startupError ? (
             <section className="empty-state" role="alert" aria-labelledby="startup-error-title">

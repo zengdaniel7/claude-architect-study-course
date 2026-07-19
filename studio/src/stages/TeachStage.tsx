@@ -14,22 +14,28 @@ export function TeachStage() {
   const { saving, completeStage } = useStudio();
   const [words, setWords] = useState("");
   const [recording, setRecording] = useState(false);
+  const [permissionPending, setPermissionPending] = useState(false);
   const [audioUrl, setAudioUrl] = useState("");
   const [recordingError, setRecordingError] = useState("");
   const recorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const audioUrlRef = useRef("");
   const disposedRef = useRef(false);
+  const permissionRequestRef = useRef(0);
   const chunksRef = useRef<Blob[]>([]);
   const matched = useMemo(() => rubric.map((item) => item.pattern.test(words)), [words]);
   const ready = words.trim().length >= 60 && matched.every(Boolean);
 
-  useEffect(() => () => {
-    disposedRef.current = true;
-    const recorder = recorderRef.current;
-    if (recorder && recorder.state !== "inactive") recorder.stop();
-    streamRef.current?.getTracks().forEach((track) => track.stop());
-    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+  useEffect(() => {
+    disposedRef.current = false;
+    return () => {
+      disposedRef.current = true;
+      permissionRequestRef.current += 1;
+      const recorder = recorderRef.current;
+      if (recorder && recorder.state !== "inactive") recorder.stop();
+      streamRef.current?.getTracks().forEach((track) => track.stop());
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    };
   }, []);
 
   function replaceAudioUrl(nextUrl: string) {
@@ -39,10 +45,17 @@ export function TeachStage() {
   }
 
   async function startRecording() {
+    if (permissionPending || recording) return;
+    const requestId = ++permissionRequestRef.current;
+    setPermissionPending(true);
     setRecordingError("");
     try {
       if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") throw new Error("Recording is unavailable in this browser.");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      if (disposedRef.current || permissionRequestRef.current !== requestId) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
       streamRef.current = stream;
       const recorder = new MediaRecorder(stream);
       chunksRef.current = [];
@@ -59,10 +72,14 @@ export function TeachStage() {
       recorderRef.current = recorder;
       setRecording(true);
     } catch {
-      streamRef.current?.getTracks().forEach((track) => track.stop());
-      streamRef.current = null;
-      setRecording(false);
-      setRecordingError("Microphone access did not start. You can keep using the written teach-back, or try Record again.");
+      if (!disposedRef.current && permissionRequestRef.current === requestId) {
+        streamRef.current?.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+        setRecording(false);
+        setRecordingError("Microphone access did not start. You can keep using the written teach-back, or try Record again.");
+      }
+    } finally {
+      if (!disposedRef.current && permissionRequestRef.current === requestId) setPermissionPending(false);
     }
   }
 
@@ -99,7 +116,7 @@ export function TeachStage() {
       <section className="voice-panel" aria-labelledby="voice-title">
         <div><span className="eyebrow">Optional voice practice</span><h2 id="voice-title">Say it aloud, then listen once</h2><p>The recording stays in this browser tab and is not uploaded.</p></div>
         <div className="voice-actions">
-          {!recording ? <Button icon={<Mic size={18} />} onClick={() => void startRecording()}>Record</Button> : <Button kind="danger" icon={<Square size={18} />} onClick={stopRecording}>Stop</Button>}
+          {!recording ? <Button icon={<Mic size={18} />} disabled={permissionPending} onClick={() => void startRecording()}>{permissionPending ? "Waiting for microphone…" : "Record"}</Button> : <Button kind="danger" icon={<Square size={18} />} onClick={stopRecording}>Stop</Button>}
           {audioUrl ? <audio controls src={audioUrl} aria-label="Your teach-back recording" /> : null}
           {audioUrl ? <button type="button" className="icon-button" onClick={deleteRecording} aria-label="Delete recording"><Trash2 size={19} /></button> : null}
         </div>

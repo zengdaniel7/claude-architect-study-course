@@ -36,9 +36,22 @@ test("Studio reflows at Mac split-view widths", async ({ page }) => {
   }
 });
 
+test("Studio keeps icon and text navigation labels at compact widths", async ({ page }) => {
+  for (const width of [1000, 600]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(STUDIO);
+    for (const label of ["Home", "Course", "Review", "Library", "Settings"]) {
+      await expect(page.getByRole("link", { name: label })).toBeVisible();
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
+  }
+});
+
 test("Studio completes W1 without copy and paste", async ({ page }) => {
   await page.goto(STUDIO);
   await page.getByRole("link", { name: "Continue lesson" }).click();
+
+  await expect(page.getByRole("link", { name: /opens in a new tab/i })).toBeVisible();
 
   await page.getByRole("button", { name: "I can point to each part" }).click();
   await page.locator("#draw-description").fill("Home folder to Documents, then study, then tiny-order.json.");
@@ -72,6 +85,8 @@ test("Studio completes W1 without copy and paste", async ({ page }) => {
   await page.getByLabel("Got it").check();
   await page.getByRole("button", { name: "Finish review" }).click();
   await expect(page.getByRole("heading", { name: "Files, folders, and plain text complete" })).toBeVisible();
+  await page.getByRole("link", { name: "Open W1 archive" }).click();
+  await expect(page.getByRole("heading", { name: "W1 archive" })).toBeVisible();
   await expect(page.getByText("100% complete", { exact: true })).toBeVisible();
 });
 

@@ -12,6 +12,7 @@ describe("API initialization", () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 
   it("does not disguise a local startup failure as unsaved demo mode", async () => {
@@ -22,6 +23,7 @@ describe("API initialization", () => {
 
   it("keeps the static public course preview available without an API", async () => {
     setUrl("https://course.example/");
+    vi.stubEnv("VITE_CCAF_PUBLIC_PREVIEW", "true");
     const { initializeApi } = await import("./api");
     const result = await initializeApi();
     expect(result.demo).toBe(true);

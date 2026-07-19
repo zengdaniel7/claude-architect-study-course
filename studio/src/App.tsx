@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppShell } from "./components/organisms/AppShell";
+import { ArchivePage } from "./pages/ArchivePage";
 import { ComponentGalleryPage } from "./pages/ComponentGalleryPage";
 import { CoursePage } from "./pages/CoursePage";
 import { HomePage } from "./pages/HomePage";
@@ -16,6 +17,7 @@ export function App() {
         <Route path="session" element={<SessionPage />} />
         <Route path="course" element={<CoursePage />} />
         <Route path="review" element={<ReviewHubPage />} />
+        <Route path="archive" element={<ArchivePage />} />
         <Route path="library" element={<LibraryPage />} />
         <Route path="settings" element={<SettingsPage />} />
         <Route path="components" element={<ComponentGalleryPage />} />

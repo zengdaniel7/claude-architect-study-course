@@ -8,7 +8,7 @@ export function FeedbackBanner() {
   return (
     <section className={`feedback feedback--${feedback.tone}`} role="status" aria-live="polite">
       <Icon size={24} aria-hidden="true" />
-      <div><strong>{feedback.title}</strong><p>{feedback.message}</p>{feedback.nextAction ? <p><b>Next:</b> {feedback.nextAction}</p> : null}</div>
+      <div><strong>{feedback.title}</strong><p>{feedback.message}</p></div>
       <button type="button" className="icon-button" onClick={clearFeedback} aria-label="Dismiss feedback"><X size={19} /></button>
     </section>
   );

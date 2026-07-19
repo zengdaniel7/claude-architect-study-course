@@ -1,0 +1,21 @@
+import { CheckCircle2 } from "../icons";
+import { useStudio } from "../StudioContext";
+
+export function ArchivePage() {
+  const { session } = useStudio();
+  const completed = session?.mastery === "mastered";
+
+  return (
+    <section className="secondary-view archive-view" aria-labelledby="archive-title">
+      <div className="secondary-heading">
+        <span className="eyebrow">Completed lesson</span>
+        <h1 id="archive-title">W1 archive</h1>
+        <p>{completed ? "Your W1 completion is saved here. Return when a spaced-review card is due." : "W1 evidence appears here after the lesson is complete."}</p>
+      </div>
+      <div className="archive-summary">
+        <CheckCircle2 size={30} aria-hidden="true" />
+        <div><strong>{completed ? "Files, folders, and plain text" : "W1 is still in progress"}</strong><p>{completed ? "Learn, Draw, Build, Teach, Quiz, and Review are complete." : "Finish the active lesson stage to add it to the archive."}</p></div>
+      </div>
+    </section>
+  );
+}

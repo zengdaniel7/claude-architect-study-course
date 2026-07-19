@@ -45,4 +45,27 @@ describe("ReviewStage", () => {
     expect(screen.getByText("Card 2 of 2")).toBeInTheDocument();
     expect(mocks.completeStage).not.toHaveBeenCalled();
   });
+
+  it("moves focus to a saved review confirmation", async () => {
+    const user = userEvent.setup();
+    render(<ReviewStage />);
+    await user.click(screen.getByRole("button", { name: "Show answer" }));
+    await user.click(screen.getByLabelText("Got it"));
+    await user.click(screen.getByRole("button", { name: "Finish review" }));
+
+    const confirmation = await screen.findByText("Review saved.");
+    await waitFor(() => expect(confirmation.parentElement).toHaveFocus());
+  });
+
+  it("moves focus to a retryable error when saving fails", async () => {
+    mocks.completeStage.mockResolvedValueOnce(null);
+    const user = userEvent.setup();
+    render(<ReviewStage />);
+    await user.click(screen.getByRole("button", { name: "Show answer" }));
+    await user.click(screen.getByLabelText("Got it"));
+    await user.click(screen.getByRole("button", { name: "Finish review" }));
+
+    const error = await screen.findByRole("alert");
+    await waitFor(() => expect(error).toHaveFocus());
+  });
 });
