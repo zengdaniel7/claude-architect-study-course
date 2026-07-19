@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "../icons";
+import { ArrowRight, CheckCircle2, ExternalLink } from "../icons";
 import { useStudio } from "../StudioContext";
 
 export function ArchivePage() {
@@ -16,6 +16,10 @@ export function ArchivePage() {
         <CheckCircle2 size={30} aria-hidden="true" />
         <div><strong>{completed ? "Files, folders, and plain text" : "W1 is still in progress"}</strong><p>{completed ? "Learn, Draw, Build, Teach, Quiz, and Review are complete." : "Finish the active lesson stage to add it to the archive."}</p></div>
       </div>
+      {completed ? <div className="archive-next">
+        <a className="button button--primary" href="/legacy/notes.html?unit=w2"><span>Continue to Week 2 archive</span><ArrowRight size={18} aria-hidden="true" /></a>
+        <p className="microcopy"><ExternalLink size={16} aria-hidden="true" /> Opens legacy archive.</p>
+      </div> : null}
     </section>
   );
 }

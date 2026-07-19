@@ -282,6 +282,8 @@ code { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; back
 .archive-summary { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; max-width: 65ch; padding: 20px 0; border-top: 3px solid var(--green); border-bottom: 1px solid var(--line); }
 .archive-summary > svg { color: var(--green); }
 .archive-summary p { margin: 2px 0 0; color: var(--muted); }
+.archive-next { display: grid; justify-items: start; gap: 6px; margin-top: 20px; }
+.archive-next .microcopy { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 0.78rem; }
 .queue-summary > svg { color: var(--accent); }
 .queue-summary strong { font-size: 1.25rem; }
 .queue-summary p { margin: 3px 0 0; color: var(--muted); }
