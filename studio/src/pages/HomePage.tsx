@@ -4,11 +4,12 @@ import { Link } from "react-router-dom";
 import { useStudio } from "../StudioContext";
 import { Button } from "../components/atoms/Button";
 import { ProgressRail } from "../components/molecules/ProgressRail";
+import { PUBLIC_PREVIEW } from "../preview";
 
 export function HomePage() {
   const { session, loading, demo, prepareReview } = useStudio();
   const [reviewStatus, setReviewStatus] = useState("");
-  if (loading || !session) return <div className="loading-view" role="status">Loading your saved progress…</div>;
+  if (loading || !session) return <div className="loading-view" role="status">{PUBLIC_PREVIEW ? "Opening the preview…" : "Loading your saved progress…"}</div>;
   const mastered = session.mastery === "mastered";
   const reviewDue = mastered && session.dueReviews > 0;
   const currentLabel = session.stages[session.stageIndex]?.label ?? "lesson";
@@ -24,7 +25,9 @@ export function HomePage() {
         <div>
           <span className="eyebrow">{reviewDue ? "Review due" : mastered ? "Lesson mastered" : "Continue where you stopped"}</span>
           <h1 id="home-title">{session.title}</h1>
-          <p>{reviewDue ? `${session.dueReviews} saved card${session.dueReviews === 1 ? " is" : "s are"} ready for a short review.` : mastered ? "All six lesson stages are complete. Your evidence and zero-guess result stay saved." : <>Your next step is <b>{currentLabel}</b>. Completed work stays saved.</>}</p>
+          <p>{PUBLIC_PREVIEW
+            ? mastered ? "All six preview stages are complete. This run is not saved." : <>Your next step is <b>{currentLabel}</b>. Preview actions reset when you leave.</>
+            : reviewDue ? `${session.dueReviews} saved card${session.dueReviews === 1 ? " is" : "s are"} ready for a short review.` : mastered ? "All six lesson stages are complete. Your evidence and zero-guess result stay saved." : <>Your next step is <b>{currentLabel}</b>. Completed work stays saved.</>}</p>
         </div>
         <Link className="button button--primary button--large" to={reviewDue ? "/session" : mastered ? "/archive" : "/session"}><span>{reviewDue ? "Start review" : mastered ? "Open W1 archive" : "Continue lesson"}</span><ArrowRight size={20} aria-hidden="true" /></Link>
       </section>
@@ -49,9 +52,9 @@ export function HomePage() {
       </div>
 
       <section className="system-strip" aria-label="Tutor system status">
-        <div>{demo ? <Server size={21} aria-hidden="true" /> : <ShieldCheck size={21} aria-hidden="true" />}<span><b>{demo ? "Preview mode" : "Local and private"}</b><small>{session.legacyImported ? "Legacy progress imported" : "No progress was overwritten"}</small></span></div>
-        <Button kind="quiet" onClick={() => void prepare()}>Prepare deep review</Button>
-        {reviewStatus ? <span className="inline-status" role="status">{reviewStatus}</span> : null}
+        <div>{PUBLIC_PREVIEW ? <Server size={21} aria-hidden="true" /> : <ShieldCheck size={21} aria-hidden="true" />}<span><b>{PUBLIC_PREVIEW ? "Preview mode" : "Local and private"}</b><small>{PUBLIC_PREVIEW ? "No learner progress is stored" : session.legacyImported ? "Legacy progress imported" : "No progress was overwritten"}</small></span></div>
+        {!demo ? <Button kind="quiet" onClick={() => void prepare()}>Prepare deep review</Button> : null}
+        {!demo && reviewStatus ? <span className="inline-status" role="status">{reviewStatus}</span> : null}
       </section>
     </div>
   );

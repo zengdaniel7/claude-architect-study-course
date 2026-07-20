@@ -5,7 +5,7 @@ import { manifest, unitById } from "../content";
 import { Button } from "../components/atoms/Button";
 
 export function LearnStage() {
-  const { session, saving, completeStage } = useStudio();
+  const { session, saving, completeStage, demo } = useStudio();
   const unit = unitById(session?.unitId ?? "w1");
   const lesson = manifest.lessons[unit.id];
   const narration = useMemo(() => `${lesson.plain} Example: ${lesson.example}. Remember: ${lesson.danger}`, [lesson]);
@@ -57,7 +57,7 @@ export function LearnStage() {
 
       <div className="scene-actionbar">
         <p><b>Check:</b> Can you point to the two folders, the file, and its extension?</p>
-        <Button kind="primary" disabled={saving} onClick={() => void completeStage("learn", { understoodPath: true, source: "studio" })}>{saving ? "Saving…" : "I can point to each part"}</Button>
+        <Button kind="primary" disabled={saving} onClick={() => void completeStage("learn", { understoodPath: true, source: "studio" })}>{saving ? demo ? "Moving…" : "Saving…" : "I can point to each part"}</Button>
       </div>
     </section>
   );

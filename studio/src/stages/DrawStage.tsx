@@ -28,7 +28,7 @@ function paint(canvas: HTMLCanvasElement, strokes: Point[][]) {
 }
 
 export function DrawStage() {
-  const { saving, completeStage } = useStudio();
+  const { saving, completeStage, demo } = useStudio();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const activeRef = useRef<Point[]>([]);
   const [strokes, setStrokes] = useState<Point[][]>([]);
@@ -112,8 +112,8 @@ export function DrawStage() {
       </label>
 
       <div className="scene-actionbar">
-        <p>{hasEvidence ? "Your route has enough evidence to save." : "Add one stroke or a short written description."}</p>
-        <Button kind="primary" disabled={!hasEvidence || saving} onClick={() => void completeStage("draw", { strokeCount: strokes.length, description })}>{saving ? "Saving…" : "Save my path"}</Button>
+        <p>{hasEvidence ? demo ? "Your route is ready for the next preview step." : "Your route has enough evidence to save." : "Add one stroke or a short written description."}</p>
+        <Button kind="primary" disabled={!hasEvidence || saving} onClick={() => void completeStage("draw", { strokeCount: strokes.length, description })}>{saving ? demo ? "Moving…" : "Saving…" : demo ? "Continue with this path" : "Save my path"}</Button>
       </div>
     </section>
   );

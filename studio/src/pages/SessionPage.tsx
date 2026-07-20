@@ -11,6 +11,7 @@ import { QuizStage } from "../stages/QuizStage";
 import { ReviewStage } from "../stages/ReviewStage";
 import { TeachStage } from "../stages/TeachStage";
 import { useSceneFocus } from "../useSceneFocus";
+import { PUBLIC_PREVIEW } from "../preview";
 
 const stages = {
   learn: LearnStage,
@@ -34,7 +35,7 @@ export function SessionPage() {
           <CheckCircle2 size={42} aria-hidden="true" />
           <span className="eyebrow">W1 mastered</span>
           <h1 id="completion-title">Files, folders, and plain text complete</h1>
-          <p>You finished Learn, Draw, Build, Teach, Quiz, and Review. Your saved evidence stays available in the W1 archive.</p>
+          <p>{PUBLIC_PREVIEW ? "You finished Learn, Draw, Build, Teach, Quiz, and Review in this preview. This run is not saved." : "You finished Learn, Draw, Build, Teach, Quiz, and Review. Your saved evidence stays available in the W1 archive."}</p>
           <div className="completion-actions">
             <Link className="button button--primary" to="/archive"><span>Open W1 archive</span><ArrowRight size={18} aria-hidden="true" /></Link>
           </div>

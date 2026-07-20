@@ -48,6 +48,43 @@ test("Studio keeps icon and text navigation labels at compact widths", async ({ 
   }
 });
 
+test("Studio non-AI navigation stays within the interaction budget", async ({ page }) => {
+  await page.goto(STUDIO);
+  const samples = [];
+  for (let index = 0; index < 20; index += 1) {
+    const course = index % 2 === 0;
+    samples.push(await page.evaluate(({ hash, selector }) => new Promise((resolve, reject) => {
+      const root = document.querySelector("#root");
+      if (!root) {
+        reject(new Error("Studio root is missing"));
+        return;
+      }
+      const started = performance.now();
+      const timeout = window.setTimeout(() => {
+        observer.disconnect();
+        reject(new Error(`Timed out waiting for ${selector}`));
+      }, 1_000);
+      const finish = () => {
+        if (!document.querySelector(selector)) return;
+        window.clearTimeout(timeout);
+        observer.disconnect();
+        resolve(performance.now() - started);
+      };
+      const observer = new MutationObserver(finish);
+      observer.observe(root, { childList: true, subtree: true });
+      window.location.hash = hash;
+      window.requestAnimationFrame(finish);
+    }), {
+      hash: course ? "/course" : "/",
+      selector: course ? "#course-title" : "#home-title"
+    }));
+  }
+
+  const ordered = [...samples].sort((left, right) => left - right);
+  const p95 = ordered[Math.ceil(ordered.length * 0.95) - 1];
+  expect(p95, `non-AI navigation p95 was ${p95.toFixed(1)} ms`).toBeLessThan(150);
+});
+
 test("Studio completes W1 without copy and paste", async ({ page }) => {
   await page.goto(STUDIO);
   await page.getByRole("link", { name: "Continue lesson" }).click();
@@ -83,18 +120,30 @@ test("Studio completes W1 without copy and paste", async ({ page }) => {
   }
 
   await page.getByRole("button", { name: "Show answer" }).click();
-  await page.getByLabel("Got it").check();
-  const ratingRequest = page.waitForRequest(/\/api\/reviews\/[^/]+\/cards\/[^/]+$/);
+  await page.getByLabel("Again").check();
+  const repeatRequest = page.waitForRequest(/\/api\/reviews\/[^/]+\/cards\/[^/]+$/);
   await page.getByRole("button", { name: "Save rating" }).click();
-  const request = await ratingRequest;
-  const rating = request.postDataJSON();
+  const repeated = (await repeatRequest).postDataJSON();
+  expect(repeated).toMatchObject({ rating: "again" });
+  expect(repeated.ratingId).toMatch(/^[0-9a-f-]{36}$/);
+  await expect(page.getByRole("button", { name: "Next card" })).toBeVisible();
+  await page.getByRole("button", { name: "Next card" }).click();
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Show answer" })).toBeVisible();
+  await page.getByRole("button", { name: "Show answer" }).click();
+  await page.getByLabel("Got it").check();
+  const finalRatingRequest = page.waitForRequest(/\/api\/reviews\/[^/]+\/cards\/[^/]+$/);
+  await page.getByRole("button", { name: "Save rating" }).click();
+  const rating = (await finalRatingRequest).postDataJSON();
   expect(rating).toMatchObject({ rating: "good" });
   expect(rating.ratingId).toMatch(/^[0-9a-f-]{36}$/);
   expect(rating.elapsedMs).toEqual(expect.any(Number));
   await expect(page.getByRole("heading", { name: "Files, folders, and plain text complete" })).toBeVisible();
   await page.getByRole("link", { name: "Open W1 archive" }).click();
   await expect(page.getByRole("heading", { name: "W1 archive" })).toBeVisible();
-  await expect(page.getByText("100% complete", { exact: true })).toBeVisible();
+  await expect(page.getByText("Learn, Draw, Build, Teach, Quiz, and Review are complete.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Continue to Week 2 archive" })).toBeVisible();
 });
 
 test("Studio honors keyboard focus and reduced motion", async ({ page }) => {

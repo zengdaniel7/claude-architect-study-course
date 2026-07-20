@@ -10,11 +10,13 @@ const mocks = vi.hoisted(() => ({
   inspectBackup: vi.fn(),
   commitBackup: vi.fn(),
   commitLegacyImport: vi.fn(),
-  downloadBackup: vi.fn()
+  downloadBackup: vi.fn(),
+  ollamaAvailable: false,
+  ollama: { status: "unavailable" }
 }));
 
 vi.mock("../StudioContext", () => ({
-  useStudio: () => ({ demo: mocks.demo, refreshSession: mocks.refreshSession, ollamaAvailable: false, ollama: { status: "unavailable" } })
+  useStudio: () => ({ demo: mocks.demo, refreshSession: mocks.refreshSession, ollamaAvailable: mocks.ollamaAvailable, ollama: mocks.ollama })
 }));
 vi.mock("../api", () => ({
   fetchMigrationReport: mocks.fetchMigrationReport,
@@ -26,7 +28,10 @@ vi.mock("../api", () => ({
 
 describe("Settings recovery", () => {
   beforeEach(() => {
+    localStorage.clear();
     mocks.demo = false;
+    mocks.ollamaAvailable = false;
+    mocks.ollama = { status: "unavailable" };
     mocks.refreshSession.mockReset().mockResolvedValue(undefined);
     mocks.fetchMigrationReport.mockReset().mockResolvedValue({ sourceFound: false, sourceUnchanged: true, status: "not_found" });
     mocks.inspectBackup.mockReset();
@@ -40,6 +45,22 @@ describe("Settings recovery", () => {
     render(<SettingsPage />);
     expect(screen.queryByRole("heading", { name: "Recovery" })).not.toBeInTheDocument();
     expect(mocks.fetchMigrationReport).not.toHaveBeenCalled();
+  });
+
+  it("explains when an enabled local tutor is temporarily protected", () => {
+    mocks.ollama = { status: "protected" };
+    render(<SettingsPage />);
+
+    expect(screen.getByRole("switch", { name: /Local tutor/i })).toBeChecked();
+    expect(screen.getByText(/On, but paused to protect this Mac's memory/i)).toBeInTheDocument();
+  });
+
+  it("describes the local tutor as off when its switch is off", () => {
+    localStorage.setItem("ccaf-studio-local-ai", "off");
+    render(<SettingsPage />);
+
+    expect(screen.getByRole("switch", { name: /Local tutor/i })).not.toBeChecked();
+    expect(screen.getByText("Off. Saved hints remain available.")).toBeInTheDocument();
   });
 
   it("inspects a backup before an explicit restore and reloads the session", async () => {
@@ -77,7 +98,7 @@ describe("Settings recovery", () => {
     const user = userEvent.setup();
     render(<SettingsPage />);
 
-    expect(await screen.findByText("Candidate W1 checks: 2/6.")).toBeInTheDocument();
+    expect(await screen.findByText(/Candidate W1 checks: 2\/6\./)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Import legacy checks" }));
     await waitFor(() => expect(mocks.commitLegacyImport).toHaveBeenCalledWith("a".repeat(64)));
     expect(mocks.refreshSession).toHaveBeenCalledOnce();

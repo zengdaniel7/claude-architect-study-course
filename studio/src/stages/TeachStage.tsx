@@ -11,7 +11,7 @@ const rubric = [
 ];
 
 export function TeachStage() {
-  const { saving, completeStage } = useStudio();
+  const { saving, completeStage, demo } = useStudio();
   const [words, setWords] = useState("");
   const [recording, setRecording] = useState(false);
   const [permissionPending, setPermissionPending] = useState(false);
@@ -125,7 +125,7 @@ export function TeachStage() {
 
       <div className="scene-actionbar">
         <p>{ready ? "All four ideas are present." : "Use the checklist to add the missing idea."}</p>
-        <Button kind="primary" icon={<Play size={18} />} disabled={!ready || saving} onClick={() => void completeStage("teach", { words, rubric: matched, audioPracticed: Boolean(audioUrl) })}>{saving ? "Saving…" : "Save my teach-back"}</Button>
+        <Button kind="primary" icon={<Play size={18} />} disabled={!ready || saving} onClick={() => void completeStage("teach", { words, rubric: matched, audioPracticed: Boolean(audioUrl) })}>{saving ? demo ? "Checking…" : "Saving…" : demo ? "Check my teach-back" : "Save my teach-back"}</Button>
       </div>
     </section>
   );

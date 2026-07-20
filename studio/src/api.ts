@@ -76,7 +76,7 @@ export async function submitAttempt(
   stage: StageId,
   payload: Record<string, unknown>,
   confidence?: string,
-  attemptId = crypto.randomUUID()
+  attemptId: string = crypto.randomUUID()
 ): Promise<AttemptResponse> {
   if (!demoMode) {
     try {

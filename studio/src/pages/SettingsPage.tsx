@@ -104,7 +104,7 @@ function RecoverySection() {
       </div>
       {inspection ? <div className="recovery-summary" aria-label="Backup inspection summary"><span><b>Database</b>{inspection.databaseId}</span><span><b>Schema</b>{inspection.schemaVersion}</span><span><b>Digest</b>{inspection.stateDigest}</span><Button kind="danger" disabled={busy !== null} onClick={() => void restore()}>{busy === "restore" ? "Restoring…" : "Confirm restore"}</Button></div> : null}
       {migration?.status === "pending_confirmation" ? <div className="recovery-row recovery-row--legacy">
-        <div><b>Legacy import</b><small>Source unchanged: {migration.sourceUnchanged ? "yes" : "no"}. Candidate W1 checks: {candidateChecks}/6.</small></div>
+        <div><b>Legacy import</b><small>{`Source unchanged: ${migration.sourceUnchanged ? "yes" : "no"}. Candidate W1 checks: ${candidateChecks}/6.`}</small></div>
         <Button kind="secondary" disabled={busy !== null || !migration.sourceUnchanged} onClick={() => void importLegacy()}>{busy === "legacy" ? "Importing…" : "Import legacy checks"}</Button>
       </div> : null}
       {status ? <section ref={statusRef} className={`recovery-status recovery-status--${status.tone}`} role={status.tone === "error" ? "alert" : "status"} tabIndex={-1}>{status.message}</section> : null}
@@ -126,11 +126,19 @@ export function SettingsPage() {
     localStorage.setItem("ccaf-studio-quiet-motion", quietMotion ? "on" : "off");
   }, [localAi, largeText, quietMotion]);
 
+  const localTutorStatus = !localAi
+    ? "Off. Saved hints remain available."
+    : ollamaAvailable
+      ? "On. llama3.2:3b is ready and unloads after each answer."
+      : ollama.status === "protected"
+        ? "On, but paused to protect this Mac's memory. Saved hints stay available."
+        : "On. Saved hints are used while Ollama is unavailable.";
+
   return (
     <section className="secondary-view settings-view" aria-labelledby="settings-title">
       <div className="secondary-heading"><span className="eyebrow">Mac study preferences</span><h1 id="settings-title">Settings</h1></div>
       <div className="settings-list">
-        <label className="setting-row"><Cpu size={22} aria-hidden="true" /><span><b>Local tutor</b><small>{ollamaAvailable ? "llama3.2:3b is ready and unloads after each answer" : ollama.status === "protected" ? "Paused to protect this Mac's memory; saved hints stay available" : "Saved hints are used when Ollama is unavailable"}</small></span><input type="checkbox" role="switch" checked={localAi} onChange={(event) => setLocalAi(event.target.checked)} /></label>
+        <label className="setting-row"><Cpu size={22} aria-hidden="true" /><span><b>Local tutor</b><small>{localTutorStatus}</small></span><input type="checkbox" role="switch" checked={localAi} onChange={(event) => setLocalAi(event.target.checked)} /></label>
         <label className="setting-row"><Eye size={22} aria-hidden="true" /><span><b>Larger reading text</b><small>Increase lesson text without changing the rest of the Mac interface.</small></span><input type="checkbox" role="switch" checked={largeText} onChange={(event) => setLargeText(event.target.checked)} /></label>
         <label className="setting-row"><Gauge size={22} aria-hidden="true" /><span><b>Quiet motion</b><small>Use immediate state changes without animated transitions.</small></span><input type="checkbox" role="switch" checked={quietMotion} onChange={(event) => setQuietMotion(event.target.checked)} /></label>
         <div className="setting-row"><Volume2 size={22} aria-hidden="true" /><span><b>Read aloud</b><small>Uses the selected macOS system voice and never starts automatically.</small></span><span className="setting-value">On request</span></div>

@@ -68,6 +68,9 @@ describe("ReviewStage", () => {
     await waitFor(() => expect(mocks.rateReviewCard).toHaveBeenCalledWith(
       "demo-review", "w1-preview", "again", expect.any(Number), expect.any(String), expect.any(Array)
     ));
+    expect(screen.getByRole("button", { name: "Next card" })).toBeInTheDocument();
+    expect(screen.getByText("Rating complete.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Next card" }));
     expect(screen.getByText("1 card due")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Show answer" })).toBeInTheDocument();
   });
@@ -92,6 +95,7 @@ describe("ReviewStage", () => {
     await user.click(screen.getByLabelText("Got it"));
     await user.click(screen.getByRole("button", { name: "Save rating" }));
     await screen.findByRole("alert");
+    expect(screen.getByLabelText("Got it")).toBeDisabled();
     await user.click(screen.getByRole("button", { name: "Retry rating" }));
 
     await waitFor(() => expect(mocks.rateReviewCard).toHaveBeenCalledTimes(2));

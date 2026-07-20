@@ -28,14 +28,15 @@ const links = [
 
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(false);
-  const { session, demo, startupError } = useStudio();
+  const { session, demo, startupError, clearFeedback } = useStudio();
   const location = useLocation();
   const localMode = !demo && !PUBLIC_PREVIEW;
 
   useEffect(() => {
+    clearFeedback();
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     document.getElementById("studio-main")?.focus({ preventScroll: true });
-  }, [location.pathname]);
+  }, [clearFeedback, location.pathname]);
   return (
     <div className={`app-shell ${collapsed ? "app-shell--collapsed" : ""}`}>
       <aside className="sidebar" aria-label="Study Studio navigation">

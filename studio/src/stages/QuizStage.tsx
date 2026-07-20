@@ -9,7 +9,7 @@ import { useSceneFocus } from "../useSceneFocus";
 interface Answer { choice: number; confidence: Confidence; correct: boolean }
 
 export function QuizStage() {
-  const { session, saving, completeStage } = useStudio();
+  const { session, saving, completeStage, demo } = useStudio();
   const questions = manifest.banks[session?.unitId ?? "w1"]?.questions ?? [];
   const [index, setIndex] = useState(0);
   const [choice, setChoice] = useState<number | null>(null);
@@ -87,7 +87,7 @@ export function QuizStage() {
         {!checked ? (
           <Button kind="primary" icon={<HelpCircle size={18} />} disabled={choice === null} onClick={checkAnswer}>Check answer</Button>
         ) : (
-          <Button kind="primary" icon={<ArrowRight size={18} />} disabled={saving} onClick={() => void nextQuestion()}>{saving ? "Saving…" : index === questions.length - 1 ? "Finish quiz" : "Next question"}</Button>
+          <Button kind="primary" icon={<ArrowRight size={18} />} disabled={saving} onClick={() => void nextQuestion()}>{saving ? demo ? "Finishing…" : "Saving…" : index === questions.length - 1 ? "Finish quiz" : "Next question"}</Button>
         )}
       </div>
     </section>

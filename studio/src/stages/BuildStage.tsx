@@ -14,7 +14,7 @@ const STARTER = `{
 type BuildPart = "bridge" | "practice" | "mac";
 
 export function BuildStage() {
-  const { saving, completeStage } = useStudio();
+  const { saving, completeStage, demo } = useStudio();
   const [part, setPart] = useState<BuildPart>("bridge");
   useSceneFocus(`build-${part}`);
   const [code, setCode] = useState(STARTER);
@@ -129,7 +129,7 @@ export function BuildStage() {
 
       <div className="scene-actionbar">
         <p>{ready ? "All four independent-build checks passed." : "Choose the file, enter its path, and confirm both checks."}</p>
-        <Button kind="primary" disabled={!ready || saving} onClick={() => void completeStage("build", { fileName, fileText, path, plainText, independent, practiceValid })}>{saving ? "Saving…" : "Save independent build"}</Button>
+        <Button kind="primary" disabled={!ready || saving} onClick={() => void completeStage("build", { fileName, fileText, path, plainText, independent, practiceValid })}>{saving ? demo ? "Checking…" : "Saving…" : demo ? "Check independent build" : "Save independent build"}</Button>
       </div>
     </section>
   );

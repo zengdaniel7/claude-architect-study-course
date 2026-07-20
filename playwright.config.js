@@ -8,6 +8,7 @@ const boundedTimeout = (name, fallback, maximum) => {
   return Number.isFinite(value) ? Math.min(Math.max(value, 1_000), maximum) : fallback;
 };
 const testTimeout = boundedTimeout("CCA_STUDIO_TEST_TIMEOUT_MS", 90_000, 120_000);
+const webServerTimeout = boundedTimeout("CCA_STUDIO_WEB_SERVER_TIMEOUT_MS", 120_000, 180_000);
 
 module.exports = defineConfig({
   testDir: "./tests/e2e",
@@ -18,7 +19,7 @@ module.exports = defineConfig({
   workers: 1,
   maxFailures: ci ? 1 : 0,
   forbidOnly: ci,
-  retries: ci ? 1 : 0,
+  retries: 0,
   reporter: verbose
     ? [["line"], ["json", { outputFile: "test-results/playwright-report.json" }]]
     : [["list", { printSteps: true }]],
@@ -35,7 +36,7 @@ module.exports = defineConfig({
       command: "python3 scripts/serve_legacy_archive.py --port 4173",
       url: "http://127.0.0.1:4173/dashboard.html",
       reuseExistingServer: !process.env.CI,
-      timeout: 15_000,
+      timeout: webServerTimeout,
       stdout: verbose ? "pipe" : "ignore",
       stderr: verbose ? "pipe" : "ignore"
     },
@@ -43,7 +44,7 @@ module.exports = defineConfig({
       command: "python3 scripts/e2e_studio_server.py",
       url: `${studioBaseURL}/__health`,
       reuseExistingServer: !process.env.CI,
-      timeout: 20_000,
+      timeout: webServerTimeout,
       stdout: verbose ? "pipe" : "ignore",
       stderr: verbose ? "pipe" : "ignore"
     }

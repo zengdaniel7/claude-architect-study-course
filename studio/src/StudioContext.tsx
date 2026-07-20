@@ -219,6 +219,8 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
     setSession(nextSession);
   }, []);
 
+  const clearFeedback = useCallback(() => setFeedback(null), []);
+
   const value = useMemo<StudioContextValue>(() => ({
     session,
     loading,
@@ -235,10 +237,10 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
     getTutorHelp,
     closeTutor,
     reportGap,
-    clearFeedback: () => setFeedback(null),
+    clearFeedback,
     prepareReview,
     refreshSession
-  }), [session, loading, startupError, saving, demo, ollamaAvailable, ollama, feedback, tutorResult, tutorState, completeStage, rateReviewCard, getTutorHelp, closeTutor, reportGap, prepareReview, refreshSession]);
+  }), [session, loading, startupError, saving, demo, ollamaAvailable, ollama, feedback, tutorResult, tutorState, completeStage, rateReviewCard, getTutorHelp, closeTutor, reportGap, clearFeedback, prepareReview, refreshSession]);
 
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>;
 }
