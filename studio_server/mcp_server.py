@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+import ipaddress
 import os
+import re
 import socket
 import urllib.error
 import urllib.request
@@ -35,11 +37,11 @@ def _loopback_url(value: str) -> str:
     if host is None:
         raise ValueError("CCA_STUDIO_SERVER_URL must include a loopback host")
     try:
-        is_loopback = socket.getaddrinfo(host, parsed.port or (443 if parsed.scheme == "https" else 80), type=socket.SOCK_STREAM)
-    except socket.gaierror as error:
-        raise ValueError("CCA_STUDIO_SERVER_URL must resolve to loopback") from error
-    if not is_loopback or not all(address[4][0] in {"127.0.0.1", "::1"} for address in is_loopback):
-        raise ValueError("CCA_STUDIO_SERVER_URL must resolve to loopback")
+        literal_loopback = ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        literal_loopback = host.lower() == "localhost"
+    if not literal_loopback:
+        raise ValueError("CCA_STUDIO_SERVER_URL must use localhost or a literal loopback address")
     path = parsed.path.rstrip("/")
     return f"{parsed.scheme}://{parsed.netloc}{path}"
 
@@ -88,11 +90,13 @@ class SupervisorClient:
         return f"{self.base_url}{path}"
 
     def _token(self) -> str:
+        if self.token_path.is_symlink():
+            raise StudyStudioUnavailable("Open Study Studio first: its supervisor token is invalid")
         try:
             token = self.token_path.read_text(encoding="ascii").strip()
         except (OSError, UnicodeError) as error:
             raise StudyStudioUnavailable("Open Study Studio first: its supervisor token is unavailable") from error
-        if not token or len(token) > 4096:
+        if not 32 <= len(token) <= 256 or re.fullmatch(r"[A-Za-z0-9_-]+", token) is None:
             raise StudyStudioUnavailable("Open Study Studio first: its supervisor token is invalid")
         return token
 
@@ -118,7 +122,21 @@ class SupervisorClient:
         health = self._json(payload)
         if health.get("appId") != EXPECTED_APP_ID:
             raise StudyStudioUnavailable("Open Study Studio first: a foreign local service is using that port")
-        if health.get("ok") is False:
+        valid_identity = (
+            health.get("ok") is True
+            and health.get("sqlite") is True
+            and health.get("save") is True
+            and health.get("schemaVersion") == 3
+            and isinstance(health.get("releaseId"), str)
+            and re.fullmatch(r"sha256:[0-9a-f]{64}", health["releaseId"]) is not None
+            and isinstance(health.get("manifestHash"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", health["manifestHash"]) is not None
+            and isinstance(health.get("backendContentSha256"), str)
+            and re.fullmatch(r"[0-9a-f]{64}", health["backendContentSha256"]) is not None
+            and isinstance(health.get("databaseId"), str)
+            and health["databaseId"] not in {"", "unknown"}
+        )
+        if not valid_identity:
             raise StudyStudioUnavailable("Open Study Studio first: Study Studio health checks are failing")
         return health
 

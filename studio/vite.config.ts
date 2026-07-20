@@ -4,11 +4,18 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 
 const studioRoot = fileURLToPath(new URL(".", import.meta.url));
+const publicPreview = process.env.VITE_CCAF_PUBLIC_PREVIEW === "true";
 
 export default defineConfig({
   root: studioRoot,
   base: "./",
   publicDir: path.resolve(studioRoot, "../fonts"),
+  resolve: {
+    alias: publicPreview ? [{
+      find: /^(?:\.\/|\.\.\/)api$/,
+      replacement: path.resolve(studioRoot, "src/api.preview.ts")
+    }] : []
+  },
   plugins: [react()],
   build: {
     outDir: path.resolve(studioRoot, "dist"),

@@ -53,7 +53,7 @@ def health_ok(
     }
     if payload.get("schemaVersion") not in {None, 3}:
         return False
-    if any(expected is not None and payload.get(field) not in {None, expected} for field, expected in expected_fields.items()):
+    if any(expected is not None and payload.get(field) != expected for field, expected in expected_fields.items()):
         return False
     if expected_release_id is None:
         return True

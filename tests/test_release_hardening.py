@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import shutil
+import stat
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -53,6 +55,20 @@ def test_release_id_includes_backend_and_manifest_identity() -> None:
     )
 
 
+def test_backend_identity_covers_the_production_control_plane() -> None:
+    relative = {path.relative_to(ROOT).as_posix() for path in release_identity._backend_files(ROOT)}
+    assert {
+        "scripts/build_legacy_archive.py",
+        "scripts/release_identity.py",
+        "scripts/run_frontier_mcp.py",
+        "scripts/run_studio_runtime.py",
+        "scripts/start_studio.py",
+        "studio_server/app.py",
+        "studio_server/legacy_assets.py",
+        "studio_server/mcp_server.py",
+    } <= relative
+
+
 def test_interrupted_site_copy_keeps_previous_verified_release(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     source = tmp_path / "source"
     target = tmp_path / "site"
@@ -82,6 +98,23 @@ def test_interrupted_site_copy_keeps_previous_verified_release(tmp_path: Path, m
     assert release_identity.verify_release(target.with_name("site.previous"))["releaseId"] == old_release["releaseId"]
 
 
+def test_tampered_cached_app_is_detected_and_rebuilt(tmp_path: Path) -> None:
+    target = tmp_path / "app"
+    cache = tmp_path / "cache"
+    expected = release_identity.backend_content_hash(ROOT)
+    start_studio.sync_app(ROOT, target, cache)
+    assert start_studio.verify_app_cache(target, expected)["backendContentSha256"] == expected
+
+    cached_app = target / "studio_server" / "app.py"
+    cached_app.write_text(cached_app.read_text(encoding="utf-8") + "\n# tampered\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="file hash"):
+        start_studio.verify_app_cache(target, expected)
+
+    start_studio.sync_app(ROOT, target, cache)
+    assert start_studio.verify_app_cache(target, expected)["backendContentSha256"] == expected
+    assert "# tampered" not in cached_app.read_text(encoding="utf-8")
+
+
 def test_legacy_archive_contains_only_allowlisted_generated_assets(tmp_path: Path) -> None:
     source = tmp_path / "source"
     archive = tmp_path / "archive"
@@ -96,6 +129,7 @@ def test_legacy_archive_contains_only_allowlisted_generated_assets(tmp_path: Pat
     (source / ".git" / "config").write_text("private metadata", encoding="utf-8")
     (source / "notes.md").write_text("not a legacy asset", encoding="utf-8")
     (source / "my-progress.backup.json").write_text("private progress", encoding="utf-8")
+    (source / "my-progress.json").write_text('{"ts":1,"data":{}}', encoding="utf-8")
 
     build_legacy_archive.build_archive(source, archive)
 
@@ -104,6 +138,20 @@ def test_legacy_archive_contains_only_allowlisted_generated_assets(tmp_path: Pat
     assert not (archive / ".git").exists()
     assert not (archive / "notes.md").exists()
     assert not (archive / "my-progress.backup.json").exists()
+    assert (archive / "my-progress.json").is_file()
+    assert stat.S_IMODE((archive / "my-progress.json").stat().st_mode) == 0o600
+    assert stat.S_IMODE(archive.stat().st_mode) == 0o700
+
+
+def test_long_setup_heartbeat_reports_before_thirty_seconds(capsys: pytest.CaptureFixture[str]) -> None:
+    result = build_legacy_archive.run_with_heartbeat(
+        "[test-setup]",
+        lambda: time.sleep(0.035) or "done",
+        interval_seconds=0.01,
+    )
+
+    assert result == "done"
+    assert "[test-setup] Still working..." in capsys.readouterr().out
 
 
 class FakeResponse:

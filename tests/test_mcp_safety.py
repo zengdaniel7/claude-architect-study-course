@@ -64,7 +64,7 @@ def json_bytes(value: dict[str, Any]) -> bytes:
 
 def make_client(module: Any, tmp_path: Path, transport: FakeTransport) -> Any:
     token_path = tmp_path / "supervisor.token"
-    token_path.write_text("test-supervisor-token", encoding="ascii")
+    token_path.write_text("test-supervisor-token-0123456789abcdef", encoding="ascii")
     return module.SupervisorClient(
         server_url="http://127.0.0.1:8765",
         data_dir=tmp_path,
@@ -74,7 +74,17 @@ def make_client(module: Any, tmp_path: Path, transport: FakeTransport) -> Any:
 
 
 def health() -> tuple[int, bytes]:
-    return 200, json_bytes({"ok": True, "appId": "ccaf-study-studio", "releaseId": "test"})
+    return 200, json_bytes({
+        "ok": True,
+        "sqlite": True,
+        "save": True,
+        "appId": "ccaf-study-studio",
+        "releaseId": f'sha256:{"1" * 64}',
+        "schemaVersion": 3,
+        "manifestHash": "2" * 64,
+        "backendContentSha256": "3" * 64,
+        "databaseId": "test-database",
+    })
 
 
 def test_mcp_module_has_no_database_store_dependency() -> None:
@@ -115,7 +125,7 @@ def test_mcp_reads_session_through_authenticated_supervisor(mcp_module: Any, tmp
     assert transport.calls[0][0:2] == ("GET", "http://127.0.0.1:8765/__health")
     assert transport.calls[1][0:2] == ("GET", "http://127.0.0.1:8765/api/supervisor/session")
     assert "X-CCA-Supervisor" not in transport.calls[0][2]
-    assert transport.calls[1][2]["X-CCA-Supervisor"] == "test-supervisor-token"
+    assert transport.calls[1][2]["X-CCA-Supervisor"] == "test-supervisor-token-0123456789abcdef"
 
 
 def test_mcp_review_and_proposal_preserve_advisory_shapes(mcp_module: Any, tmp_path: Path) -> None:
@@ -152,3 +162,13 @@ def test_mcp_tools_route_to_supervisor_without_local_store(mcp_module: Any, tmp_
 def test_mcp_rejects_non_loopback_server_before_token_use(mcp_module: Any) -> None:
     with pytest.raises(ValueError, match="loopback"):
         mcp_module.SupervisorClient(server_url="http://192.0.2.1:8765")
+    with pytest.raises(ValueError, match="loopback"):
+        mcp_module.SupervisorClient(server_url="http://loopback.example:8765")
+
+
+def test_mcp_rejects_incomplete_health_identity(mcp_module: Any, tmp_path: Path) -> None:
+    transport = FakeTransport([(200, json_bytes({"ok": True, "appId": "ccaf-study-studio"}))])
+    client = make_client(mcp_module, tmp_path, transport)
+    with pytest.raises(mcp_module.StudyStudioUnavailable, match="Open Study Studio first"):
+        client.session()
+    assert len(transport.calls) == 1

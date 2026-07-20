@@ -54,7 +54,7 @@ jobs:
       - name: Build AI-disabled preview
         env:
           VITE_CCAF_PUBLIC_PREVIEW: "true"
-        run: pnpm run studio:build
+        run: pnpm run studio:build && pnpm run studio:preview:check
       - uses: actions/upload-pages-artifact@v3
         with:
           path: studio/dist

@@ -9,7 +9,7 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-from build_legacy_archive import build_archive
+from build_legacy_archive import build_archive, run_with_heartbeat
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,7 +43,9 @@ def main() -> None:
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="ccaf-legacy-e2e-") as data:
         archive = Path(data) / "legacy"
-        build_archive(ROOT, archive)
+        print("[legacy-e2e] Building the verified read-only archive...", flush=True)
+        run_with_heartbeat("[legacy-e2e]", lambda: build_archive(ROOT, archive))
+        print(f"[legacy-e2e] Archive ready on http://127.0.0.1:{args.port}", flush=True)
         handler = lambda *args_, **kwargs: ArchiveHandler(*args_, directory=str(archive), **kwargs)
         server = ThreadingHTTPServer(("127.0.0.1", args.port), handler)
         try:

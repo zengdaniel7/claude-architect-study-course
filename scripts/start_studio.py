@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import shutil
 import subprocess
@@ -22,6 +23,7 @@ SITE = CACHE / "site"
 APP = CACHE / "app"
 ARCHIVE = CACHE / "legacy"
 REQUIREMENTS = ROOT / "requirements.txt"
+APP_SIGNATURE = ".app-signature"
 
 
 def python_version(executable: Path) -> tuple[int, int] | None:
@@ -62,13 +64,36 @@ def file_digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def metadata_digest(root: Path, files: list[Path]) -> str:
+def app_content_hash(root: Path) -> str:
+    if not root.is_dir() or root.is_symlink():
+        raise ValueError("Cached Studio app is missing or is not a regular directory")
+    files: list[Path] = []
+    for item in root.rglob("*"):
+        if item.is_symlink():
+            raise ValueError(f"Cached Studio app contains a symlink: {item.relative_to(root)}")
+        if not item.is_file() or item.name == APP_SIGNATURE or "__pycache__" in item.parts or item.suffix == ".pyc":
+            continue
+        files.append(item)
     value = hashlib.sha256()
-    for item in sorted(files):
-        value.update(str(item.relative_to(root)).encode("utf-8"))
+    for item in sorted(files, key=lambda path: path.relative_to(root).as_posix()):
+        value.update(item.relative_to(root).as_posix().encode("utf-8"))
         value.update(b"\0")
         value.update(hashlib.sha256(item.read_bytes()).digest())
     return value.hexdigest()
+
+
+def verify_app_cache(root: Path, expected_backend_hash: str) -> dict[str, str]:
+    marker = root / APP_SIGNATURE
+    try:
+        descriptor = json.loads(marker.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ValueError("Cached Studio app identity is missing or malformed") from error
+    if not isinstance(descriptor, dict) or descriptor.get("backendContentSha256") != expected_backend_hash:
+        raise ValueError("Cached Studio backend identity does not match the release")
+    actual = app_content_hash(root)
+    if descriptor.get("appContentSha256") != actual:
+        raise ValueError("Cached Studio app file hash does not match its identity")
+    return {"backendContentSha256": expected_backend_hash, "appContentSha256": actual}
 
 
 def replace_tree(temporary: Path, target: Path, verifier=None) -> None:
@@ -104,6 +129,8 @@ def replace_tree(temporary: Path, target: Path, verifier=None) -> None:
 def ensure_runtime() -> Path:
     CACHE.mkdir(parents=True, exist_ok=True)
     DATA.mkdir(parents=True, exist_ok=True)
+    CACHE.chmod(0o700)
+    DATA.chmod(0o700)
     runtime_python = VENV / "bin" / "python"
     marker = VENV / ".requirements-sha256"
     base_marker = VENV / ".base-python"
@@ -153,15 +180,21 @@ def sync_site(source: Path | None = None, target: Path | None = None) -> dict[st
     return source_release
 
 
-def sync_app() -> None:
-    server = ROOT / "studio_server"
-    runner = ROOT / "scripts" / "run_studio_runtime.py"
-    manifest = ROOT / "studio" / "src" / "content" / "course-manifest.json"
-    source_hash = backend_content_hash(ROOT)
-    marker = APP / ".app-signature"
-    if marker.is_file() and marker.read_text(encoding="utf-8").strip() == source_hash:
+def sync_app(root: Path | None = None, target: Path | None = None, cache: Path | None = None) -> None:
+    root = (root or ROOT).resolve()
+    target = (target or APP).resolve()
+    cache = (cache or CACHE).resolve()
+    server = root / "studio_server"
+    runner = root / "scripts" / "run_studio_runtime.py"
+    manifest = root / "studio" / "src" / "content" / "course-manifest.json"
+    source_hash = backend_content_hash(root)
+    try:
+        verify_app_cache(target, source_hash)
         return
-    temporary = CACHE / f"app-{os.getpid()}.tmp"
+    except ValueError:
+        pass
+    cache.mkdir(parents=True, exist_ok=True)
+    temporary = cache / f"app-{os.getpid()}.tmp"
     shutil.rmtree(temporary, ignore_errors=True)
     try:
         shutil.copytree(server, temporary / "studio_server", ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
@@ -172,8 +205,12 @@ def sync_app() -> None:
     except Exception:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
-    (temporary / ".app-signature").write_text(source_hash, encoding="utf-8")
-    replace_tree(temporary, APP)
+    signature = {
+        "backendContentSha256": source_hash,
+        "appContentSha256": app_content_hash(temporary),
+    }
+    (temporary / APP_SIGNATURE).write_text(json.dumps(signature, sort_keys=True), encoding="utf-8")
+    replace_tree(temporary, target, verifier=lambda path: verify_app_cache(path, source_hash))
 
 
 def sync_archive() -> None:
@@ -192,8 +229,9 @@ def main() -> None:
     sync_app()
     sync_archive()
     release = sync_site()
-    app_signature = APP / ".app-signature"
-    if not app_signature.is_file() or app_signature.read_text(encoding="utf-8").strip() != release["backendContentSha256"]:
+    try:
+        verify_app_cache(APP, str(release["backendContentSha256"]))
+    except ValueError as error:
         raise SystemExit("Cached Study Studio app identity does not match the verified release. Rebuild the cache and retry.")
     environment = os.environ.copy()
     environment.update({

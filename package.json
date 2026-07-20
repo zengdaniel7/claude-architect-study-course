@@ -10,10 +10,11 @@
     "studio:dev": "vite --config studio/vite.config.ts",
     "studio:build": "pnpm run studio:manifest && vite build --config studio/vite.config.ts && python3 scripts/release_identity.py generate --dist studio/dist",
     "studio:release:check": "python3 scripts/release_identity.py verify --dist studio/dist",
+    "studio:preview:check": "node scripts/verify-preview-bundle.mjs",
     "studio:preview": "vite preview --config studio/vite.config.ts",
     "studio:start": "python3 scripts/start_studio.py --no-open",
     "test:unit": "vitest run --config studio/vitest.config.ts --maxWorkers=1",
-    "test:studio-server": "python -m pytest tests/studio_server -q",
+    "test:studio-server": "python -m pytest tests/studio_server tests/test_mcp_safety.py tests/test_release_hardening.py -vv --durations=10",
     "test:server": "python3 -m unittest discover -s tests -p 'test_serve.py'",
     "test:e2e": "playwright test",
     "test": "pnpm run audit && pnpm run typecheck && pnpm run test:unit && pnpm run test:server && pnpm run test:studio-server && pnpm run studio:build && pnpm run test:e2e"

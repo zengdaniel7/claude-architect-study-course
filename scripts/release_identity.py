@@ -18,6 +18,13 @@ SUPPORTED_SCHEMA_MAX = 3
 MANIFEST_RELATIVE = Path("studio/src/content/course-manifest.json")
 REQUIREMENTS_RELATIVE = Path("requirements.txt")
 REPO_ROOT = Path(__file__).resolve().parents[1]
+PRODUCTION_SCRIPTS = (
+    Path("scripts/build_legacy_archive.py"),
+    Path("scripts/release_identity.py"),
+    Path("scripts/run_frontier_mcp.py"),
+    Path("scripts/run_studio_runtime.py"),
+    Path("scripts/start_studio.py"),
+)
 
 
 def _sha256(path: Path) -> str:
@@ -31,7 +38,8 @@ def _sha256(path: Path) -> str:
 def _backend_files(root: Path) -> list[Path]:
     server = root / "studio_server"
     files = [item for item in server.rglob("*.py") if "__pycache__" not in item.parts]
-    files.extend([root / "scripts" / "run_studio_runtime.py", root / MANIFEST_RELATIVE, root / REQUIREMENTS_RELATIVE])
+    files.extend(root / relative for relative in PRODUCTION_SCRIPTS)
+    files.extend([root / MANIFEST_RELATIVE, root / REQUIREMENTS_RELATIVE])
     return sorted(files, key=lambda item: item.relative_to(root).as_posix())
 
 
