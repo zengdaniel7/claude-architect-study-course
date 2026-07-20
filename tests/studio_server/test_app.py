@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sqlite3
+import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,9 @@ def write_progress(tmp_path: Path, checks: list[bool] | None = None, extra: dict
 def client_for(tmp_path: Path, checks: list[bool] | None = None, extra: dict[str, str] | None = None) -> tuple[TestClient, dict[str, str], Any]:
     write_progress(tmp_path, checks, extra)
     app = create_app(tmp_path)
+    report = app.state.store.migration_report()
+    if report.get("status") == "pending_confirmation":
+        app.state.store.commit_legacy_import(report["sourceSha256"])
     client = TestClient(app, base_url="http://localhost")
     return client, {"X-CCA-Instance": app.state.instance_token}, app
 
@@ -62,6 +66,24 @@ def pending_quiz_review(client: TestClient, headers: dict[str, str]) -> dict[str
     return reviews[0]
 
 
+def rate_card(
+    client: TestClient,
+    headers: dict[str, str],
+    review: dict[str, Any],
+    rating: str,
+    *,
+    rating_id: str | None = None,
+) -> dict[str, Any]:
+    card = review["packet"]["cards"][0]
+    response = client.post(
+        f'/api/reviews/{review["id"]}/cards/{card["id"]}',
+        headers=headers,
+        json={"ratingId": rating_id or str(uuid.uuid4()), "rating": rating, "elapsedMs": 250},
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
 @pytest.mark.asyncio
 async def test_body_limit_never_reads_a_get_body() -> None:
     called = False
@@ -86,14 +108,24 @@ async def test_body_limit_never_reads_a_get_body() -> None:
     assert messages[0]["status"] == 204
 
 
-def test_import_is_lossless_contiguous_and_reported(tmp_path: Path) -> None:
+def test_legacy_import_is_lossless_confirmed_contiguous_and_reported(tmp_path: Path) -> None:
     unknown = "ccaf-custom-future-key"
     original = write_progress(tmp_path, [True, False, True, True, True], {unknown: "opaque-value"})
     app = create_app(tmp_path)
     client = TestClient(app, base_url="http://localhost")
     headers = {"X-CCA-Instance": app.state.instance_token}
 
-    session = client.get("/api/session/current", headers=headers).json()
+    before = client.get("/api/session/current", headers=headers).json()
+    assert before["stage"] == "learn"
+    report = client.get("/api/migration/report", headers=headers).json()
+    assert report["status"] == "pending_confirmation"
+    imported = client.post(
+        "/api/migration/legacy/commit",
+        headers=headers,
+        json={"sourceSha256": report["sourceSha256"]},
+    )
+    assert imported.status_code == 200
+    session = imported.json()["session"]
     assert [stage["status"] for stage in session["stages"]] == [
         "complete", "current", "upcoming", "upcoming", "upcoming", "upcoming"
     ]
@@ -103,6 +135,7 @@ def test_import_is_lossless_contiguous_and_reported(tmp_path: Path) -> None:
     report = client.get("/api/migration/report", headers=headers).json()
     assert report["sourceFound"] is True
     assert report["sourceUnchanged"] is True
+    assert report["status"] == "imported"
     assert unknown in report["unknownKeysPreserved"]
 
 
@@ -150,7 +183,7 @@ def test_guess_inflated_quiz_forces_review_and_retake(tmp_path: Path) -> None:
     assert len(review["packet"]["cards"]) == 1
     assert review["packet"]["cards"][0]["source"] == "Correct guess"
 
-    reviewed = attempt(client, headers, "review", {"reviewId": review["id"], "reviewed": 1, "finalGrade": "good"})
+    reviewed = rate_card(client, headers, review, "good")
     assert reviewed["session"]["stage"] == "quiz"
     assert reviewed["session"]["mastery"] == "practiced"
 
@@ -159,7 +192,7 @@ def test_guess_inflated_quiz_forces_review_and_retake(tmp_path: Path) -> None:
     assert qualified["session"]["stage"] == "review"
 
     final_review = pending_quiz_review(client, headers)
-    mastered = attempt(client, headers, "review", {"reviewId": final_review["id"], "reviewed": 1, "finalGrade": "good"})
+    mastered = rate_card(client, headers, final_review, "good")
     assert mastered["session"]["mastery"] == "mastered"
     assert mastered["session"]["progressPercent"] == 100
 
@@ -368,38 +401,48 @@ def test_mastered_review_is_scheduled_and_again_cannot_finish(tmp_path: Path) ->
     qualified = attempt(client, headers, "quiz", quiz_payload(), "know")
     assert qualified["result"]["qualified"] is True
     immediate = pending_quiz_review(client, headers)
-    mastered = attempt(client, headers, "review", {
-        "reviewId": immediate["id"], "reviewed": 1, "finalGrade": "good"
-    })
+    mastered = rate_card(client, headers, immediate, "good")
     assert mastered["session"]["mastery"] == "mastered"
     assert mastered["session"]["dueReviews"] == 0
     assert client.get("/api/reviews/pending", headers=headers).json()["reviews"] == []
 
     future = app.state.store.pending_reviews("quiz")
     assert len(future) == 1
-    assert future[0]["packet"]["intervalDays"] == 4
+    with app.state.store._connect() as db:
+        state = db.execute(
+            "SELECT prior_interval_days FROM review_card_state WHERE review_id = ?",
+            (future[0]["id"],),
+        ).fetchone()
+        assert state["prior_interval_days"] == 4
     with app.state.store._connect() as db:
         db.execute("UPDATE reviews SET due_at = ? WHERE id = ?", ("2000-01-01T00:00:00+00:00", future[0]["id"]))
+        db.execute(
+            "UPDATE review_card_state SET next_due_at = ?, status = 'scheduled' WHERE review_id = ?",
+            ("2000-01-01T00:00:00+00:00", future[0]["id"]),
+        )
 
     assert client.get("/api/session/current", headers=headers).json()["dueReviews"] == 1
     due = pending_quiz_review(client, headers)
-    repeated = attempt(client, headers, "review", {
-        "reviewId": due["id"], "reviewed": 1, "finalGrade": "again"
-    })
-    assert repeated["result"]["passed"] is False
+    repeated = rate_card(client, headers, due, "again")
+    assert repeated["repeat"] is True
+    assert repeated["reviewComplete"] is False
     assert repeated["session"]["mastery"] == "mastered"
     assert repeated["session"]["dueReviews"] == 1
 
-    maintained = attempt(client, headers, "review", {
-        "reviewId": due["id"], "reviewed": 2, "finalGrade": "hard"
-    })
-    assert maintained["result"]["maintenance"] is True
-    assert maintained["feedback"]["title"] == "Review recorded"
+    due_again = pending_quiz_review(client, headers)
+    maintained = rate_card(client, headers, due_again, "hard")
+    assert maintained["reviewComplete"] is True
+    assert maintained["feedback"]["title"] == "Review saved"
     assert maintained["session"]["mastery"] == "mastered"
     assert maintained["session"]["dueReviews"] == 0
     next_review = app.state.store.pending_reviews("quiz")
     assert len(next_review) == 1
-    assert next_review[0]["packet"]["intervalDays"] == 2
+    with app.state.store._connect() as db:
+        state = db.execute(
+            "SELECT prior_interval_days FROM review_card_state WHERE review_id = ?",
+            (next_review[0]["id"],),
+        ).fetchone()
+        assert state["prior_interval_days"] == 2
 
 
 @pytest.mark.asyncio
