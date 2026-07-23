@@ -37,8 +37,8 @@ export function QuizStage() {
   async function nextQuestion() {
     if (choice === null) return;
     const nextAnswers = [...answers, { choice, confidence, correct }];
-    setAnswers(nextAnswers);
     if (index < questions.length - 1) {
+      setAnswers(nextAnswers);
       setIndex((value) => value + 1);
       setChoice(null);
       setConfidence("know");

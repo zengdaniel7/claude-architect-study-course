@@ -105,7 +105,7 @@ The broad lane covers programming, web/networking, data, Git/testing/delivery, s
 
 ## Release safeguards
 
-- `course-data.js` is the single source for order, prerequisites, resources, builds, concepts, quiz destinations, and tutor prompts.
+- `course-data.js` is the single editing source for order, prerequisites, resources, builds, concepts, quiz destinations, and tutor prompts; the Study Studio's protected `studio/src/content/course-manifest.json` is generated from it (plus `video-data.js`) by `scripts/export-studio-manifest.mjs` and checked in CI.
 - `course-audit.mjs` validates prerequisites, unique builds, review cards, beginner quiz banks, internal resources, and stale old-unit labels.
 - Private PDFs, personal progress JSON, Obsidian settings, and personal notes are never included in the public release.
 - Exam facts remain separately labeled **official** or **reported** and were not rewritten during this repair.

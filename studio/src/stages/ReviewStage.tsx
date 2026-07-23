@@ -27,6 +27,7 @@ export function ReviewStage() {
   const [reviewId, setReviewId] = useState("");
   const [loadingCards, setLoadingCards] = useState(!demo);
   const [loadError, setLoadError] = useState("");
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [grade, setGrade] = useState<ReviewRating | null>(null);
   const [pendingRating, setPendingRating] = useState<PendingRating | null>(null);
@@ -44,6 +45,8 @@ export function ReviewStage() {
       return;
     }
     let active = true;
+    setLoadingCards(true);
+    setLoadError("");
     fetchPendingReview().then((review) => {
       if (!active) return;
       setQueue(review?.cards ?? []);
@@ -55,7 +58,7 @@ export function ReviewStage() {
       setLoadingCards(false);
     });
     return () => { active = false; };
-  }, [demo]);
+  }, [demo, loadAttempt]);
 
   useEffect(() => {
     cardStartedAt.current = Date.now();
@@ -106,7 +109,7 @@ export function ReviewStage() {
   }
 
   if (loadingCards) return <div className="loading-view" role="status">Loading your saved review card…</div>;
-  if (loadError && !demo) return <div className="empty-state" role="alert"><h1>Review is still saved</h1><p>{loadError}</p></div>;
+  if (loadError && !demo) return <div className="empty-state" role="alert"><h1>Review is still saved</h1><p>{loadError}</p><Button kind="primary" icon={<RotateCcw size={18} />} onClick={() => setLoadAttempt((value) => value + 1)}>Try again</Button></div>;
   if (!card && submitState === "success") return <section ref={submitStatusRef} className="review-submit-status review-submit-status--success" role="status" tabIndex={-1}><strong>{PUBLIC_PREVIEW ? "Preview review complete." : "Review saved."}</strong><span>{PUBLIC_PREVIEW ? "This run is not saved." : "The saved queue is complete."}</span></section>;
   if (!card) return <div className="empty-state" role="status"><h1>No review card is due</h1><p>Return to Home and continue your course.</p></div>;
   const retrying = Boolean(pendingRating);

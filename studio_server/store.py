@@ -241,8 +241,12 @@ class StudioStore:
         return target
 
     def _prune_backups(self) -> None:
+        # Migration (studio-v*) and pre-import rollback copies live outside the
+        # routine rotation so ordinary boots and exports cannot evict them.
         backups = sorted(self.backup_dir.glob("studio-*.sqlite3"), key=lambda path: path.stat().st_mtime, reverse=True)
-        for old in backups[BACKUP_RETENTION:]:
+        routine = [path for path in backups if not re.match(r"studio-(?:v\d|pre-import-)", path.name)]
+        pre_import = [path for path in backups if path.name.startswith("studio-pre-import-")]
+        for old in routine[BACKUP_RETENTION:] + pre_import[BACKUP_RETENTION:]:
             old.unlink(missing_ok=True)
             old.with_suffix(".json").unlink(missing_ok=True)
 
@@ -862,7 +866,7 @@ class StudioStore:
                     """,
                     (review_id, now()),
                 ).fetchone()[0])
-            return row is not None and remaining == 0, {
+            return row is not None and remaining == 0 and self._latest_quiz_qualified(db), {
                 "reviewId": review_id,
                 "remainingCards": remaining,
                 "requirement": "Save a rating on every card. Again must be repeated before the review can finish.",
@@ -884,11 +888,12 @@ class StudioStore:
         elapsed_ms: int,
         rating_id: str,
     ) -> dict[str, Any]:
+        # elapsedMs is telemetry; keeping it out of the idempotency hash lets a
+        # timed-out retry replay its receipt even when the clock reading moved.
         request_document = {
             "reviewId": review_id,
             "cardId": card_id,
             "rating": rating,
-            "elapsedMs": elapsed_ms,
         }
         request_hash = hashlib.sha256(canonical(request_document)).hexdigest()
         with self._write_lock, self._connect() as db:
@@ -1434,28 +1439,43 @@ class StudioStore:
 
     def export_backup(self) -> tuple[Path, dict[str, Any]]:
         snapshot = self.create_verified_backup("export")
-        metadata = {
-            "appId": "ccaf-study-studio",
-            "formatVersion": BACKUP_FORMAT_VERSION,
-            "schemaVersion": SCHEMA_VERSION,
-            "manifestHash": self.manifest_hash,
-            "databaseId": self._database_id_for_path(snapshot),
-            "databaseSha256": self._file_sha256(snapshot),
-            "stateDigest": self._normalized_state_digest(snapshot),
-            "createdAt": now(),
-        }
-        archive_path = self.backup_dir / f"ccaf-study-studio-{datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')}.ccaf-backup"
-        with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
-            archive.writestr("metadata.json", compact(metadata))
-            archive.write(snapshot, "studio.sqlite3")
-        archive_path.chmod(0o600)
-        with archive_path.open("rb") as handle:
-            os.fsync(handle.fileno())
+        try:
+            metadata = {
+                "appId": "ccaf-study-studio",
+                "formatVersion": BACKUP_FORMAT_VERSION,
+                "schemaVersion": SCHEMA_VERSION,
+                "manifestHash": self.manifest_hash,
+                "databaseId": self._database_id_for_path(snapshot),
+                "databaseSha256": self._file_sha256(snapshot),
+                "stateDigest": self._normalized_state_digest(snapshot),
+                "createdAt": now(),
+            }
+            archive_path = self.backup_dir / f"ccaf-study-studio-{datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')}.ccaf-backup"
+            with zipfile.ZipFile(archive_path, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=6) as archive:
+                archive.writestr("metadata.json", compact(metadata))
+                archive.write(snapshot, "studio.sqlite3")
+            archive_path.chmod(0o600)
+            with archive_path.open("rb") as handle:
+                os.fsync(handle.fileno())
+        finally:
+            # The archive embeds the snapshot bytes; the standalone copy would
+            # only double disk use and crowd the backup rotation.
+            snapshot.unlink(missing_ok=True)
+            snapshot.with_suffix(".json").unlink(missing_ok=True)
         self._fsync_directory(self.backup_dir)
         archives = sorted(self.backup_dir.glob("*.ccaf-backup"), key=lambda path: path.stat().st_mtime, reverse=True)
         for old in archives[BACKUP_RETENTION:]:
             old.unlink(missing_ok=True)
         return archive_path, metadata
+
+    @staticmethod
+    def _session_recency_for_path(path: Path) -> tuple[int, str]:
+        with sqlite3.connect(f"file:{path}?mode=ro", uri=True, timeout=10.0) as db:
+            try:
+                row = db.execute("SELECT state_version, updated_at FROM sessions WHERE unit_id = 'w1'").fetchone()
+            except sqlite3.DatabaseError:
+                return 0, ""
+        return (int(row[0]), str(row[1])) if row else (0, "")
 
     @staticmethod
     def _database_id_for_path(path: Path) -> str:
@@ -1520,6 +1540,8 @@ class StudioStore:
         except Exception:
             staged_database.unlink(missing_ok=True)
             raise
+        incoming_version, incoming_updated = self._session_recency_for_path(staged_database)
+        current_version, current_updated = self._session_recency_for_path(self.path)
         record = {
             "token": token,
             "databaseSha256": database_sha,
@@ -1534,13 +1556,22 @@ class StudioStore:
             os.fsync(handle.fileno())
         record_path.chmod(0o600)
         self._fsync_directory(self.import_dir)
+        warning = (
+            "This backup is OLDER than your current progress. Restoring goes back to that older state; a pre-import rollback copy is kept."
+            if incoming_version < current_version
+            else "Import replaces Studio progress only after you confirm."
+        )
         return {
             "importToken": token,
             "valid": True,
             "schemaVersion": SCHEMA_VERSION,
             "databaseId": record["databaseId"],
             "stateDigest": state_digest,
-            "warning": "Import replaces Studio progress only after you confirm.",
+            "incomingStateVersion": incoming_version,
+            "incomingUpdatedAt": incoming_updated,
+            "currentStateVersion": current_version,
+            "currentUpdatedAt": current_updated,
+            "warning": warning,
         }
 
     def commit_backup_import(self, token: str) -> dict[str, Any]:

@@ -19,12 +19,13 @@ A complete, self-contained study site for Anthropic's **Claude Certified Archite
 - **💬 Grounded tutor bridge** that copies the current lesson, prerequisite, rubric, and recent evidence into a focused tutor prompt
 - **🧰 Applied Engineer path** for programming, APIs, databases, Git, testing, systems, security, architecture, and technical-cofounder judgment
 - **🩹 Repair guide** — the trickiest pre-test questions explained as pictures
-- Progress is saved automatically — every tick, card and typed answer, the instant you make it; no account, no tracking. On the hosted site it lives in your browser (per-browser, per-address — with **Export/Import backup buttons** on the Home page). Run it locally with `serve.py` and it's **also written to a real file, `my-progress.json`**, which auto-restores if the browser's copy is ever cleared.
+- **🎛️ NEW: CCA-F Study Studio** — a rebuilt guided app (React + a local Python server + a private SQLite database) that walks one unit at a time through **Learn → Draw → Build → Teach → Quiz → Review**, with server-side grading, verified backups, and an MCP connection for AI tutors ([FRONTIER-AI.md](FRONTIER-AI.md)). Unit **W1 is fully interactive** today; the other 22 units are in the protected manifest for staged migration, and the classic pages above stay available at `/legacy/`.
+- Progress is saved automatically **when you run the course locally** — every tick, card and typed answer; no account, no tracking. The classic pages save to your browser and (with `serve.py`) to a real file, `my-progress.json`, which auto-restores if the browser's copy is ever cleared; Study Studio saves to a private local database with verified export/import backups. The hosted site is a **preview only and does not save progress**.
 
 ## 🚀 Run it — two ways
 
-### 🌐 Option 1: just use the website (zero setup)
-Open **https://zengdaniel7.github.io/claude-architect-study-course/** — everything works right there: lessons, diagrams, quizzes, flashcards, exercises, and **your progress saves automatically in your browser** (checkmarks, mastered cards, exercise answers — no account needed). One catch: that progress lives in *that* browser on *that* device, and the course content itself is fixed — you can't change it.
+### 🌐 Option 1: peek at the live preview (zero setup)
+Open **https://zengdaniel7.github.io/claude-architect-study-course/** — a **preview of the new Study Studio**. You can click through the first unit (W1) end to end: Learn → Draw → Build → Teach → Quiz → Review. It shows **"Preview only. Progress is not saved."** and means it — nothing persists between visits, and the AI tutor is switched off. Use it to *see* the course; download it to *study*.
 
 ### 💻 Option 2: download it for FULL access (recommended)
 ```bash
@@ -32,16 +33,22 @@ git clone https://github.com/zengdaniel7/claude-architect-study-course.git
 cd claude-architect-study-course
 python3 serve.py
 ```
-Open http://localhost:8000 — start at the **Home** page. Downloading unlocks what the website can't do:
+Open http://localhost:8000 — start at the **Home** page. Downloading unlocks what the hosted preview can't do:
 - **Your progress becomes a real file** — `serve.py` mirrors every tick and typed answer into `my-progress.json` in the folder, automatically, and restores from it if browser data is ever cleared. (Plain `python3 -m http.server 8000` works too, but then saves stay browser-only.)
 - **The course becomes YOURS to grow** — run an AI coding agent (like [Claude Code](https://claude.com/claude-code)) in the folder and the included [CLAUDE.md](CLAUDE.md) turns it into your personal tutor: it grades your exercise reports, keeps your mistake log, **adds new flashcards and exercises to the actual files** as you learn. The hosted site can never edit itself — a local copy can.
 - Works offline, and you can edit any lesson to match how you learn.
 
-| | 🌐 Website | 💻 Downloaded |
+**⭐ Want the new Study Studio app locally?** It ships as source. Build it once with Node 20+ and pnpm (`corepack enable && pnpm install && pnpm run studio:build`), then launch:
+```bash
+./Start\ CCA-F\ Study\ Studio.command
+```
+Open **http://127.0.0.1:8765/** — W1 fully guided with server-side grading, progress in a private local database (with verified export/import backups), the classic pages at `/legacy/`, and MCP hookup for AI tutors ([FRONTIER-AI.md](FRONTIER-AI.md)).
+
+| | 🌐 Hosted preview | 💻 Downloaded |
 |---|---|---|
-| Lessons, quizzes, flashcards, exercises | ✅ | ✅ |
-| Progress auto-saves (in your browser) | ✅ | ✅ |
-| Progress also saved to a real file on disk, with auto-restore | ❌ | ✅ |
+| See the new Study Studio (W1 guided journey) | ✅ preview | ✅ (after one build) |
+| Full classic course: lessons, quizzes, flashcards, exercises | ❌ | ✅ |
+| Progress saves | ❌ never (preview only) | ✅ browser + `my-progress.json`, or the Studio database |
 | AI tutor that grades + upgrades the course files | ❌ | ✅ |
 | Edit lessons / add your own content | ❌ | ✅ |
 | Works offline | ❌ | ✅ |

@@ -12,7 +12,7 @@ export interface OllamaState {
 
 let initialization: Promise<{ session: SessionState; demo: boolean; ollama: OllamaState }> | null = null;
 
-class ApiRequestError extends Error {
+export class ApiRequestError extends Error {
   constructor(readonly status: number, message: string) {
     super(message);
   }
@@ -33,7 +33,16 @@ async function requestResponse(path: string, init: RequestInit = {}): Promise<Re
   init.signal?.addEventListener("abort", forwardAbort, { once: true });
   try {
     const response = await fetch(path, { ...init, headers, signal: controller.signal });
-    if (!response.ok) throw new ApiRequestError(response.status, `${response.status} ${response.statusText}`);
+    if (!response.ok) {
+      let detail = "";
+      try {
+        const body = (await response.json()) as { detail?: unknown };
+        if (typeof body.detail === "string") detail = body.detail;
+      } catch {
+        // Non-JSON error bodies fall back to the status line.
+      }
+      throw new ApiRequestError(response.status, detail || `${response.status} ${response.statusText}`);
+    }
     return response;
   } finally {
     window.clearTimeout(timeout);
@@ -112,13 +121,14 @@ export async function submitAttempt(
     stage: (isDone ? "review" : ["learn", "draw", "build", "teach", "quiz", "review"][nextIndex]) as StageId,
     stages: buildStages(nextIndex),
     progressPercent: isDone ? 100 : Math.round((nextIndex / 6) * 100),
-    mastery: isDone ? "mastered" as const : "practiced" as const
+    mastery: isDone ? "mastered" as const : "practiced" as const,
+    stateVersion: session.stateVersion + 1
   };
   return {
     session: next,
     feedback: {
       tone: "success",
-      title: isDone ? "W1 complete" : "Saved",
+      title: isDone ? "W1 complete" : "Preview step complete",
       message: isDone ? "Your preview lesson is complete. Progress is not saved." : "This preview action is temporary. Progress is not saved."
     },
     attemptId,
@@ -215,8 +225,8 @@ export async function rateReviewCard(
     session: nextSession,
     feedback: {
       tone: "success",
-      title: reviewComplete ? "Review saved" : rating === "again" ? "Again saved" : "Rating saved",
-      message: reviewComplete ? "Your demo review is complete." : "Your next review card is ready."
+      title: reviewComplete ? "Preview review complete" : rating === "again" ? "Again recorded (preview)" : "Rating recorded (preview)",
+      message: reviewComplete ? "Your demo review is complete. Progress is not saved." : "Your next review card is ready. Progress is not saved."
     },
     stateVersion: nextSession.stateVersion
   };

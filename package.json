@@ -17,7 +17,7 @@
     "test:studio-server": "python -m pytest tests/studio_server tests/test_mcp_safety.py tests/test_release_hardening.py -vv --durations=10",
     "test:server": "python3 -m unittest discover -s tests -p 'test_serve.py'",
     "test:e2e": "playwright test",
-    "test": "pnpm run audit && pnpm run typecheck && pnpm run test:unit && pnpm run test:server && pnpm run test:studio-server && pnpm run studio:build && pnpm run test:e2e"
+    "test": "pnpm run audit && pnpm run typecheck && pnpm run test:unit && pnpm run test:server && pnpm run test:studio-server && pnpm run studio:build && pnpm run studio:release:check && pnpm run test:e2e"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",

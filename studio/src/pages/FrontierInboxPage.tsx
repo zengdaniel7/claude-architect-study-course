@@ -1,7 +1,7 @@
 import { Check, Inbox, LoaderCircle, X } from "../icons";
 import { useEffect, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { decideProposal, fetchFrontierInbox, fetchFrontierInboxDetail } from "../api";
+import { ApiRequestError, decideProposal, fetchFrontierInbox, fetchFrontierInboxDetail } from "../api";
 import { useStudio } from "../StudioContext";
 import type { FrontierInboxDetail, FrontierInboxItem } from "../types";
 import { Button } from "../components/atoms/Button";
@@ -48,8 +48,19 @@ export function FrontierInboxPage() {
       setItems((current) => current.map((item) => item.id === detail.id ? { ...item, status: result.proposal.status } : item));
       setDetail((current) => current ? { ...current, status: result.proposal.status } : current);
       setStatus({ tone: "success", message: decision === "accepted" ? "Proposal accepted. It remains advisory." : "Proposal rejected." });
-    } catch {
-      setStatus({ tone: "error", message: "Decision did not save." });
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 409) {
+        setStatus({ tone: "error", message: "This proposal was already decided elsewhere. Showing its current state." });
+        try {
+          const fresh = await fetchFrontierInboxDetail(detail.id);
+          setDetail(fresh);
+          setItems((current) => current.map((item) => item.id === fresh.id ? { ...item, status: fresh.status } : item));
+        } catch {
+          // The message above already explains the stale state.
+        }
+      } else {
+        setStatus({ tone: "error", message: "Decision did not save." });
+      }
     } finally {
       setSaving(false);
     }

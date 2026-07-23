@@ -1,5 +1,5 @@
 import { Cpu, Download, Eye, Gauge, RotateCcw, Upload, Volume2 } from "../icons";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { commitBackup, commitLegacyImport, downloadBackup, fetchMigrationReport, inspectBackup } from "../api";
 import { useStudio } from "../StudioContext";
 import type { BackupInspection, MigrationReport } from "../types";
@@ -14,11 +14,17 @@ function RecoverySection() {
   const [migration, setMigration] = useState<MigrationReport | null>(null);
   const [busy, setBusy] = useState<"download" | "inspect" | "restore" | "legacy" | null>(null);
   const [status, setStatus] = useState<Status>(null);
+  const [migrationError, setMigrationError] = useState(false);
   const statusRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
-    void fetchMigrationReport().then(setMigration).catch(() => undefined);
+  const loadMigration = useCallback(() => {
+    setMigrationError(false);
+    void fetchMigrationReport().then(setMigration).catch(() => setMigrationError(true));
   }, []);
+
+  useEffect(() => {
+    loadMigration();
+  }, [loadMigration]);
 
   useEffect(() => {
     if (status) statusRef.current?.focus({ preventScroll: true });
@@ -62,13 +68,19 @@ function RecoverySection() {
     if (!inspection) return;
     setBusy("restore");
     setStatus(null);
+    let committed = false;
     try {
       await commitBackup(inspection.importToken);
-      await refreshSession();
+      committed = true;
       setInspection(null);
+      await refreshSession();
       setStatus({ tone: "success", message: "Backup restored. Session reloaded." });
     } catch {
-      setStatus({ tone: "error", message: "Restore did not finish. Your current database was kept." });
+      if (committed) {
+        setStatus({ tone: "success", message: "Backup restored. Reload this page to see it." });
+      } else {
+        setStatus({ tone: "error", message: "Restore did not finish. Your current database was kept." });
+      }
     } finally {
       setBusy(null);
     }
@@ -78,13 +90,19 @@ function RecoverySection() {
     if (!migration?.sourceSha256) return;
     setBusy("legacy");
     setStatus(null);
+    let committed = false;
     try {
       await commitLegacyImport(migration.sourceSha256);
-      await refreshSession();
+      committed = true;
       setMigration((report) => report ? { ...report, status: "imported" } : report);
+      await refreshSession();
       setStatus({ tone: "success", message: "Legacy checks imported. Session reloaded." });
     } catch {
-      setStatus({ tone: "error", message: "Legacy import did not finish. Source progress was not changed." });
+      if (committed) {
+        setStatus({ tone: "success", message: "Legacy checks imported. Reload this page to see them." });
+      } else {
+        setStatus({ tone: "error", message: "Legacy import did not finish. Source progress was not changed." });
+      }
     } finally {
       setBusy(null);
     }
@@ -102,10 +120,14 @@ function RecoverySection() {
         <div><b>Restore a backup</b><small>Check a .ccaf-backup file before it can replace Studio progress.</small></div>
         <label className="button button--secondary recovery-file"><Upload size={18} aria-hidden="true" /><span>{busy === "inspect" ? "Checking…" : "Choose backup"}</span><input type="file" accept=".ccaf-backup,application/zip,application/x-zip-compressed" disabled={busy !== null} onChange={(event) => void chooseBackup(event.target.files?.[0])} /></label>
       </div>
-      {inspection ? <div className="recovery-summary" aria-label="Backup inspection summary"><span><b>Database</b>{inspection.databaseId}</span><span><b>Schema</b>{inspection.schemaVersion}</span><span><b>Digest</b>{inspection.stateDigest}</span><Button kind="danger" disabled={busy !== null} onClick={() => void restore()}>{busy === "restore" ? "Restoring…" : "Confirm restore"}</Button></div> : null}
+      {inspection ? <div className="recovery-summary" aria-label="Backup inspection summary"><span><b>Database</b>{inspection.databaseId}</span><span><b>Schema</b>{inspection.schemaVersion}</span><span><b>Digest</b>{inspection.stateDigest}</span>{typeof inspection.incomingStateVersion === "number" && typeof inspection.currentStateVersion === "number" && inspection.incomingStateVersion < inspection.currentStateVersion ? <span role="alert"><b>Careful</b>This backup is older than your current progress.</span> : null}<Button kind="danger" disabled={busy !== null} onClick={() => void restore()}>{busy === "restore" ? "Restoring…" : "Confirm restore"}</Button></div> : null}
       {migration?.status === "pending_confirmation" ? <div className="recovery-row recovery-row--legacy">
         <div><b>Legacy import</b><small>{`Source unchanged: ${migration.sourceUnchanged ? "yes" : "no"}. Candidate W1 checks: ${candidateChecks}/6.`}</small></div>
         <Button kind="secondary" disabled={busy !== null || !migration.sourceUnchanged} onClick={() => void importLegacy()}>{busy === "legacy" ? "Importing…" : "Import legacy checks"}</Button>
+      </div> : null}
+      {migrationError ? <div className="recovery-row recovery-row--legacy">
+        <div><b>Legacy import</b><small>Study Studio could not check for legacy progress just now.</small></div>
+        <Button kind="secondary" disabled={busy !== null} onClick={loadMigration}>Try again</Button>
       </div> : null}
       {status ? <section ref={statusRef} className={`recovery-status recovery-status--${status.tone}`} role={status.tone === "error" ? "alert" : "status"} tabIndex={-1}>{status.message}</section> : null}
     </section>

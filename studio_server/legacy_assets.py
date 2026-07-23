@@ -90,6 +90,10 @@ def verify_archive(root: Path) -> bool:
         relative = path.relative_to(root).as_posix()
         if path.is_symlink():
             raise ValueError(f"Legacy archive cannot contain symlinks: {relative}")
+        if path.name == ".DS_Store" or path.name.startswith("._"):
+            # Benign macOS metadata appears in the cache on its own; it is never
+            # served (dot-prefixed paths are blocked) and must not disable /legacy/.
+            continue
         if path.is_dir():
             if relative not in allowed_directories:
                 raise ValueError(f"Legacy archive contains an unexpected directory: {relative}")

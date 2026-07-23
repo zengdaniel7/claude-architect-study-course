@@ -1,12 +1,16 @@
 import path from "node:path";
 import { fileURLToPath, URL } from "node:url";
 import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 
 const studioRoot = fileURLToPath(new URL(".", import.meta.url));
-const publicPreview = process.env.VITE_CCAF_PUBLIC_PREVIEW === "true";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  // Read the flag from both the shell and .env files so the preview alias can
+  // never disagree with import.meta.env's view of VITE_CCAF_PUBLIC_PREVIEW.
+  const env = loadEnv(mode, studioRoot, "VITE_");
+  const publicPreview = (process.env.VITE_CCAF_PUBLIC_PREVIEW ?? env.VITE_CCAF_PUBLIC_PREVIEW) === "true";
+  return {
   root: studioRoot,
   base: "./",
   publicDir: path.resolve(studioRoot, "../fonts"),
@@ -33,4 +37,5 @@ export default defineConfig({
       "/legacy": "http://127.0.0.1:8765"
     }
   }
+  };
 });

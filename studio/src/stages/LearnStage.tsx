@@ -8,9 +8,21 @@ export function LearnStage() {
   const { session, saving, completeStage, demo } = useStudio();
   const unit = unitById(session?.unitId ?? "w1");
   const lesson = manifest.lessons[unit.id];
-  const narration = useMemo(() => `${lesson.plain} Example: ${lesson.example}. Remember: ${lesson.danger}`, [lesson]);
+  const narration = useMemo(() => lesson ? `${lesson.plain} Example: ${lesson.example}. Remember: ${lesson.danger}` : "", [lesson]);
 
   useEffect(() => () => window.speechSynthesis?.cancel(), []);
+
+  if (!lesson) {
+    return (
+      <section className="lesson-scene" aria-labelledby="learn-title">
+        <div className="scene-heading">
+          <span className="eyebrow">One idea</span>
+          <h1 id="learn-title">This unit's guided lesson is not built yet</h1>
+          <p>The guided Study Studio version of <b>{unit.title}</b> is still being migrated. Use the classic pages at <a href="/legacy/">/legacy/</a> for this unit — your Studio progress is safe.</p>
+        </div>
+      </section>
+    );
+  }
 
   function readAloud() {
     window.speechSynthesis.cancel();

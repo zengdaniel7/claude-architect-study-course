@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { askTutor, cancelTutor, fetchCurrentSession, initializeApi, prepareFrontierReview, rateReviewCard as persistReviewCard, recordContentGap, submitAttempt } from "./api";
+import { ApiRequestError, askTutor, cancelTutor, fetchCurrentSession, initializeApi, prepareFrontierReview, rateReviewCard as persistReviewCard, recordContentGap, submitAttempt } from "./api";
 import type { OllamaState } from "./api";
 import type { AttemptResponse, Feedback, ReviewCard, ReviewRating, ReviewRatingResponse, SessionState, StageId, TutorResult } from "./types";
 
@@ -81,13 +81,34 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
       setSession(response.session);
       setFeedback(response.feedback);
       return response;
-    } catch {
-      setFeedback({
-        tone: "repair",
-        title: "Not saved yet",
-        message: "Your work is still on this screen. Study Studio checked its saved receipt before offering another try.",
-        nextAction: stage
-      });
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        setFeedback({
+          tone: "repair",
+          title: "Study Studio restarted",
+          message: "Reload this page to reconnect, then try again. Your work is still on this screen.",
+          nextAction: stage
+        });
+      } else if (error instanceof ApiRequestError && error.status === 409) {
+        setFeedback({
+          tone: "repair",
+          title: "Not saved — this page is out of date",
+          message: `${error.message} Your work is still on this screen.`,
+          nextAction: stage
+        });
+        try {
+          setSession(await fetchCurrentSession());
+        } catch {
+          // The conflict message above already tells the learner to reload.
+        }
+      } else {
+        setFeedback({
+          tone: "repair",
+          title: "Not saved yet",
+          message: "Your work is still on this screen. Study Studio checked its saved receipt before offering another try.",
+          nextAction: stage
+        });
+      }
       return null;
     } finally {
       savingRef.current = false;
@@ -104,13 +125,34 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
       setSession(response.session);
       setFeedback(response.feedback);
       return response;
-    } catch {
-      setFeedback({
-        tone: "repair",
-        title: "Rating not saved yet",
-        message: "Your selected rating is still ready to retry.",
-        nextAction: "review"
-      });
+    } catch (error) {
+      if (error instanceof ApiRequestError && error.status === 401) {
+        setFeedback({
+          tone: "repair",
+          title: "Study Studio restarted",
+          message: "Reload this page to reconnect, then rate the card again.",
+          nextAction: "review"
+        });
+      } else if (error instanceof ApiRequestError && error.status === 409) {
+        setFeedback({
+          tone: "repair",
+          title: "Rating not saved — this page is out of date",
+          message: `${error.message} Your selected rating is still ready to retry.`,
+          nextAction: "review"
+        });
+        try {
+          setSession(await fetchCurrentSession());
+        } catch {
+          // The conflict message above already tells the learner to reload.
+        }
+      } else {
+        setFeedback({
+          tone: "repair",
+          title: "Rating not saved yet",
+          message: "Your selected rating is still ready to retry.",
+          nextAction: "review"
+        });
+      }
       return null;
     } finally {
       savingRef.current = false;

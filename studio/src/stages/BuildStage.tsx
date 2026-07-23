@@ -21,6 +21,7 @@ export function BuildStage() {
   const [practiceMessage, setPracticeMessage] = useState("");
   const [fileName, setFileName] = useState("");
   const [fileText, setFileText] = useState("");
+  const [fileError, setFileError] = useState("");
   const [path, setPath] = useState("");
   const [plainText, setPlainText] = useState(false);
   const [independent, setIndependent] = useState(false);
@@ -35,8 +36,20 @@ export function BuildStage() {
   async function chooseFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
+    setFileError("");
     setFileName(file.name);
-    setFileText(await file.text());
+    // The local server rejects bodies over 1 MB; tiny-order.json is a few lines.
+    if (file.size > 200_000) {
+      setFileText("");
+      setFileError("That file is too big to be tiny-order.json. Choose the small file you saved in TextEdit.");
+      return;
+    }
+    try {
+      setFileText(await file.text());
+    } catch {
+      setFileText("");
+      setFileError("That file could not be read. Choose it again.");
+    }
   }
 
   if (part === "bridge") {
@@ -112,7 +125,7 @@ export function BuildStage() {
           <input type="file" accept=".json,text/plain,application/json" onChange={chooseFile} />
         </label>
         <div className={`check-result ${fileValid ? "check-result--ok" : ""}`}>
-          <span>File check</span><strong>{fileName || "No file chosen"}</strong><small>{fileValid ? "Exact name and readable text found" : "Choose tiny-order.json"}</small>
+          <span>File check</span><strong>{fileName || "No file chosen"}</strong><small>{fileError ? fileError : fileValid ? "Exact name and readable text found" : "Choose tiny-order.json"}</small>
         </div>
       </div>
 
