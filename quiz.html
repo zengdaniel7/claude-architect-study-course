@@ -14,13 +14,20 @@
   .why.show{display:block}
   .go{background:var(--green);color:#fff;border:0;border-radius:7px;font:inherit;font-weight:800;padding:12px 26px;font-size:1.02rem;cursor:pointer;margin-top:10px}
   .mini{background:var(--accent);color:#fff;border:0;border-radius:7px;font:inherit;font-weight:700;padding:8px 16px;cursor:pointer;margin:6px 8px 0 0;font-size:.85rem}
+  .quiz-question{display:none;margin:14px 0}.quiz-question.is-active{display:block}
+  .quiz-progress{margin:16px 0 10px}.quiz-progress-row{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;font-weight:800;color:var(--muted)}
+  .quiz-progress .bar{height:12px;background:#DCE5E8}.quiz-progress .bar span{background:var(--accent)}
+  .quiz-actions{display:flex;justify-content:space-between;gap:10px;margin:12px 0 18px;padding:10px;background:#fff;border:2px solid var(--line);border-radius:8px}
+  .quiz-nav{border:2px solid var(--line);background:#fff;color:var(--ink);border-radius:7px;font:inherit;font-weight:800;padding:10px 18px;cursor:pointer}.quiz-nav:disabled{opacity:.35;cursor:not-allowed}
+  #qstatus{min-height:1.4em;font-size:.8rem;color:var(--muted);margin:0}
+  @media(max-width:560px){.quiz-actions{display:grid;grid-template-columns:1fr 1fr}.quiz-actions .go{grid-column:1/-1;width:100%;margin:0}}
 </style>
 </head>
 <body>
 <nav class="top" id="site-nav"></nav>
 <script src="course-data.js"></script>
 <script src="nav.js"></script>
-<div class="wrap">
+<main class="wrap" id="main-content">
   <div id="picker" style="display:none">
     <h1>📊 Pick a quiz</h1>
     <div class="card"><ul id="picklist"></ul></div>
@@ -28,9 +35,16 @@
   <div id="quizview" style="display:none">
     <h1 id="qtitle"></h1>
     <p class="sub"><a href="quizzes.html">← All quizzes</a> · short check · no looking up · tick 🤔 if you guess</p>
+    <div id="lesson-flow"></div>
+    <div class="quiz-progress" id="quiz-progress"><div class="quiz-progress-row"><span id="qpos"></span><span id="qanswered"></span></div><div class="bar" aria-hidden="true"><span id="qbar" style="width:0"></span></div></div>
     <form id="quiz"></form>
-    <button class="go" id="scoreBtn">✅ Score me</button>
-    <div class="card" id="results" style="display:none">
+    <p id="qstatus" role="status" aria-live="polite"></p>
+    <div class="quiz-actions" id="quiz-actions">
+      <button class="quiz-nav" id="qprev" type="button">Previous</button>
+      <button class="quiz-nav" id="qnext" type="button">Next question</button>
+      <button class="go" id="scoreBtn" type="button" style="display:none;margin:0">Score quiz</button>
+    </div>
+    <div class="card" id="results" role="status" aria-live="polite" tabindex="-1" style="display:none">
       <p style="font-size:1.8rem;font-weight:800" id="score"></p>
       <div class="callout" id="conf"></div>
       <div id="unitdone" style="margin:12px 0"></div>
@@ -39,8 +53,9 @@
       <h3>📈 Your attempts</h3>
       <div id="history"></div>
     </div>
+    <div id="next-step"></div>
   </div>
-</div>
+</main>
 <div id="toast" style="position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:var(--ink);color:#fff;padding:10px 18px;border-radius:10px;font-weight:700;opacity:0;transition:.25s;pointer-events:none">Copied 👍</div>
 <script src="quizzes.js"></script>
 <script src="lesson-quizzes.js"></script>
@@ -49,7 +64,7 @@ var LETTERS=["A","B","C","D"];
 function param(n){var m=new RegExp("[?&]"+n+"=([^&]+)").exec(location.search);return m?decodeURIComponent(m[1]):null;}
 
 // ---- mark-unit-done (quiz -> timeline/course progress chain) ----
-var UPATH=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():["o1","a1","a2","m3","m1","m2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
+var UPATH=(window.CCAF&&CCAF.ORDER)?CCAF.ORDER.slice():["w1","w2","w3","w4","w5","a1","m3","m1","m2","o1","a2","d1","d2","m4","o3","o4","o2","rel","t1","t2","p1","px","p2"];
 var UTITLES=(window.CCAF&&CCAF.TITLES)?CCAF.TITLES:{};
 function curState(){try{var s=JSON.parse(localStorage.getItem("ccaf-curriculum")||"{}");if(s&&typeof s==="object"){s.done=s.done||{};s.opened=s.opened||{};return s;}}catch(e){}return {done:{},opened:{}};}
 function targetUnit(){var u=param("unit");if(u&&UTITLES[u])return u;
@@ -128,6 +143,7 @@ var SETU2={"digital-foundations":["w1","w2","w3","w4","w5"],foundations:["a1","a
 // so scores mean knowledge — not remembered letter positions.
 var QLIST=null, HK=null, QTITLE=null;
 function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function stableQuestionId(text){var h=2166136261;for(var i=0;i<text.length;i++){h^=text.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(36);}
 function shufOpts(q){var idx=shuffle([0,1,2,3]);
   return {q:q.q,opts:idx.map(function(i){return q.opts[i];}),ans:idx.indexOf(q.ans),why:q.why};}
 function buildLesson(u){
@@ -167,10 +183,11 @@ function bestScore(k){var h=history(HKEY(k));if(!h.length)return null;return h.r
 function showQuiz(){
   document.getElementById("quizview").style.display="block";
   document.getElementById("qtitle").textContent=QTITLE;
+  if(uparam&&window.CCAFFlow)CCAFFlow.mount("lesson-flow",{unit:uparam,stage:"quiz"});
   var form=document.getElementById("quiz");
   QLIST.forEach(function(item,qi){
-    var card=document.createElement("div");card.className="card";
-    var p=document.createElement("p");p.style.fontWeight="700";p.textContent=(qi+1)+". "+item.q;card.appendChild(p);
+    var card=document.createElement("div");card.className="card quiz-question";card.setAttribute("data-question",String(qi));
+    var p=document.createElement("p");p.style.fontWeight="700";p.tabIndex=-1;p.textContent=(qi+1)+". "+item.q;card.appendChild(p);
     item.opts.forEach(function(t,i){
       var lab=document.createElement("label");lab.className="opt";lab.id="o"+qi+"-"+i;
       lab.innerHTML='<input type="radio" name="q'+qi+'" value="'+i+'"><span class="ltr">'+LETTERS[i]+'</span><span>'+t+'</span>';
@@ -180,7 +197,27 @@ function showQuiz(){
     var w=document.createElement("div");w.className="why";w.id="why"+qi;w.textContent="💡 "+item.why;card.appendChild(w);
     form.appendChild(card);
   });
+  var pageIndex=0;
+  function drawPage(focus){
+    var cards=document.querySelectorAll(".quiz-question"),answered=0;
+    cards.forEach(function(card,index){card.classList.toggle("is-active",index===pageIndex);if(card.querySelector('input[type="radio"]:checked'))answered++;});
+    document.getElementById("qpos").textContent="Question "+(pageIndex+1)+" of "+QLIST.length;
+    document.getElementById("qanswered").textContent=answered+" answered";
+    document.getElementById("qbar").style.width=Math.round((pageIndex+1)/QLIST.length*100)+"%";
+    document.getElementById("qprev").disabled=pageIndex===0;
+    document.getElementById("qnext").style.display=pageIndex===QLIST.length-1?"none":"inline-block";
+    document.getElementById("scoreBtn").style.display=pageIndex===QLIST.length-1?"inline-block":"none";
+    if(focus){var heading=cards[pageIndex].querySelector("p");if(heading)heading.focus();}
+  }
+  form.addEventListener("change",function(){drawPage(false);});
+  document.getElementById("qprev").addEventListener("click",function(){pageIndex=Math.max(0,pageIndex-1);drawPage(true);});
+  document.getElementById("qnext").addEventListener("click",function(){
+    if(!document.querySelector('.quiz-question[data-question="'+pageIndex+'"] input[type="radio"]:checked'))document.getElementById("qstatus").textContent="You can continue, but this question is still unanswered.";else document.getElementById("qstatus").textContent="";
+    pageIndex=Math.min(QLIST.length-1,pageIndex+1);drawPage(true);
+  });
+  drawPage(false);
   document.getElementById("scoreBtn").addEventListener("click",function(){grade();});
+  document.getElementById("quiz").addEventListener("submit",function(event){event.preventDefault();grade();});
   document.getElementById("againBtn").addEventListener("click",function(){location.reload();}); // reload = fresh draw + fresh option order
   document.getElementById("copyBtn").addEventListener("click",function(){copyResult();});
 }
@@ -198,7 +235,7 @@ function grade(){
     document.getElementById("o"+qi+"-"+item.ans).classList.add("correct");
     document.getElementById("why"+qi).classList.add("show");
     if(a===item.ans){correct++;if(wasGuess)guessedCorrect++;} else {missed.push(qi+1); if(a!==null) document.getElementById("o"+qi+"-"+a).classList.add("wrong");}
-    if(wasGuess||a!==item.ans){reviewCards.push({id:(HK+"-"+qi+"-"+item.q.slice(0,24)).replace(/[^a-zA-Z0-9-]/g,"-"),unit:targetUnit()||"general",front:item.q,back:item.opts[item.ans]+". "+item.why,source:wasGuess&&a===item.ans?"guessed-correct":"missed"});}
+    if(wasGuess||a!==item.ans){reviewCards.push({id:"mistake-"+stableQuestionId(item.q),unit:targetUnit()||"general",front:item.q,back:item.opts[item.ans]+". "+item.why,source:wasGuess&&a===item.ans?"guessed-correct":"missed"});}
   });
   var total=QLIST.length;
   last={score:correct,total:total,guessed:guessed,missed:missed};
@@ -207,7 +244,8 @@ function grade(){
   try{var rc0=JSON.parse(localStorage.getItem("ccaf-mistake-cards")||"{}");reviewCards.forEach(function(c){rc0[c.id]=c;});localStorage.setItem("ccaf-mistake-cards",JSON.stringify(rc0));}catch(e){}
   // save the result AGAINST THE UNIT it was taken for — a lesson's first close requires this record
   try{qun=targetUnit();if(qun){var qd0=JSON.parse(localStorage.getItem("ccaf-quizdone")||"{}");
-    qd0[qun]={score:correct,total:total,guessed:guessed,set:HK,ts:new Date().toLocaleDateString()};
+    var latest={score:correct,total:total,guessed:guessed,set:HK,ts:new Date().toLocaleDateString()};
+    qd0[qun]=(window.CCAF&&CCAF.mergeQuizResult)?CCAF.mergeQuizResult(qd0[qun],latest):latest;
     localStorage.setItem("ccaf-quizdone",JSON.stringify(qd0));}}catch(e){}
   document.getElementById("score").textContent="Score: "+correct+" / "+total;
   var c=document.getElementById("conf");
@@ -215,10 +253,14 @@ function grade(){
   c.className="callout "+(correct/total>=0.8?"ok":(correct/total>=0.5?"tip":"warn"));
   c.innerHTML="<b>"+(correct===total?"Perfect! 🎉":(correct/total>=0.8?"Strong.":(correct/total>=0.5?"Getting there.":"Early days — that's fine.")))+"</b> You guessed on "+guessed+". Confident correct ≈ "+Math.max(0,secure)+". The 💡 notes under each question explain the right answer."+
     (qun&&UTITLES[qun]?'<br>🧾 This take counts for: <b>'+UTITLES[qun]+'</b> — saved.':'');
-  document.getElementById("results").style.display="block";
-  document.getElementById("results").scrollIntoView({behavior:"smooth"});
+  var results=document.getElementById("results");results.style.display="block";
+  document.querySelectorAll(".quiz-question").forEach(function(card){card.classList.add("is-active");});
+  document.getElementById("quiz-progress").style.display="none";document.getElementById("quiz-actions").style.display="none";document.getElementById("qstatus").textContent="Quiz scored. Review the explanations below.";
+  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  results.scrollIntoView({behavior:reduce?"auto":"smooth"});results.focus({preventScroll:true});
   renderHistory();
   renderUnitDone(correct/total);
+  if(qun&&window.CCAFFlow){CCAFFlow.mount("lesson-flow",{unit:qun,stage:"quiz"});CCAFFlow.mountNext("next-step",qun,{stage:"review",context:"Quiz result saved.",label:"Next: review these cards"});}
 }
 function renderHistory(){
   var h=history(HK); var html="<ul>";

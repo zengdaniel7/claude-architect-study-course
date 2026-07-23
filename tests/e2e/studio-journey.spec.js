@@ -1,0 +1,156 @@
+const { test, expect } = require("@playwright/test");
+
+const STUDIO = `${process.env.CCA_STUDIO_E2E_URL || "http://127.0.0.1:8765"}/`;
+const answers = [2, 1, 0, 0, 0];
+
+test("Studio reflows at Mac split-view widths", async ({ page }) => {
+  for (const width of [800, 1024, 1262, 1440, 1728]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(STUDIO);
+    await expect(page.getByRole("link", { name: "Frontier Inbox" })).toBeVisible();
+    const homeOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(homeOverflow, `home overflow at ${width}px`).toBe(false);
+    await expect(page.getByRole("main")).toBeVisible();
+
+    await page.goto(`${STUDIO}#/session`);
+    await expect(page.locator(".path-visual"), `path frame missing at ${width}px`).toBeVisible();
+    const lessonOverflow = await page.evaluate(() => {
+      const frame = document.querySelector(".path-visual");
+      if (!frame) {
+        throw new Error("Path frame missing");
+      }
+      const splitLabels = Array.from(document.querySelectorAll(".path-node:not(.path-node--file) > span"))
+        .filter((label) => {
+          const lineHeight = Number.parseFloat(getComputedStyle(label).lineHeight);
+          return Number.isFinite(lineHeight) && label.getBoundingClientRect().height > lineHeight * 1.5;
+        })
+        .map((label) => label.textContent);
+      return {
+        document: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        pathFrame: frame.scrollWidth > frame.clientWidth + 1,
+        splitLabels
+      };
+    });
+    expect(lessonOverflow.document, `lesson overflow at ${width}px`).toBe(false);
+    expect(lessonOverflow.pathFrame, `path frame overflow at ${width}px`).toBe(false);
+    expect(lessonOverflow.splitLabels, `ordinary path labels split at ${width}px`).toEqual([]);
+  }
+});
+
+test("Studio keeps icon and text navigation labels at compact widths", async ({ page }) => {
+  for (const width of [1000, 600]) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto(STUDIO);
+    for (const label of ["Home", "Course", "Review", "Library", "Settings"]) {
+      await expect(page.getByRole("link", { name: label })).toBeVisible();
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false);
+  }
+});
+
+test("Studio non-AI navigation stays within the interaction budget", async ({ page }) => {
+  await page.goto(STUDIO);
+  const samples = [];
+  for (let index = 0; index < 20; index += 1) {
+    const course = index % 2 === 0;
+    samples.push(await page.evaluate(({ hash, selector }) => new Promise((resolve, reject) => {
+      const root = document.querySelector("#root");
+      if (!root) {
+        reject(new Error("Studio root is missing"));
+        return;
+      }
+      const started = performance.now();
+      const timeout = window.setTimeout(() => {
+        observer.disconnect();
+        reject(new Error(`Timed out waiting for ${selector}`));
+      }, 1_000);
+      const finish = () => {
+        if (!document.querySelector(selector)) return;
+        window.clearTimeout(timeout);
+        observer.disconnect();
+        resolve(performance.now() - started);
+      };
+      const observer = new MutationObserver(finish);
+      observer.observe(root, { childList: true, subtree: true });
+      window.location.hash = hash;
+      window.requestAnimationFrame(finish);
+    }), {
+      hash: course ? "/course" : "/",
+      selector: course ? "#course-title" : "#home-title"
+    }));
+  }
+
+  const ordered = [...samples].sort((left, right) => left - right);
+  const p95 = ordered[Math.ceil(ordered.length * 0.95) - 1];
+  expect(p95, `non-AI navigation p95 was ${p95.toFixed(1)} ms`).toBeLessThan(150);
+});
+
+test("Studio completes W1 without copy and paste", async ({ page }) => {
+  await page.goto(STUDIO);
+  await page.getByRole("link", { name: "Continue lesson" }).click();
+
+  await expect(page.getByRole("link", { name: /opens in a new tab/i })).toBeVisible();
+
+  await page.getByRole("button", { name: "I can point to each part" }).click();
+  await page.locator("#draw-description").fill("Home folder to Documents, then study, then tiny-order.json.");
+  await page.getByRole("button", { name: "Save my path" }).click();
+
+  await page.getByRole("button", { name: "Open the practice workbench" }).click();
+  await page.getByRole("button", { name: "Create the real file" }).click();
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "tiny-order.json",
+    mimeType: "application/json",
+    buffer: Buffer.from('{"item":"tea","quantity":2}')
+  });
+  await page.getByLabel("Full path").fill("/Users/me/Documents/study/tiny-order.json");
+  await page.getByLabel("I used TextEdit’s plain-text mode.").check();
+  await page.getByLabel("I created the final file myself on my Mac.").check();
+  await page.getByRole("button", { name: "Save independent build" }).click();
+
+  await page.locator("#teach-words").fill(
+    "A file is one saved item. A folder holds files. A path shows each folder leading to the file. The .json extension and plain-text format tell software how to read it."
+  );
+  await page.getByRole("button", { name: "Save my teach-back" }).click();
+
+  for (let index = 0; index < answers.length; index += 1) {
+    await page.locator(".answer-list label").nth(answers[index]).click();
+    await page.getByLabel("I know").check();
+    await page.getByRole("button", { name: "Check answer" }).click();
+    await page.getByRole("button", { name: index === answers.length - 1 ? "Finish quiz" : "Next question" }).click();
+  }
+
+  await page.getByRole("button", { name: "Show answer" }).click();
+  await page.getByLabel("Again").check();
+  const repeatRequest = page.waitForRequest(/\/api\/reviews\/[^/]+\/cards\/[^/]+$/);
+  await page.getByRole("button", { name: "Save rating" }).click();
+  const repeated = (await repeatRequest).postDataJSON();
+  expect(repeated).toMatchObject({ rating: "again" });
+  expect(repeated.ratingId).toMatch(/^[0-9a-f-]{36}$/);
+  await expect(page.getByRole("button", { name: "Next card" })).toBeVisible();
+  await page.getByRole("button", { name: "Next card" }).click();
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Show answer" })).toBeVisible();
+  await page.getByRole("button", { name: "Show answer" }).click();
+  await page.getByLabel("Got it").check();
+  const finalRatingRequest = page.waitForRequest(/\/api\/reviews\/[^/]+\/cards\/[^/]+$/);
+  await page.getByRole("button", { name: "Save rating" }).click();
+  const rating = (await finalRatingRequest).postDataJSON();
+  expect(rating).toMatchObject({ rating: "good" });
+  expect(rating.ratingId).toMatch(/^[0-9a-f-]{36}$/);
+  expect(rating.elapsedMs).toEqual(expect.any(Number));
+  await expect(page.getByRole("heading", { name: "Files, folders, and plain text complete" })).toBeVisible();
+  await page.getByRole("link", { name: "Open W1 archive" }).click();
+  await expect(page.getByRole("heading", { name: "W1 archive" })).toBeVisible();
+  await expect(page.getByText("Learn, Draw, Build, Teach, Quiz, and Review are complete.", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Continue to Week 2 archive" })).toBeVisible();
+});
+
+test("Studio honors keyboard focus and reduced motion", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto(STUDIO);
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Skip to lesson" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("main")).toBeFocused();
+});

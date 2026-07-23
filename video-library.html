@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video library — CCA-F</title>
+<link rel="stylesheet" href="study.css">
+<style>
+  .library-head{padding:26px 0 8px}
+  .library-head h1{margin-bottom:4px}
+  .library-actions{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+  .tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:18px 0}
+  .tab{min-height:48px;border:1.5px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);font:inherit;font-size:.8rem;font-weight:800;cursor:pointer;padding:7px}
+  .tab[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+  .episode{display:grid;grid-template-columns:minmax(190px,250px) minmax(0,1fr);gap:20px;padding:18px 0;border-bottom:2px solid var(--line)}
+  .episode[hidden]{display:none}
+  .episode:last-child{border-bottom:0}
+  .episode-image{display:block;position:relative;aspect-ratio:16/9;background:#111;border-radius:7px;overflow:hidden}
+  .episode-image img{display:block;width:100%;height:100%;object-fit:contain}
+  .episode-image .number{position:absolute;left:8px;top:8px;background:rgba(20,31,37,.9);color:#fff;border-radius:5px;padding:2px 8px;font-size:.72rem;font-weight:800}
+  .episode h2{font-size:1.08rem;line-height:1.35;margin:5px 0 8px;padding:0;border:0}
+  .episode-meta{display:flex;gap:7px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:.75rem;font-weight:700}
+  .status{border-radius:999px;padding:2px 9px}.status.used{background:#E8F5EC;color:#175B36}.status.reference{background:#E7F0FB;color:#174E7F}.status.excluded,.status.unavailable{background:#FBE7E5;color:#742929}
+  .episode p{font-size:.88rem;line-height:1.55;margin:7px 0;max-width:65ch}
+  .clip-row{border-left:5px solid var(--accent);padding:9px 0 9px 13px;margin:10px 0}
+  .clip-row .focus{font-size:.86rem;line-height:1.45;margin:2px 0 7px}
+  .clip-actions{display:flex;gap:8px;flex-wrap:wrap}
+  .lesson-link{font-weight:800}
+  .empty{display:none;padding:30px 0;color:var(--muted)}
+  @media(max-width:700px){.tabs{grid-template-columns:1fr 1fr}.episode{grid-template-columns:1fr}.episode-image{max-width:100%}.clip-actions{display:grid}.clip-actions .media-btn{width:100%}}
+</style>
+</head>
+<body>
+<nav class="top" id="site-nav"></nav>
+<script src="course-data.js"></script>
+<script src="video-data.js"></script>
+<script src="video-ui.js"></script>
+<script src="nav.js"></script>
+
+<main class="wrap">
+  <header class="library-head">
+    <h1>🎥 Video library</h1>
+    <p class="sub">Peace Of Code playlist, checked against current Anthropic documentation. Use the short lesson clip first; open the full episode when you want the complete explanation.</p>
+    <div class="library-actions">
+      <a class="btn green" id="playlist" target="_blank" rel="noopener">Open the full YouTube playlist</a>
+      <a class="btn" href="today.html">Back to my lesson</a>
+    </div>
+    <div class="callout info"><b>Source rule:</b> these are community explanations. Official Anthropic Academy lessons and documentation remain the authority when product behavior changes.</div>
+    <p class="hint" id="lesson-filter" hidden></p>
+  </header>
+
+  <div class="tabs" role="group" aria-label="Filter videos">
+    <button class="tab" data-filter="all" aria-pressed="true">All available</button>
+    <button class="tab" data-filter="used" aria-pressed="false">In lessons</button>
+    <button class="tab" data-filter="reference" aria-pressed="false">Extra review</button>
+    <button class="tab" data-filter="excluded" aria-pressed="false">Not assigned</button>
+  </div>
+
+  <section id="episodes" aria-live="polite"></section>
+  <p class="empty" id="empty">No videos match this view.</p>
+  <footer>Transcript-first review completed July 15, 2026. Exact clips are kept under ten minutes.</footer>
+</main>
+
+<script>
+(function(){
+  var media=window.CCAF_MEDIA,ui=window.CCAFMediaUI,course=window.CCAF_COURSE;
+  document.getElementById("playlist").href=media.playlistUrl;
+  var params=new URLSearchParams(location.search),lessonOnly=params.get("lesson")||"";
+  var lessonTitle=course&&course.map&&course.map[lessonOnly]?course.map[lessonOnly].title:lessonOnly;
+  if(lessonOnly){var lf=document.getElementById("lesson-filter");lf.hidden=false;lf.innerHTML='Showing videos connected to <b>'+ui.esc(lessonTitle)+'</b>. <a href="video-library.html">Show the complete playlist review</a>.';}
+
+  var clipLessons={};
+  Object.keys(media.lessons).forEach(function(unitId){
+    var lesson=media.lessons[unitId];[lesson.primary,lesson.optional].forEach(function(item){
+      if(item&&item.type==="clip")clipLessons[item.clip]=unitId;
+    });
+  });
+  var clipsByEpisode={};
+  Object.keys(media.clips).forEach(function(key){var clip=media.clips[key],unitId=clipLessons[key];
+    if(!unitId)return;(clipsByEpisode[clip.episode]=clipsByEpisode[clip.episode]||[]).push({key:key,clip:clip,unitId:unitId});
+  });
+
+  function statusGroup(status){return status==="used"?"used":status==="reference"?"reference":"excluded";}
+  function statusText(status){return status==="used"?"Assigned to a lesson":status==="reference"?"Extra review":status==="unavailable"?"Unavailable":"Not assigned";}
+  function displayDate(raw){
+    if(!raw)return "Date unavailable";
+    return raw.indexOf("-")>=0?raw:raw.slice(0,4)+"-"+raw.slice(4,6)+"-"+raw.slice(6,8);
+  }
+  function episodeHTML(key,ep){
+    var assigned=clipsByEpisode[key]||[],related=ep.lessons||[];
+    var img=ep.id?'<a class="episode-image" href="'+ui.esc(media.youtubeUrl(ep.id,0))+'" target="_blank" rel="noopener"><img src="https://i.ytimg.com/vi/'+ui.esc(ep.id)+'/hqdefault.jpg" alt="Video thumbnail for '+ui.esc(ep.title)+'" loading="lazy" width="480" height="360"><span class="number">Episode '+ui.esc(ep.number)+'</span></a>':'<div class="episode-image"><span class="number">Unavailable</span></div>';
+    var clips=assigned.map(function(row){var c=row.clip,url=media.youtubeUrl(ep.id,c.startSec),full=media.youtubeUrl(ep.id,0),title=course.map[row.unitId].title;
+      return '<div class="clip-row"><a class="lesson-link" href="notes.html?unit='+ui.esc(row.unitId)+'">'+ui.esc(title)+'</a><div class="focus"><b>'+ui.esc(ui.formatTime(c.startSec)+'–'+ui.formatTime(c.endSec))+':</b> '+ui.esc(c.focus)+'</div><div class="clip-actions"><a class="media-btn primary" href="'+ui.esc(url)+'" target="_blank" rel="noopener">▶ Watch '+ui.esc(ui.formatTime(c.endSec-c.startSec))+' clip</a><a class="media-btn secondary" href="'+ui.esc(full)+'" target="_blank" rel="noopener">Full episode · '+ui.esc(ui.formatTime(ep.durationSec))+'</a><a class="media-btn secondary" href="review.html?unit='+ui.esc(row.unitId)+'">Review notes</a></div></div>';
+    }).join("");
+    if(!clips&&ep.id&&ep.status!=="unavailable")clips='<div class="clip-actions"><a class="media-btn secondary" href="'+ui.esc(media.youtubeUrl(ep.id,0))+'" target="_blank" rel="noopener">Open full episode · '+ui.esc(ui.formatTime(ep.durationSec))+'</a></div>';
+    var lessons=related.length?'<p class="hint">Related lessons: '+related.map(function(id){var u=course.map[id];return '<a href="notes.html?unit='+ui.esc(id)+'">'+ui.esc(u?u.title:id)+'</a>';}).join(" · ")+'</p>':"";
+    return '<article class="episode" data-status="'+statusGroup(ep.status)+'" data-lessons="'+ui.esc(related.join(" "))+'">'+img+'<div><div class="episode-meta"><span class="status '+ui.esc(ep.status)+'">'+ui.esc(statusText(ep.status))+'</span><span>'+ui.esc(displayDate(ep.uploaded))+'</span><span>'+ui.esc(ep.durationSec?ui.formatTime(ep.durationSec):"")+'</span></div><h2>'+ui.esc(ep.title)+'</h2><p>'+ui.esc(ep.note)+'</p>'+lessons+clips+'</div></article>';
+  }
+
+  var host=document.getElementById("episodes"),html="";
+  Object.keys(media.episodes).forEach(function(key){html+=episodeHTML(key,media.episodes[key]);});host.innerHTML=html;
+  var active="all";
+  function draw(){var shown=0;host.querySelectorAll(".episode").forEach(function(row){var ok=(active==="all"||row.dataset.status===active)&&(!lessonOnly||(" "+row.dataset.lessons+" ").indexOf(" "+lessonOnly+" ")>=0);row.hidden=!ok;if(ok)shown++;});document.getElementById("empty").style.display=shown?"none":"block";}
+  document.querySelectorAll(".tab").forEach(function(tab){tab.addEventListener("click",function(){active=tab.dataset.filter;document.querySelectorAll(".tab").forEach(function(t){t.setAttribute("aria-pressed",String(t===tab));});draw();});});
+  draw();
+})();
+</script>
+</body>
+</html>

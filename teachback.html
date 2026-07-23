@@ -8,8 +8,9 @@
 <style>
   .prompt{border-left:7px solid var(--accent);background:#E7F0FB;padding:18px 20px;font-size:1.12rem}
   .controls{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+  .controls [hidden]{display:none!important}
   button,.action{font:inherit;font-weight:800;border:0;padding:10px 17px;cursor:pointer;text-decoration:none;display:inline-block}
-  .primary{background:var(--accent);color:#fff}.record{background:var(--red);color:#fff}.save{background:var(--green);color:#fff}.plain{background:#fff;color:var(--ink);border:2px solid var(--line)}
+  .primary{background:var(--accent);color:#fff}.record{background:#6653A3;color:#fff}.save{background:var(--green);color:#fff}.plain{background:#fff;color:var(--ink);border:2px solid var(--line)}
   textarea{width:100%;min-height:180px;font:inherit;line-height:1.65;padding:14px;border:2px solid var(--line);background:#fff;color:var(--ink);resize:vertical}
   .rubric label{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px dashed var(--line)}
   .rubric input,.aloud input{width:23px;height:23px;flex:0 0 auto}
@@ -20,23 +21,27 @@
 <nav class="top" id="site-nav"></nav>
 <script src="course-data.js"></script>
 <script src="nav.js"></script>
-<main class="wrap">
+<main class="wrap" id="main-content">
   <header style="padding:28px 0 6px">
     <div class="hint" id="level"></div>
     <h1>60-second teach-back</h1>
     <p class="sub" id="title"></p>
   </header>
 
+  <div id="lesson-flow"></div>
+
   <div class="prompt" id="prompt"></div>
   <div class="controls">
     <button class="primary" id="listen" type="button">Listen to the prompt</button>
-    <button class="record" id="record" type="button">Start voice typing</button>
-    <button class="plain" id="stop" type="button">Stop audio</button>
+    <button class="plain" id="stop" type="button" hidden>Stop audio</button>
   </div>
 
-  <label for="words"><b>Your words</b> <span class="hint">Voice typing is optional. Typing works fully.</span></label>
+  <label for="words"><b>Your words</b></label>
   <textarea id="words" placeholder="In plain words, this lesson means..."></textarea>
-  <label class="aloud" style="display:flex;gap:12px;align-items:flex-start;margin:12px 0"><input id="aloud" type="checkbox"><span><b>I explained it aloud</b><br><span class="hint">Use this when voice typing is unavailable or inaccurate.</span></span></label>
+  <details><summary>Use voice instead of typing</summary><div class="body">
+    <button class="record" id="record" type="button">Start voice typing</button>
+    <label class="aloud" style="display:flex;gap:12px;align-items:flex-start;margin:12px 0"><input id="aloud" type="checkbox"><span><b>I explained it aloud</b><br><span class="hint">Use this when voice typing is unavailable or inaccurate.</span></span></label>
+  </div></details>
 
   <h2>Four-part self-check</h2>
   <div class="card rubric">
@@ -48,10 +53,10 @@
 
   <div class="controls">
     <button class="save" id="complete" type="button">Save teach-back evidence</button>
-    <button class="plain" id="copy" type="button">Copy for tutor feedback</button>
-    <a class="action plain" href="today.html">Back to lesson</a>
   </div>
-  <div id="status"></div>
+  <div id="status" role="status" aria-live="polite" tabindex="-1"></div>
+  <div id="next-step"></div>
+  <details><summary>Ask a tutor to grade my explanation</summary><div class="body"><button class="plain" id="copy" type="button">Copy teach-back for feedback</button></div></details>
 </main>
 <script>
 (function(){
@@ -64,24 +69,31 @@
   document.getElementById("level").textContent=unit.level;
   document.getElementById("title").textContent=unit.title;
   document.getElementById("prompt").textContent=p;
+  if(window.CCAFFlow)CCAFFlow.mount("lesson-flow",{unit:u,stage:"teach"});
   var key="ccaf-teachback-"+u,st={words:"",aloud:false,r:{}};
   try{var old=JSON.parse(localStorage.getItem(key)||"{}");if(old&&typeof old==="object")st=Object.assign(st,old);}catch(e){}
   var words=document.getElementById("words"),aloud=document.getElementById("aloud"),status=document.getElementById("status");
   words.value=st.words||"";aloud.checked=!!st.aloud;
   document.querySelectorAll("[data-r]").forEach(function(x){x.checked=!!(st.r&&st.r[x.getAttribute("data-r")]);});
-  function save(){st.words=words.value;st.aloud=aloud.checked;st.r={};document.querySelectorAll("[data-r]").forEach(function(x){st.r[x.getAttribute("data-r")]=x.checked;});st.ts=Date.now();localStorage.setItem(key,JSON.stringify(st));}
-  words.addEventListener("input",save);aloud.addEventListener("change",save);document.querySelectorAll("[data-r]").forEach(function(x){x.addEventListener("change",save);});
-  document.getElementById("listen").addEventListener("click",function(){if(!speechSynthesis)return;speechSynthesis.cancel();var msg=new SpeechSynthesisUtterance(p);msg.rate=.86;speechSynthesis.speak(msg);});
-  document.getElementById("stop").addEventListener("click",function(){if(window.speechSynthesis)speechSynthesis.cancel();if(rec)rec.stop();});
+  var saveTimer=null;
+  function saveNow(){clearTimeout(saveTimer);st.words=words.value;st.aloud=aloud.checked;st.r={};document.querySelectorAll("[data-r]").forEach(function(x){st.r[x.getAttribute("data-r")]=x.checked;});st.ts=Date.now();localStorage.setItem(key,JSON.stringify(st));}
+  function save(){clearTimeout(saveTimer);saveTimer=setTimeout(saveNow,300);}
+  words.addEventListener("input",save);aloud.addEventListener("change",saveNow);document.querySelectorAll("[data-r]").forEach(function(x){x.addEventListener("change",saveNow);});
+  window.addEventListener("pagehide",saveNow);
+  var stopButton=document.getElementById("stop");
+  document.getElementById("listen").addEventListener("click",function(){if(!speechSynthesis)return;speechSynthesis.cancel();var msg=new SpeechSynthesisUtterance(p);msg.rate=.86;msg.onend=function(){stopButton.hidden=true;};stopButton.hidden=false;speechSynthesis.speak(msg);});
+  document.getElementById("stop").addEventListener("click",function(){if(window.speechSynthesis)speechSynthesis.cancel();if(rec)rec.stop();stopButton.hidden=true;});
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition,rec=null,rb=document.getElementById("record");
   if(SR){rec=new SR();rec.continuous=true;rec.interimResults=true;rec.onresult=function(e){var t="";for(var i=e.resultIndex;i<e.results.length;i++)t+=e.results[i][0].transcript;words.value=(words.value+" "+t).trim();save();};rec.onend=function(){rb.textContent="Start voice typing";};rb.addEventListener("click",function(){try{rec.start();rb.textContent="Listening...";}catch(e){}});}else{rb.style.display="none";}
-  document.getElementById("complete").addEventListener("click",function(){save();var all=Object.keys(st.r).length===4&&Object.keys(st.r).every(function(k){return st.r[k];});var has=(st.words||"").trim().length>=40||st.aloud;
+  function showNext(){if(window.CCAFFlow){CCAFFlow.mount("lesson-flow",{unit:u,stage:"teach"});CCAFFlow.mountNext("next-step",u,{stage:"quiz",context:"Teach-back saved.",label:"Next: take the quiz"});}}
+  document.getElementById("complete").addEventListener("click",function(){saveNow();var all=Object.keys(st.r).length===4&&Object.keys(st.r).every(function(k){return st.r[k];});var has=(st.words||"").trim().length>=40||st.aloud;
     status.style.display="block";
-    if(!all||!has){status.innerHTML="<b>Not saved as mastery yet.</b><br>"+(!has?"Type at least a short explanation or tick I explained it aloud.<br>":"")+(!all?"Complete all four self-checks.":"");return;}
+    if(!all||!has){status.innerHTML="<b>Not saved as mastery yet.</b><br>"+(!has?"Type at least a short explanation or tick I explained it aloud.<br>":"")+(!all?"Complete all four self-checks.":"");status.focus();return;}
     if(window.CCAF){CCAF.recordEvidence(u,"teachback",{complete:true,words:st.words,aloud:st.aloud,rubric:st.r});CCAF.setStep(u,3,true);}
-    status.style.borderLeftColor="var(--green)";status.style.background="#EAF7EF";status.innerHTML="<b>Teach-back evidence saved.</b> Your Explain step is complete.";
+    status.style.borderLeftColor="var(--green)";status.style.background="#EAF7EF";status.innerHTML="<b>Teach-back evidence saved.</b> Your Explain step is complete.";showNext();status.focus();
   });
-  document.getElementById("copy").addEventListener("click",function(){save();var prereq=(unit.prereq||[]).map(function(id){return C.map[id]?C.map[id].title:id;});var t="You are my CCA-F tutor. Grade this teach-back gently but accurately. Lesson: "+unit.title+". Prerequisites: "+(prereq.join(", ")||"none")+". Concepts: "+unit.concepts.join(", ")+". Use four checks: plain idea, concrete example, tradeoff/failure, production relevance. Do not add a new lesson. Give: Right, Fix, one tiny redo, and Beginner/Developing/Exam-ready/Strong.\n\nMY TEACH-BACK:\n"+(st.words||"I explained aloud; ask me one short follow-up question.");copyText(t).then(function(){status.style.display="block";status.innerHTML="Copied. Paste it to your tutor.";});});
+  document.getElementById("copy").addEventListener("click",function(){saveNow();var prereq=(unit.prereq||[]).map(function(id){return C.map[id]?C.map[id].title:id;});var t="You are my CCA-F tutor. Grade this teach-back gently but accurately. Lesson: "+unit.title+". Prerequisites: "+(prereq.join(", ")||"none")+". Concepts: "+unit.concepts.join(", ")+". Use four checks: plain idea, concrete example, tradeoff/failure, production relevance. Do not add a new lesson. Give: Right, Fix, one tiny redo, and Beginner/Developing/Exam-ready/Strong.\n\nMY TEACH-BACK:\n"+(st.words||"I explained aloud; ask me one short follow-up question.");copyText(t).then(function(){status.style.display="block";status.innerHTML="Copied. Paste it to your tutor.";});});
+  if(window.CCAF&&CCAF.mastery(u).teachOK)showNext();
 })();
 </script>
 </body>

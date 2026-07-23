@@ -1,0 +1,10 @@
+{
+  "capturedFrom": "1d603bc04a7ee75e97f5651941d1ce417bd7a9ff",
+  "purpose": "Protect curriculum facts, quiz answers, required builds, and flashcard ordering during the Studio rebuild.",
+  "sha256": {
+    "course-data.js": "a46b1df0f77900ef32ca3e1da7bf03d541da4dfb0dff4e1bf115dfdd1f4e0d72",
+    "quizzes.js": "73cedee78ef982959dbe0e63379ef5e2e75741f400608ccba0e1a296931a7029",
+    "exercise-library.js": "5c661fcf67f3a2adbbe4a4f0b374e345938ccdb1570a325020fcb7a87f494c26",
+    "flashcards.js": "adcc5edf53b1a15f901ac42cfccdd1490a16815f0797b3c0ec90cae7cbbd937d"
+  }
+}

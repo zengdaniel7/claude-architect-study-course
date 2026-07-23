@@ -1,0 +1,48 @@
+{
+  "name": "cca-f-study-course",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "audit": "node course-audit.mjs && node scripts/check-syntax.mjs && node scripts/verify-studio-baseline.mjs && node scripts/export-studio-manifest.mjs --check",
+    "studio:manifest": "node scripts/export-studio-manifest.mjs",
+    "studio:manifest:check": "node scripts/export-studio-manifest.mjs --check",
+    "typecheck": "tsc -p studio/tsconfig.json --noEmit",
+    "studio:dev": "vite --config studio/vite.config.ts",
+    "studio:build": "pnpm run studio:manifest && vite build --config studio/vite.config.ts && python3 scripts/release_identity.py generate --dist studio/dist",
+    "studio:release:check": "python3 scripts/release_identity.py verify --dist studio/dist",
+    "studio:preview:check": "node scripts/verify-preview-bundle.mjs",
+    "studio:preview": "vite preview --config studio/vite.config.ts",
+    "studio:start": "python3 scripts/start_studio.py --no-open",
+    "test:unit": "vitest run --config studio/vitest.config.ts --maxWorkers=1",
+    "test:studio-server": "python -m pytest tests/studio_server tests/test_mcp_safety.py tests/test_release_hardening.py -vv --durations=10",
+    "test:server": "python3 -m unittest discover -s tests -p 'test_serve.py'",
+    "test:e2e": "playwright test",
+    "test": "pnpm run audit && pnpm run typecheck && pnpm run test:unit && pnpm run test:server && pnpm run test:studio-server && pnpm run studio:build && pnpm run studio:release:check && pnpm run test:e2e"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@types/node": "24.10.0",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "6.0.3",
+    "happy-dom": "20.10.6",
+    "typescript": "7.0.2",
+    "vite": "8.1.4",
+    "vitest": "4.1.10"
+  },
+  "packageManager": "pnpm@11.7.0",
+  "dependencies": {
+    "@codemirror/commands": "6.10.4",
+    "@codemirror/lang-json": "6.0.2",
+    "@codemirror/state": "6.7.1",
+    "@codemirror/view": "6.43.6",
+    "lucide-react": "1.24.0",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
+    "react-router-dom": "7.18.1"
+  }
+}

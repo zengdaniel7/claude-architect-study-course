@@ -90,7 +90,7 @@
       prereq:["m2"],concepts:["agent-loop","stop-reason","tool-use-loop","guardrail","workflow-vs-agent"],exercise:"agent-loop-board",
       quiz:"quiz.html?set=agentic",notes:"notes.html?unit=o1",
       ask:"Teach me the agent loop: model -> tool request -> application -> tool result -> model. Cover stop_reason, runaway guards, and when one call is enough.",
-      watch:[["article-effective-agents.html","Building effective agents | Visual article","Focus: workflow holds a fixed map; agent chooses its next step."],["https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons","Anthropic docs | Handling stop reasons","Focus: tool_use continues; end_turn finishes."]]
+      watch:[["article-effective-agents.html","Building effective agents | Visual article","Focus: workflow holds a fixed map; agent chooses its next step."],["https://platform.claude.com/docs/en/build-with-claude/handling-stop-reasons","Anthropic docs | Handling stop reasons","Focus: branch on the returned reason; tool_use requires a tool result."]]
     },
     {
       id:"a2",level:"Atoms",title:"Model physics and economics",
@@ -199,7 +199,7 @@
   ];
 
   var lessons={
-    w1:{plain:"A file is one saved item. A folder holds files. A path is the full route to an item. An extension is the ending after the final dot.",example:"/Users/learner/Documents/study/tiny-order.json",diagram:["Finder","study folder","tiny-order.json","JSON text"],danger:"Saving rich text or adding .txt changes the file you meant to create."},
+    w1:{plain:"A file is one saved item. A folder holds files. A path is the full route to an item. An extension is the ending after the final dot.",example:"/Users/student/Documents/study/tiny-order.json",diagram:["Finder","study folder","tiny-order.json","JSON text"],danger:"Saving rich text or adding .txt changes the file you meant to create."},
     w2:{plain:"JSON is plain text arranged as labeled key and value pairs. The punctuation is part of the format.",example:'{ "item": "tea", "quantity": 2 }',diagram:["{ object }","\"key\"","value","validator"],danger:"Missing quotes, extra commas, and smart quotes make JSON invalid."},
     w3:{plain:"A program follows instructions. A function is a named action. Arguments go in, a return value comes out, and an error explains why it could not finish.",example:"total(2, 3) -> 5",diagram:["arguments","function","return value","caller"],danger:"An error is not proof you failed. It is evidence about the next repair."},
     w4:{plain:"An API lets one program ask another program to do work. The request goes out; the response comes back.",example:"order app -> GET /orders/42 -> order service -> 200 + JSON",diagram:["your app","request","API","response"],danger:"An API key is a secret. Keep it in an environment variable, not inside a shared file."},
@@ -210,7 +210,7 @@
 
   var banks={
     w1:{questions:[
-      {q:"Which item is a file?",opts:["study","Documents","tiny-order.json","/Users/learner"],ans:2,why:"The .json item is one saved file; the others name folders or a partial path."},
+      {q:"Which item is a file?",opts:["study","Documents","tiny-order.json","/Users/student"],ans:2,why:"The .json item is one saved file; the others name folders or a partial path."},
       {q:"TextEdit saved tiny-order.json.txt. What happened?",opts:["It became an API","A .txt extension was added","The folder was deleted","JSON requires .txt"],ans:1,why:"The final extension is now .txt, so it is not the filename the task requested."},
       {q:"What does a path tell you?",opts:["The route to a file or folder","The file's password","The program's output","The JSON schema"],ans:0,why:"A path names the folders to follow to reach an item."},
       {q:"Why use plain text for JSON?",opts:["It removes formatting codes","It encrypts the file","It makes every value a number","It runs the file"],ans:0,why:"JSON is a text data format; rich-text formatting can add content JSON parsers do not understand."},

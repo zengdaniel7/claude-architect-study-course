@@ -22,3 +22,11 @@ Every lesson communicates its main idea visually before sustained reading.
 5. alt text that states the teaching point
 
 No autoplay. No dense body copy inside an image. Every video needs a still or text fallback. Generated interfaces must never be presented as real product screenshots.
+
+## Reviewed video rule
+
+- Review long videos transcript-first, then inspect frames around demonstrations.
+- Link the exact lesson segment and keep a separate full-episode link.
+- Use one primary source and at most one optional community clip per lesson.
+- Label community material clearly; current official documentation wins when behavior differs.
+- Keep captions, a one-line focus, and a local notes fallback.

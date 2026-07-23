@@ -5,12 +5,21 @@ const root = new URL("./", import.meta.url);
 const read = (name) => fs.readFileSync(new URL(name, root), "utf8");
 const exists = (name) => fs.existsSync(new URL(name, root));
 const context = vm.createContext({ window: {} });
+const rawNotes = read("notes-data.js");
+const correctionSource = read("notes-corrections.js");
 
 vm.runInContext(read("course-data.js"), context, { filename: "course-data.js" });
+vm.runInContext(read("video-data.js"), context, { filename: "video-data.js" });
+vm.runInContext(rawNotes, context, { filename: "notes-data.js" });
+vm.runInContext(correctionSource, context, { filename: "notes-corrections.js" });
+vm.runInContext(read("units-data.js"), context, { filename: "units-data.js" });
 vm.runInContext(read("exercises.js"), context, { filename: "exercises.js" });
 vm.runInContext(read("exercise-library.js"), context, { filename: "exercise-library.js" });
 
 const course = context.window.CCAF_COURSE;
+const media = context.window.CCAF_MEDIA;
+const notes = context.window.LESSON_NOTES;
+const chapters = context.UNIT_CHAPTERS;
 const exercises = context.EXERCISES;
 const failures = [];
 const pass = [];
@@ -39,6 +48,66 @@ for (const [index, unit] of course.units.entries()) {
   check(Array.isArray(course.cards[unit.id]) && course.cards[unit.id].length >= 3, `${unit.id}: at least three review cards exist`);
 }
 
+check(media && media.lessons && media.clips && media.episodes, "reviewed video manifest loads");
+check(media.reviewedAt === "2026-07-15", "video manifest records its transcript review date");
+check(Object.values(media.episodes).filter((episode) => episode.status !== "unavailable").length === 22, "playlist records 22 available episodes");
+
+const assignedClips = new Set();
+for (const unit of course.units) {
+  const lesson = media.lessons[unit.id];
+  check(Boolean(lesson), `${unit.id}: media lesson entry exists`);
+  check(Boolean(lesson && lesson.primary), `${unit.id}: primary watch source exists`);
+  check(!lesson || lesson.optional == null || lesson.optional.type === "clip", `${unit.id}: optional slot contains at most one reviewed clip`);
+  for (const item of lesson ? [lesson.primary, lesson.optional].filter(Boolean) : []) {
+    if (item.type !== "clip") continue;
+    const resolved = media.resolve(item);
+    assignedClips.add(item.clip);
+    check(Boolean(resolved), `${unit.id}: reviewed clip resolves`);
+    if (!resolved) continue;
+    check(resolved.startSec < resolved.endSec, `${unit.id}: clip has a valid time range`);
+    check(resolved.endSec - resolved.startSec <= 600, `${unit.id}: clip stays under ten minutes`);
+    check(resolved.endSec <= media.episodes[resolved.episodeKey].durationSec, `${unit.id}: clip ends inside the full episode`);
+    check(/[?&]t=\d+s/.test(resolved.url), `${unit.id}: clip URL includes its exact start time`);
+    check(!/[?&]t=\d+s/.test(resolved.fullUrl), `${unit.id}: full-episode URL starts at the beginning`);
+    check(resolved.captionSource && resolved.reviewedAt, `${unit.id}: clip records caption source and review date`);
+  }
+}
+check(assignedClips.size === Object.keys(media.clips).length, "every selected playlist clip is assigned to a lesson");
+for (const [key, clip] of Object.entries(media.clips)) {
+  check(assignedClips.has(key), `${key}: selected clip appears in the course`);
+  check(media.episodes[clip.episode].status !== "unavailable", `${key}: selected clip does not use an unavailable episode`);
+}
+for (const [key, episode] of Object.entries(media.episodes)) {
+  if (episode.status !== "used") continue;
+  check(Object.values(media.clips).some((clip) => clip.episode === key), `${key}: assigned episode has an exact lesson clip`);
+}
+
+const correctedTeachingText = JSON.stringify({
+  chapters,
+  notes:Object.fromEntries(Object.entries(notes).map(([id,note]) => [id,{title:note.title,html:note.html}]))
+});
+for (const stale of [
+  "short-term memory",
+  "re-reads every request",
+  "tools from every connected MCP server are all available at once",
+  "scratchpad + memory files let agents resume after context loss",
+  "tool_use = continue, end_turn = done",
+  "The 6 exam scenarios",
+  "The shape is guaranteed, not left to luck",
+  "a feature that guarantees valid JSON via constrained decoding",
+  "so JSON is always valid",
+  "so it is always valid JSON",
+  "reliable way to guarantee the JSON is valid"
+]) check(!correctedTeachingText.includes(stale), `rendered teaching text removes stale phrase: ${stale}`);
+
+const correctionPairs = [...correctionSource.matchAll(/\[\s*("(?:\\.|[^"\\])*")\s*,\s*("(?:\\.|[^"\\])*")\s*\]/g)];
+check(correctionPairs.length >= 20, "notes correction targets are discoverable by the audit");
+for (const match of correctionPairs) {
+  const target = JSON.parse(match[1]);
+  check(rawNotes.includes(target), `notes correction still matches its source phrase: ${target.slice(0, 58)}`);
+}
+check(rawNotes.includes("The exam gives you <b>scenarios</b>"), "production-scenario correction still matches its source phrase");
+
 const requiredExercises = course.units.map((unit) => unit.exercise);
 check(new Set(requiredExercises).size === requiredExercises.length, "every required unit has a unique fixed build");
 const exerciseMap = new Map(exercises.map((exercise) => [exercise.id, exercise]));
@@ -55,11 +124,26 @@ for (const id of ["w1", "w2", "w3", "w4", "w5", "d1", "d2"]) {
   check(course.banks[id] && course.banks[id].questions.length >= 5, `${id}: beginner checkpoint bank has at least five questions`);
 }
 
-for (const page of ["dashboard.html", "today.html", "curriculum.html", "timeline.html", "quiz.html", "pretest.html"]) {
+for (const page of ["dashboard.html", "today.html", "notes.html", "curriculum.html", "timeline.html", "quiz.html", "pretest.html", "video-library.html"]) {
   const html = read(page);
   check(html.indexOf("course-data.js") < html.indexOf("nav.js"), `${page}: loads the manifest before navigation`);
   check(!/0 \/ 16 units|\/16 units|All 16 units/.test(html), `${page}: no stale 16-unit progress label`);
 }
+
+for (const page of ["today.html", "notes.html", "curriculum.html", "video-library.html"]) {
+  const html = read(page);
+  const courseIndex = html.indexOf("course-data.js");
+  const dataIndex = html.indexOf("video-data.js");
+  const uiIndex = html.indexOf("video-ui.js");
+  const navIndex = html.indexOf("nav.js");
+  check(courseIndex >= 0 && courseIndex < dataIndex && dataIndex < uiIndex && uiIndex < navIndex, `${page}: loads course, video data, media UI, then navigation`);
+}
+
+const videoLibrary = read("video-library.html");
+check(videoLibrary.includes("Full episode") && videoLibrary.includes("Watch "), "video library exposes exact clips and full episodes");
+check(videoLibrary.includes("notes.html?unit=") && videoLibrary.includes("review.html?unit="), "video library connects watch, notes, and review");
+check(!/<iframe|autoplay/i.test(videoLibrary), "video library does not autoplay or embed heavy players");
+check(videoLibrary.includes(".episode[hidden]{display:none}"), "video library truly hides nonmatching filtered episodes");
 
 const css = read("study.css");
 check(css.includes('font-family:"Atkinson Hyperlegible"'), "shared UI uses Atkinson Hyperlegible");
@@ -68,10 +152,38 @@ check(css.includes("prefers-reduced-motion:reduce"), "shared UI respects reduced
 check(css.includes("focus-visible"), "shared UI provides visible keyboard focus");
 check(!/text-transform\s*:\s*uppercase/.test(read("review.html")), "review cards do not force all-capital labels");
 
+const nav = read("nav.js");
+check(nav.includes("CCAFProgress") && nav.includes("Progress data contains an invalid key"), "progress restore uses the shared validator");
+check(nav.includes("lastIssued+1") && nav.includes("result.ts"), "client save revisions are monotonic and accept the server revision");
+check(nav.includes("ev.build.data.exercise===unit.exercise"), "mastery requires the unit's exact fixed build");
+check(nav.includes("mergeQuizResult") && nav.includes("q.qualified"), "earned zero-guess quiz qualification survives later practice attempts");
+check(nav.includes('aria-expanded="false"') && nav.includes('e.key==="Escape"'), "shared More menu exposes keyboard disclosure behavior");
+check(!nav.includes('id="navBack"') && nav.includes("skip-link"), "shared navigation avoids a second, unpredictable Back control");
+check(nav.includes('label:"Today"') && nav.includes('label:"Course"') && nav.includes('label:"Practice"'), "shared navigation keeps stable learner destinations");
+check(read("dashboard.html").includes("Matching items in this browser will be replaced"), "progress import confirms replacement before writing");
+check(read("today.html").includes("Course data did not load"), "lesson page fails visibly instead of using a partial curriculum");
+check(read("curriculum.html").includes("rich.title=u.title") && read("curriculum.html").includes("rich.quiz[0]=u.quiz"), "rich curriculum summaries hydrate from the authoritative manifest");
+check(read("timeline.html").includes('<button class="donetag"'), "timeline completion controls are native buttons");
+check(read("flashcards.html").includes('<button class="flash"'), "browse flashcards are keyboard-operable buttons");
+check(read("quiz.html").includes('id:"mistake-"+stableQuestionId'), "mistake-card ids do not depend on shuffled display position");
+const serverSource = read("serve.py");
+check(serverSource.includes('payload["ts"] <= current_timestamp'), "save server refuses delayed older snapshots");
+check(serverSource.includes("SAVE_LOCK") && serverSource.includes("os.replace(tmp, SAVE)"), "save server serializes atomic replacements");
+
 const foundation = read("foundation-lab.html");
 check(foundation.includes('role="img"'), "visual foundation lessons expose the scene as an image");
 check(foundation.includes("Concept model, not a product screenshot"), "drawn interface scenes are not presented as real screenshots");
-check(foundation.includes('id="speak"'), "visual foundation lessons provide read-aloud");
+check(foundation.includes('data-read-play'), "visual foundation lessons provide read-aloud controls");
+check(foundation.includes('data-read-speed'), "visual foundation lessons provide narration speed control");
+check(foundation.includes('data-read-progress'), "visual foundation lessons provide a seek control");
+check(foundation.includes('read-aloud.js'), "visual foundation lessons load the shared read-aloud player");
+const reader = read("read-aloud.js");
+check(reader.includes("read-word") && reader.includes("is-active"), "read-aloud highlights the active word");
+check(reader.includes("playbackRate") && reader.includes("ccaf-read-aloud-rate"), "read-aloud changes and remembers playback speed");
+for (const id of ["w1", "w2", "w3", "w4", "w5", "d1", "d2"]) {
+  const narration = `audio/foundation/${id}-one-idea.mp3`;
+  check(exists(narration) && fs.statSync(new URL(narration, root)).size > 10000, `${id}: natural foundation narration exists and is nonempty`);
+}
 
 const visualPipelineName = exists("Visual Media Pipeline.md") ? "Visual Media Pipeline.md" : "VISUAL-MEDIA-PIPELINE.md";
 const designStandardName = exists("Dyslexia UI Standard.md") ? "Dyslexia UI Standard.md" : "DESIGN-STANDARD.md";
