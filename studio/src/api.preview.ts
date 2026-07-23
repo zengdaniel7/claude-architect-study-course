@@ -18,6 +18,14 @@ export interface OllamaState {
   reason?: string | null;
 }
 
+// Mirrors api.ts so preview builds resolve the same named exports; the
+// preview never performs network requests, so it is never thrown here.
+export class ApiRequestError extends Error {
+  constructor(readonly status: number, message: string) {
+    super(message);
+  }
+}
+
 const stageIds: StageId[] = ["learn", "draw", "build", "teach", "quiz", "review"];
 
 export async function fetchCurrentSession(): Promise<SessionState> {
