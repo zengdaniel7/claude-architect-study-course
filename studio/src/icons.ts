@@ -8,6 +8,7 @@ export { default as Check } from "lucide-react/dist/esm/icons/check.mjs";
 export { default as CheckCircle2 } from "lucide-react/dist/esm/icons/check-circle-2.mjs";
 export { default as ChevronLeft } from "lucide-react/dist/esm/icons/chevron-left.mjs";
 export { default as ChevronRight } from "lucide-react/dist/esm/icons/chevron-right.mjs";
+export { default as ChevronDown } from "lucide-react/dist/esm/icons/chevron-down.mjs";
 export { default as Circle } from "lucide-react/dist/esm/icons/circle.mjs";
 export { default as CircleAlert } from "lucide-react/dist/esm/icons/circle-alert.mjs";
 export { default as Clock3 } from "lucide-react/dist/esm/icons/clock-3.mjs";
@@ -42,6 +43,7 @@ export { default as PanelRightClose } from "lucide-react/dist/esm/icons/panel-ri
 export { default as PencilLine } from "lucide-react/dist/esm/icons/pencil-line.mjs";
 export { default as Play } from "lucide-react/dist/esm/icons/play.mjs";
 export { default as RotateCcw } from "lucide-react/dist/esm/icons/rotate-ccw.mjs";
+export { default as Search } from "lucide-react/dist/esm/icons/search.mjs";
 export { default as Server } from "lucide-react/dist/esm/icons/server.mjs";
 export { default as Settings } from "lucide-react/dist/esm/icons/settings.mjs";
 export { default as ShieldCheck } from "lucide-react/dist/esm/icons/shield-check.mjs";

@@ -85,6 +85,39 @@ export interface CourseManifest {
   lessons: Record<string, LessonSummary>;
   banks: Record<string, { questions: QuizQuestion[] }>;
   cards: Record<string, [string, string][]>;
+  media: CourseMediaLibrary;
+}
+
+export interface CourseVideo {
+  id: string;
+  episodeKey: string;
+  number: string;
+  title: string;
+  channel: string;
+  uploaded: string;
+  durationSec: number;
+  kind: "lesson" | "extra";
+  lessonIds: string[];
+  focus: string;
+  note: string;
+  reviewedAt: string;
+  url: string;
+  fullUrl: string;
+  thumbnailId: string;
+  clip: {
+    id: string;
+    startSec: number;
+    endSec: number;
+    captionSource: string;
+  } | null;
+}
+
+export interface CourseMediaLibrary {
+  generatedFrom: string;
+  playlistUrl: string;
+  reviewedAt: string;
+  communityNotice: string;
+  videos: CourseVideo[];
 }
 
 export interface ReviewCard {
@@ -116,6 +149,10 @@ export interface BackupInspection {
   schemaVersion: number;
   databaseId: string;
   stateDigest: string;
+  incomingStateVersion?: number;
+  incomingUpdatedAt?: string;
+  currentStateVersion?: number;
+  currentUpdatedAt?: string;
   warning: string;
 }
 

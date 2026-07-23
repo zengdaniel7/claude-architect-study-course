@@ -13,6 +13,7 @@ from pathlib import Path
 
 from build_legacy_archive import build_archive, verify_archive
 from release_identity import backend_content_hash, verify_release
+from studio_server.legacy_assets import LEGACY_ASSETS
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,6 +25,7 @@ APP = CACHE / "app"
 ARCHIVE = CACHE / "legacy"
 REQUIREMENTS = ROOT / "requirements.txt"
 APP_SIGNATURE = ".app-signature"
+LEGACY_SIGNATURE = CACHE / ".legacy-source-signature"
 
 
 def python_version(executable: Path) -> tuple[int, int] | None:
@@ -141,14 +143,26 @@ def ensure_runtime() -> Path:
     if not runtime_python.is_file() or existing_base != base_identity:
         print("Preparing the local Study Studio runtime once...", flush=True)
         shutil.rmtree(VENV, ignore_errors=True)
-        subprocess.run([str(base_python), "-m", "venv", str(VENV)], check=True)
+        try:
+            subprocess.run([str(base_python), "-m", "venv", str(VENV)], check=True)
+        except subprocess.CalledProcessError as error:
+            raise SystemExit(
+                "Study Studio could not create its private Python workspace. "
+                "Free a little disk space, then double-click the launcher again."
+            ) from error
         base_marker.write_text(base_identity, encoding="utf-8")
     installed = marker.read_text(encoding="utf-8").strip() if marker.is_file() else ""
     if installed != required:
-        subprocess.run(
-            [str(runtime_python), "-m", "pip", "install", "--disable-pip-version-check", "-r", str(REQUIREMENTS)],
-            check=True,
-        )
+        try:
+            subprocess.run(
+                [str(runtime_python), "-m", "pip", "install", "--disable-pip-version-check", "-r", str(REQUIREMENTS)],
+                check=True,
+            )
+        except subprocess.CalledProcessError as error:
+            raise SystemExit(
+                "Study Studio needs an internet connection once to finish setting up. "
+                "Connect to the internet, then double-click the launcher again."
+            ) from error
         marker.write_text(required, encoding="utf-8")
     return runtime_python
 
@@ -213,7 +227,53 @@ def sync_app(root: Path | None = None, target: Path | None = None, cache: Path |
     replace_tree(temporary, target, verifier=lambda path: verify_app_cache(path, source_hash))
 
 
+def archive_source_signature(root: Path | None = None) -> str:
+    """Fingerprint allowlisted metadata without hydrating cloud-offloaded files."""
+    root = root or ROOT
+    value = hashlib.sha256()
+    for relative in sorted(LEGACY_ASSETS):
+        stat = (root / relative).stat()
+        value.update(relative.encode("utf-8"))
+        value.update(b"\0")
+        value.update(str(stat.st_size).encode("ascii"))
+        value.update(b"\0")
+        value.update(str(stat.st_mtime_ns).encode("ascii"))
+        value.update(b"\0")
+    return value.hexdigest()
+
+
+def cached_archive_matches_source(source: Path | None = None, archive: Path | None = None) -> bool:
+    """Bootstrap older verified caches without forcing source-file downloads."""
+    source = source or ROOT
+    archive = archive or ARCHIVE
+    try:
+        verify_archive(archive)
+        return all((source / relative).stat().st_size == (archive / relative).stat().st_size for relative in LEGACY_ASSETS)
+    except (OSError, ValueError):
+        return False
+
+
+def write_legacy_signature(signature: str) -> None:
+    temporary = LEGACY_SIGNATURE.with_name(f"{LEGACY_SIGNATURE.name}-{os.getpid()}.tmp")
+    temporary.write_text(signature, encoding="utf-8")
+    os.replace(temporary, LEGACY_SIGNATURE)
+
+
 def sync_archive() -> None:
+    source_signature = archive_source_signature()
+    try:
+        cached_signature = LEGACY_SIGNATURE.read_text(encoding="utf-8").strip()
+    except OSError:
+        cached_signature = ""
+    if cached_signature == source_signature:
+        try:
+            verify_archive(ARCHIVE)
+            return
+        except (OSError, ValueError):
+            pass
+    if not cached_signature and cached_archive_matches_source():
+        write_legacy_signature(source_signature)
+        return
     temporary = CACHE / f"legacy-{os.getpid()}.tmp"
     shutil.rmtree(temporary, ignore_errors=True)
     try:
@@ -222,10 +282,19 @@ def sync_archive() -> None:
         shutil.rmtree(temporary, ignore_errors=True)
         raise
     replace_tree(temporary, ARCHIVE, verifier=verify_archive)
+    write_legacy_signature(source_signature)
+
+
+def clear_stale_temporaries() -> None:
+    """Interrupted launches leave per-PID staging folders behind; the runtime's
+    single-instance port bind means no other launch is mid-copy here."""
+    for leftover in CACHE.glob("*.tmp"):
+        shutil.rmtree(leftover, ignore_errors=True)
 
 
 def main() -> None:
     runtime_python = ensure_runtime()
+    clear_stale_temporaries()
     sync_app()
     sync_archive()
     release = sync_site()

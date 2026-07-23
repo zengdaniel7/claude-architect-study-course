@@ -1545,5 +1545,486 @@
         "A deterministic block for a critical merge rule."
       ]
     ]
+  },
+  "media": {
+    "generatedFrom": "video-data.js",
+    "playlistUrl": "https://www.youtube.com/playlist?list=PLviC8AFqAj5A9MHkRIn2fU5Ac2lEdJxNf",
+    "reviewedAt": "2026-07-15",
+    "communityNotice": "Community explanation from Peace Of Code. It is not official Anthropic guidance or an official exam specification.",
+    "videos": [
+      {
+        "id": "ldqOnljDINc",
+        "episodeKey": "ep01",
+        "number": "01",
+        "title": "Agentic Loops and stop_reason Explained",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-04-05",
+        "durationSec": 2967,
+        "kind": "lesson",
+        "lessonIds": [
+          "o1"
+        ],
+        "focus": "See chat become a loop: reason, call a tool, read the result, and decide again.",
+        "note": "The assigned clip stops before the inaccurate claim that only two stop reasons exist. The full episode simplifies the current API behavior.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=ldqOnljDINc&t=1157s",
+        "fullUrl": "https://www.youtube.com/watch?v=ldqOnljDINc",
+        "thumbnailId": "ldqOnljDINc",
+        "clip": {
+          "id": "agent-loop-basics",
+          "startSec": 1157,
+          "endSec": 1306,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "ejPWvBcc_DU",
+        "episodeKey": "ep02",
+        "number": "02",
+        "title": "Multi-Agent Systems and Coordinator Patterns",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-04-07",
+        "durationSec": 1955,
+        "kind": "lesson",
+        "lessonIds": [
+          "o2"
+        ],
+        "focus": "Name the coordinator's jobs before adding workers.",
+        "note": "Use the short coordinator clip; the official subagents lesson remains the authority.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=ejPWvBcc_DU&t=362s",
+        "fullUrl": "https://www.youtube.com/watch?v=ejPWvBcc_DU",
+        "thumbnailId": "ejPWvBcc_DU",
+        "clip": {
+          "id": "coordinator-role",
+          "startSec": 362,
+          "endSec": 514,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "a2N6vKdQUfE",
+        "episodeKey": "ep03",
+        "number": "03",
+        "title": "Subagent Context Passing and Session Management",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-04-12",
+        "durationSec": 2016,
+        "kind": "lesson",
+        "lessonIds": [
+          "t2"
+        ],
+        "focus": "Pass sources with findings and resolve conflicts before synthesis.",
+        "note": "The selected clip focuses on provenance and conflicting findings.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=a2N6vKdQUfE&t=640s",
+        "fullUrl": "https://www.youtube.com/watch?v=a2N6vKdQUfE",
+        "thumbnailId": "a2N6vKdQUfE",
+        "clip": {
+          "id": "provenance-conflicts",
+          "startSec": 640,
+          "endSec": 1104,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "e7ijjK173zI",
+        "episodeKey": "ep04",
+        "number": "04",
+        "title": "Multi-Agent System in Python and Claude SDK | Hands On",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-04-17",
+        "durationSec": 767,
+        "kind": "extra",
+        "lessonIds": [
+          "o2",
+          "t2"
+        ],
+        "focus": "Useful full build-along after the orchestration lessons; not required in the core path.",
+        "note": "Useful full build-along after the orchestration lessons; not required in the core path.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=e7ijjK173zI",
+        "fullUrl": "https://www.youtube.com/watch?v=e7ijjK173zI",
+        "thumbnailId": "e7ijjK173zI",
+        "clip": null
+      },
+      {
+        "id": "JJBcpwpsKzk",
+        "episodeKey": "ep05",
+        "number": "05",
+        "title": "PreToolUse, PostToolUse Hooks and Task Decomposition",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-04-19",
+        "durationSec": 2723,
+        "kind": "lesson",
+        "lessonIds": [
+          "t1"
+        ],
+        "focus": "Use code to block an action until a required fact is verified.",
+        "note": "The assigned clip shows deterministic prerequisite gates.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=JJBcpwpsKzk&t=1338s",
+        "fullUrl": "https://www.youtube.com/watch?v=JJBcpwpsKzk",
+        "thumbnailId": "JJBcpwpsKzk",
+        "clip": {
+          "id": "deterministic-gates",
+          "startSec": 1338,
+          "endSec": 1660,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "s1j1vTnCKns",
+        "episodeKey": "ep06",
+        "number": "06",
+        "title": "Tool Descriptions and Tool Misrouting",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-04-24",
+        "durationSec": 1490,
+        "kind": "lesson",
+        "lessonIds": [
+          "m2"
+        ],
+        "focus": "See how names, descriptions, and overlap change tool selection.",
+        "note": "The assigned clip shows why names and descriptions change tool selection.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=s1j1vTnCKns&t=58s",
+        "fullUrl": "https://www.youtube.com/watch?v=s1j1vTnCKns",
+        "thumbnailId": "s1j1vTnCKns",
+        "clip": {
+          "id": "tool-descriptions",
+          "startSec": 58,
+          "endSec": 588,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "eZj6FtTVV58",
+        "episodeKey": "ep07",
+        "number": "07",
+        "title": "Agent Error Handling and tool_choice",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-04-26",
+        "durationSec": 2286,
+        "kind": "extra",
+        "lessonIds": [
+          "m2",
+          "rel"
+        ],
+        "focus": "Useful extra review for tool errors; the core lesson already covers the same ground more briefly.",
+        "note": "Useful extra review for tool errors; the core lesson already covers the same ground more briefly.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=eZj6FtTVV58",
+        "fullUrl": "https://www.youtube.com/watch?v=eZj6FtTVV58",
+        "thumbnailId": "eZj6FtTVV58",
+        "clip": null
+      },
+      {
+        "id": "IVUxGTxSuH8",
+        "episodeKey": "ep08",
+        "number": "08",
+        "title": "MCP Servers, Configuration, Cline and More",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-04-29",
+        "durationSec": 5348,
+        "kind": "lesson",
+        "lessonIds": [
+          "o3"
+        ],
+        "focus": "See the MCP client-server picture and what MCP connects.",
+        "note": "The assigned MCP introduction is current. A later full-episode section saying all MCP tools load at once is outdated: Claude Code now uses Tool Search by default.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=IVUxGTxSuH8&t=104s",
+        "fullUrl": "https://www.youtube.com/watch?v=IVUxGTxSuH8",
+        "thumbnailId": "IVUxGTxSuH8",
+        "clip": {
+          "id": "mcp-basics",
+          "startSec": 104,
+          "endSec": 684,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "eh-xxQpfBBY",
+        "episodeKey": "ep09",
+        "number": "09",
+        "title": "Claude Built-in Tools Explained",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-01",
+        "durationSec": 2139,
+        "kind": "lesson",
+        "lessonIds": [
+          "m4"
+        ],
+        "focus": "Follow search -> read -> edit instead of guessing where code lives.",
+        "note": "The assigned clip demonstrates a search, read, and edit exploration path.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=eh-xxQpfBBY&t=1216s",
+        "fullUrl": "https://www.youtube.com/watch?v=eh-xxQpfBBY",
+        "thumbnailId": "eh-xxQpfBBY",
+        "clip": {
+          "id": "codebase-exploration",
+          "startSec": 1216,
+          "endSec": 1648,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "qIee1aqSAwY",
+        "episodeKey": "ep10",
+        "number": "10",
+        "title": "CLAUDE.md Hierarchy and Configuration Rules",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-03",
+        "durationSec": 1896,
+        "kind": "extra",
+        "lessonIds": [
+          "o4"
+        ],
+        "focus": "Reference only. Current CLAUDE.md loading and post-compaction behavior should be learned from the official memory documentation.",
+        "note": "Reference only. Current CLAUDE.md loading and post-compaction behavior should be learned from the official memory documentation.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=qIee1aqSAwY",
+        "fullUrl": "https://www.youtube.com/watch?v=qIee1aqSAwY",
+        "thumbnailId": "qIee1aqSAwY",
+        "clip": null
+      },
+      {
+        "id": "v3tMqTmgg2Q",
+        "episodeKey": "ep11",
+        "number": "11",
+        "title": "Custom Slash Commands and Skills",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-06",
+        "durationSec": 1997,
+        "kind": "extra",
+        "lessonIds": [
+          "o4"
+        ],
+        "focus": "Reference only. Custom commands have since merged into Skills; .claude/commands remains compatible.",
+        "note": "Reference only. Custom commands have since merged into Skills; .claude/commands remains compatible.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=v3tMqTmgg2Q",
+        "fullUrl": "https://www.youtube.com/watch?v=v3tMqTmgg2Q",
+        "thumbnailId": "v3tMqTmgg2Q",
+        "clip": null
+      },
+      {
+        "id": "q-n1cut5e7c",
+        "episodeKey": "ep12",
+        "number": "12",
+        "title": "Plan Mode vs Execute in Claude Code",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-10",
+        "durationSec": 3102,
+        "kind": "lesson",
+        "lessonIds": [
+          "o4"
+        ],
+        "focus": "Choose plan mode for complex, ambiguous, or risky work.",
+        "note": "The assigned clip gives a clear decision rule for planning before execution.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=q-n1cut5e7c&t=280s",
+        "fullUrl": "https://www.youtube.com/watch?v=q-n1cut5e7c",
+        "thumbnailId": "q-n1cut5e7c",
+        "clip": {
+          "id": "plan-mode",
+          "startSec": 280,
+          "endSec": 548,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "GWCnDhgH840",
+        "episodeKey": "ep13",
+        "number": "13",
+        "title": "Claude Code CI/CD Pipelines",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-13",
+        "durationSec": 1881,
+        "kind": "lesson",
+        "lessonIds": [
+          "d2"
+        ],
+        "focus": "Connect pull-request changes to automatic Claude Code checks.",
+        "note": "The assigned clip connects a pull request to automated Claude Code checks.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=GWCnDhgH840&t=342s",
+        "fullUrl": "https://www.youtube.com/watch?v=GWCnDhgH840",
+        "thumbnailId": "GWCnDhgH840",
+        "clip": {
+          "id": "ci-integration",
+          "startSec": 342,
+          "endSec": 502,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "HqwULqy1egw",
+        "episodeKey": "ep14",
+        "number": "14",
+        "title": "Prompt Engineering: Explicit Criteria and False Positives",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-17",
+        "durationSec": 2065,
+        "kind": "lesson",
+        "lessonIds": [
+          "m3"
+        ],
+        "focus": "Replace vague guidance with concrete pass and fail criteria.",
+        "note": "Primary playlist lesson for explicit criteria.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=HqwULqy1egw&t=902s",
+        "fullUrl": "https://www.youtube.com/watch?v=HqwULqy1egw",
+        "thumbnailId": "HqwULqy1egw",
+        "clip": {
+          "id": "explicit-criteria",
+          "startSec": 902,
+          "endSec": 1320,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "FbIcU6YFrhw",
+        "episodeKey": "ep15",
+        "number": "15",
+        "title": "Few-Shot Prompting Explained",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-20",
+        "durationSec": 1662,
+        "kind": "lesson",
+        "lessonIds": [
+          "m3"
+        ],
+        "focus": "Use a few examples that target the ambiguous edge cases.",
+        "note": "Optional clip for targeted examples after explicit criteria.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=FbIcU6YFrhw&t=772s",
+        "fullUrl": "https://www.youtube.com/watch?v=FbIcU6YFrhw",
+        "thumbnailId": "FbIcU6YFrhw",
+        "clip": {
+          "id": "targeted-examples",
+          "startSec": 772,
+          "endSec": 1046,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "CaDaLn7DcQ0",
+        "episodeKey": "ep16",
+        "number": "16",
+        "title": "Structured Output and JSON Schema",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-25",
+        "durationSec": 2211,
+        "kind": "extra",
+        "lessonIds": [
+          "m1"
+        ],
+        "focus": "Reference only. Its fake-tool forcing method is historical; current JSON outputs use output_config.format and strict tools use strict: true.",
+        "note": "Reference only. Its fake-tool forcing method is historical; current JSON outputs use output_config.format and strict tools use strict: true.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=CaDaLn7DcQ0",
+        "fullUrl": "https://www.youtube.com/watch?v=CaDaLn7DcQ0",
+        "thumbnailId": "CaDaLn7DcQ0",
+        "clip": null
+      },
+      {
+        "id": "BXs7QoLQxX0",
+        "episodeKey": "ep17",
+        "number": "17",
+        "title": "Batch API and Multi-Pass Review",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-05-29",
+        "durationSec": 2044,
+        "kind": "lesson",
+        "lessonIds": [
+          "p2"
+        ],
+        "focus": "Review each item first, then run a second integration pass.",
+        "note": "The selected multi-pass section is current. Earlier Batch API limitations in the full episode no longer describe all supported tool-use and multi-turn cases.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=BXs7QoLQxX0&t=1246s",
+        "fullUrl": "https://www.youtube.com/watch?v=BXs7QoLQxX0",
+        "thumbnailId": "BXs7QoLQxX0",
+        "clip": {
+          "id": "multi-pass-review",
+          "startSec": 1246,
+          "endSec": 1726,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "7kaJdZ7veDs",
+        "episodeKey": "ep18",
+        "number": "18",
+        "title": "Why AI Agents Forget: Context Engineering",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-06-02",
+        "durationSec": 2598,
+        "kind": "lesson",
+        "lessonIds": [
+          "rel"
+        ],
+        "focus": "Separate working context from durable memory and see why summaries lose detail.",
+        "note": "Treat context as working input, not durable memory. Compaction and summaries are useful but lossy.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=7kaJdZ7veDs&t=206s",
+        "fullUrl": "https://www.youtube.com/watch?v=7kaJdZ7veDs",
+        "thumbnailId": "7kaJdZ7veDs",
+        "clip": {
+          "id": "context-and-summaries",
+          "startSec": 206,
+          "endSec": 702,
+          "captionSource": "YouTube native captions"
+        }
+      },
+      {
+        "id": "MqnElZw6NYk",
+        "episodeKey": "ep19",
+        "number": "19",
+        "title": "Subagent Error Propagation and Context Management",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-06-07",
+        "durationSec": 2546,
+        "kind": "extra",
+        "lessonIds": [
+          "rel",
+          "o2"
+        ],
+        "focus": "Useful extra review. A scratchpad persists only when the application writes it and deliberately reads it again.",
+        "note": "Useful extra review. A scratchpad persists only when the application writes it and deliberately reads it again.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=MqnElZw6NYk",
+        "fullUrl": "https://www.youtube.com/watch?v=MqnElZw6NYk",
+        "thumbnailId": "MqnElZw6NYk",
+        "clip": null
+      },
+      {
+        "id": "tsIxzFg76Nw",
+        "episodeKey": "ep20",
+        "number": "20",
+        "title": "When AI Needs a Human",
+        "channel": "Peace Of Code",
+        "uploaded": "2026-06-10",
+        "durationSec": 3078,
+        "kind": "lesson",
+        "lessonIds": [
+          "px"
+        ],
+        "focus": "See why high-risk synthesis still needs a human checkpoint.",
+        "note": "The assigned clip focuses on synthesis risk and human review.",
+        "reviewedAt": "2026-07-15",
+        "url": "https://www.youtube.com/watch?v=tsIxzFg76Nw&t=2544s",
+        "fullUrl": "https://www.youtube.com/watch?v=tsIxzFg76Nw",
+        "thumbnailId": "tsIxzFg76Nw",
+        "clip": {
+          "id": "synthesis-risk",
+          "startSec": 2544,
+          "endSec": 2742,
+          "captionSource": "YouTube native captions"
+        }
+      }
+    ]
   }
 }

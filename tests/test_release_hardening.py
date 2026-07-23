@@ -115,6 +115,46 @@ def test_tampered_cached_app_is_detected_and_rebuilt(tmp_path: Path) -> None:
     assert "# tampered" not in cached_app.read_text(encoding="utf-8")
 
 
+def test_archive_signature_uses_metadata_without_reading_contents(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    source = tmp_path / "source"
+    archive = tmp_path / "archive"
+    source.mkdir()
+    archive.mkdir()
+    relative = "lesson.html"
+    (source / relative).write_text("lesson", encoding="utf-8")
+    (archive / relative).write_text("lesson", encoding="utf-8")
+    monkeypatch.setattr(start_studio, "LEGACY_ASSETS", frozenset({relative}))
+    monkeypatch.setattr(start_studio, "verify_archive", lambda path: True)
+
+    first = start_studio.archive_source_signature(source)
+    assert start_studio.cached_archive_matches_source(source, archive) is True
+    time.sleep(0.001)
+    (source / relative).touch()
+    assert start_studio.archive_source_signature(source) != first
+
+
+def test_sync_archive_reuses_verified_matching_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = tmp_path / "source"
+    cache = tmp_path / "cache"
+    archive = cache / "legacy"
+    root.mkdir()
+    archive.mkdir(parents=True)
+    relative = "lesson.html"
+    (root / relative).write_text("lesson", encoding="utf-8")
+    (archive / relative).write_text("lesson", encoding="utf-8")
+    marker = cache / ".legacy-source-signature"
+    monkeypatch.setattr(start_studio, "ROOT", root)
+    monkeypatch.setattr(start_studio, "CACHE", cache)
+    monkeypatch.setattr(start_studio, "ARCHIVE", archive)
+    monkeypatch.setattr(start_studio, "LEGACY_SIGNATURE", marker)
+    monkeypatch.setattr(start_studio, "LEGACY_ASSETS", frozenset({relative}))
+    monkeypatch.setattr(start_studio, "verify_archive", lambda path: True)
+    monkeypatch.setattr(start_studio, "build_archive", lambda source, destination: pytest.fail("cache should be reused"))
+
+    start_studio.sync_archive()
+    assert marker.read_text(encoding="utf-8") == start_studio.archive_source_signature(root)
+
+
 def test_legacy_archive_contains_only_allowlisted_generated_assets(tmp_path: Path) -> None:
     source = tmp_path / "source"
     archive = tmp_path / "archive"

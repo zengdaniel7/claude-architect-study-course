@@ -5,6 +5,9 @@ function parseManifest(value: unknown): CourseManifest {
   if (!value || typeof value !== "object") throw new Error("Course manifest must be an object.");
   const candidate = value as Record<string, unknown>;
   if (!Array.isArray(candidate.units) || candidate.units.length !== 23) throw new Error("Course manifest must contain 23 units.");
+  if (!candidate.media || typeof candidate.media !== "object") throw new Error("Course manifest must contain the reviewed media library.");
+  const media = candidate.media as Record<string, unknown>;
+  if (!Array.isArray(media.videos) || typeof media.playlistUrl !== "string") throw new Error("Course media library is incomplete.");
   for (const rawUnit of candidate.units) {
     if (!rawUnit || typeof rawUnit !== "object") throw new Error("Every course unit must be an object.");
     const unit = rawUnit as Record<string, unknown>;
