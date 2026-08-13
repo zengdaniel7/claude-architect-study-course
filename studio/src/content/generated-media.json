@@ -1,0 +1,21 @@
+{
+  "notice": "AI-generated study aids, made with Google NotebookLM from this course's own verified notes. If anything here conflicts with the lesson notes, the notes win. Exam details are community-reported, never confirmed by Anthropic.",
+  "sourceCommit": "890b294",
+  "items": [
+    {
+      "id": "video-overview",
+      "type": "video",
+      "title": "CCA-F AI Architect Prep — whole-course video overview",
+      "focus": "One 9-minute pass over the whole course: APIs and JSON, schemas, the agent loop, MCP, Claude Code, and reliability.",
+      "durationSec": 565,
+      "file": "ccaf-video-overview.mp4",
+      "mime": "video/mp4",
+      "sha256": "330008c631ace8e85b8357770d614968388bcc407277c70b52f8b9b1a81161e5",
+      "generatedOn": "2026-08-12",
+      "reviewState": "pending",
+      "thumbnail": "video-overview-thumb.jpg",
+      "captions": "video-overview.vtt",
+      "transcript": "video-overview-transcript.md"
+    }
+  ]
+}

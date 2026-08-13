@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import fcntl
+import hashlib
 import hmac
 import json
 import math
@@ -145,6 +146,32 @@ def _safe_file(root: Path, path: str) -> Path | None:
     except ValueError:
         return None
     return candidate if candidate.is_file() else None
+
+
+def _load_generated_media(root: Path) -> dict[str, dict[str, Any]]:
+    """Read the tracked generated-media manifest; only manifest-known items are ever served."""
+    manifest_path = root / "studio" / "src" / "content" / "generated-media.json"
+    try:
+        payload = json.loads(manifest_path.read_text("utf-8"))
+    except (OSError, json.JSONDecodeError, UnicodeDecodeError):
+        return {}
+    items = payload.get("items") if isinstance(payload, dict) else None
+    if not isinstance(items, list):
+        return {}
+    catalog: dict[str, dict[str, Any]] = {}
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        media_id = item.get("id")
+        file_name = item.get("file")
+        if (
+            isinstance(media_id, str) and media_id
+            and isinstance(file_name, str) and file_name
+            and Path(file_name).name == file_name
+            and not file_name.startswith(".")
+        ):
+            catalog[media_id] = item
+    return catalog
 
 
 def _valid_legacy_save(payload: object) -> bool:
@@ -394,7 +421,7 @@ class TutorService:
         return {"mode": body.mode, "advice": advice, "nextQuestion": "Which part of /Users/me/study/card.json is the file?", "label": "needs_review"}
 
 
-def create_app(root: Path | None = None, data_dir: Path | None = None, dist_dir: Path | None = None) -> FastAPI:
+def create_app(root: Path | None = None, data_dir: Path | None = None, dist_dir: Path | None = None, media_dir: Path | None = None) -> FastAPI:
     explicit_root = root is not None
     root = (root or Path(__file__).resolve().parents[1]).resolve()
     configured_data = data_dir
@@ -403,10 +430,39 @@ def create_app(root: Path | None = None, data_dir: Path | None = None, dist_dir:
     configured_dist = dist_dir
     if configured_dist is None and not explicit_root and os.environ.get("CCA_STUDIO_DIST_DIR"):
         configured_dist = Path(os.environ["CCA_STUDIO_DIST_DIR"]).expanduser()
+    configured_media = media_dir
+    if configured_media is None and os.environ.get("CCA_STUDIO_MEDIA_DIR"):
+        configured_media = Path(os.environ["CCA_STUDIO_MEDIA_DIR"]).expanduser()
+    media_root = (configured_media or (Path.home() / "ccaf-media")).resolve()
+    generated_media = _load_generated_media(root)
+    media_digest_cache: dict[str, tuple[float, int, str]] = {}
     store = StudioStore(root, configured_data)
     tutor = TutorService(store)
     dist = (configured_dist or (root / "studio" / "dist")).resolve()
     release = _release_identity(root, dist, store)
+
+    def media_file_state(item: dict[str, Any]) -> tuple[Path | None, str]:
+        """Locate a generated-media binary and verify its recorded checksum (cached by mtime+size)."""
+        file = media_root / str(item["file"])
+        try:
+            stat = file.stat()
+        except OSError:
+            return None, "missing"
+        if not file.is_file():
+            return None, "missing"
+        expected = item.get("sha256")
+        if isinstance(expected, str) and expected:
+            cached = media_digest_cache.get(str(item["id"]))
+            if cached is None or cached[0] != stat.st_mtime or cached[1] != stat.st_size:
+                digest = hashlib.sha256()
+                with file.open("rb") as handle:
+                    for chunk in iter(lambda: handle.read(1 << 20), b""):
+                        digest.update(chunk)
+                cached = (stat.st_mtime, stat.st_size, digest.hexdigest())
+                media_digest_cache[str(item["id"])] = cached
+            if cached[2] != expected.lower():
+                return file, "corrupt"
+        return file, "ok"
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -659,6 +715,34 @@ def create_app(root: Path | None = None, data_dir: Path | None = None, dist_dir:
         stored, timestamp = store.save_legacy_snapshot(payload)
         return {"ok": True, "stored": stored, "ts": timestamp}
 
+    @app.get("/api/media/status")
+    def media_status() -> dict[str, Any]:
+        items = []
+        for media_id, item in generated_media.items():
+            _, state = media_file_state(item)
+            items.append({
+                "id": media_id,
+                "present": state == "ok",
+                "state": state,
+                "reviewState": item.get("reviewState", "pending"),
+            })
+        return {"items": items}
+
+    @app.get("/media/{media_id}")
+    def media_file(media_id: str) -> FileResponse:
+        item = generated_media.get(media_id)
+        if item is None:
+            raise HTTPException(404, "Unknown media item")
+        if item.get("reviewState") != "reviewed":
+            raise HTTPException(404, "This study aid is awaiting review and is not installed as course content")
+        file, state = media_file_state(item)
+        if state == "missing":
+            raise HTTPException(404, "Media is not installed on this computer")
+        if state == "corrupt":
+            raise HTTPException(404, "Media file failed its checksum and was not served")
+        assert file is not None
+        return FileResponse(file, media_type=str(item.get("mime") or "application/octet-stream"))
+
     @app.get("/legacy/{path:path}")
     def legacy(path: str) -> FileResponse:
         if not legacy_archive_verified:
@@ -671,7 +755,7 @@ def create_app(root: Path | None = None, data_dir: Path | None = None, dist_dir:
     @app.get("/")
     @app.get("/{path:path}")
     def spa(path: str = "") -> FileResponse:
-        if path.startswith(("api/", "legacy/", "__")) or path == "my-progress.json":
+        if path.startswith(("api/", "legacy/", "media/", "__")) or path == "my-progress.json":
             raise HTTPException(404, "Not found")
         requested = _safe_file(dist, path) if path else None
         index = dist / "index.html"

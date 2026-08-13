@@ -3,9 +3,10 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import { manifest } from "../content";
-import { LibraryPage } from "./LibraryPage";
+import { generatedMedia, LibraryPage } from "./LibraryPage";
 
 vi.mock("../StudioContext", () => ({ useStudio: () => ({ session: { unitId: "w1" } }) }));
+vi.mock("../api", () => ({ fetchGeneratedMediaStatus: vi.fn(async () => ({})) }));
 
 function renderLibrary() {
   return render(<MemoryRouter><LibraryPage /></MemoryRouter>);
@@ -37,5 +38,24 @@ describe("LibraryPage", () => {
     expect(screen.getByText("Multi-Agent System in Python and Claude SDK | Hands On")).toBeInTheDocument();
     expect(screen.queryByText("Exam Questions Solved and Exam Traps")).not.toBeInTheDocument();
     expect(screen.getByText(/Community video collection/)).toBeInTheDocument();
+  });
+
+  it("labels AI-generated study aids honestly and never plays unreviewed media", async () => {
+    const user = userEvent.setup();
+    renderLibrary();
+    await user.click(screen.getByRole("tab", { name: `AI aids ${generatedMedia.items.length}` }));
+    expect(screen.getByText(/AI-generated study aids/)).toBeInTheDocument();
+    expect(screen.getByText(/notes win/)).toBeInTheDocument();
+    for (const item of generatedMedia.items) {
+      expect(screen.getByText(item.title)).toBeInTheDocument();
+    }
+    // Status mock reports nothing installed, and pending items must never render a player.
+    expect(document.querySelector("video, audio")).toBeNull();
+    const pending = generatedMedia.items.filter((item) => item.reviewState === "pending");
+    if (pending.length) {
+      expect(screen.getAllByText(/Review pending/)).toHaveLength(pending.length);
+    }
+    // The transcript stays readable even with no media installed.
+    expect(screen.getByText("Read the transcript")).toBeInTheDocument();
   });
 });

@@ -1,15 +1,29 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ChevronDown, ExternalLink, FileText, Headphones, Play, Search, Video } from "../icons";
+import { fetchGeneratedMediaStatus } from "../api";
 import { manifest, unitById } from "../content";
+import generatedMediaJson from "../content/generated-media.json";
 import { useStudio } from "../StudioContext";
-import type { CourseUnit, CourseVideo } from "../types";
+import type { CourseUnit, CourseVideo, GeneratedMediaItem, GeneratedMediaManifest, GeneratedMediaStatusEntry } from "../types";
 
-type LibraryView = "lessons" | "videos";
+type LibraryView = "lessons" | "videos" | "generated";
 type VideoFilter = "all" | "lesson" | "extra";
 
 const OFFICIAL_HOSTS = /(?:anthropic\.skilljar\.com|anthropic\.com|claude\.com|platform\.claude\.com|code\.claude\.com)/i;
 const VIDEO_THUMBNAILS = import.meta.glob("../assets/video-thumbnails/*.jpg", { eager: true, import: "default", query: "?url" }) as Record<string, string>;
+const GENERATED_ASSET_URLS = import.meta.glob("../assets/generated-media/*.{jpg,png,vtt}", { eager: true, import: "default", query: "?url" }) as Record<string, string>;
+const GENERATED_TRANSCRIPTS = import.meta.glob("../assets/generated-media/*.md", { eager: true, import: "default", query: "?raw" }) as Record<string, string>;
+
+export const generatedMedia = generatedMediaJson as GeneratedMediaManifest;
+
+function generatedAssetUrl(name?: string) {
+  return name ? GENERATED_ASSET_URLS[`../assets/generated-media/${name}`] : undefined;
+}
+
+function generatedTranscript(name?: string) {
+  return name ? GENERATED_TRANSCRIPTS[`../assets/generated-media/${name}`] : undefined;
+}
 
 function isExternal(url: string) {
   return /^https?:/i.test(url);
@@ -61,6 +75,49 @@ function ResourceRow({ unit, source, index, current, compact = false }: {
   );
 }
 
+function GeneratedMediaRow({ item, status }: { item: GeneratedMediaItem; status?: GeneratedMediaStatusEntry }) {
+  const thumbnail = generatedAssetUrl(item.thumbnail);
+  const captions = generatedAssetUrl(item.captions);
+  const transcript = generatedTranscript(item.transcript);
+  const reviewed = item.reviewState === "reviewed";
+  const present = status?.present === true;
+  const typeLabel = item.type === "video" ? "Video" : item.type === "audio" ? "Audio" : "Image";
+  return (
+    <article className="video-row generated-media-row">
+      {thumbnail ? <img className="video-row__thumbnail" src={thumbnail} alt="" loading="lazy" width="240" height="135" /> : <span className="video-row__thumbnail" aria-hidden="true" />}
+      <div className="video-row__body">
+        <span className="eyebrow">AI-generated · {typeLabel} · {formatTime(item.durationSec)}</span>
+        <h3>{item.title}</h3>
+        <p>{item.focus}</p>
+        <p className="microcopy">
+          Made with Google NotebookLM on {item.generatedOn} from the course's verified notes (commit {generatedMedia.sourceCommit}).
+          If it conflicts with the lesson notes, the notes win.
+        </p>
+        {!reviewed && (
+          <p className="source-note"><strong>Review pending</strong> — not installed as course content until its transcript check is complete.</p>
+        )}
+        {reviewed && !present && (
+          <p className="source-note"><strong>Media not installed on this computer.</strong> The transcript below still works, and the rest of the course is unaffected.</p>
+        )}
+        {reviewed && present && item.type === "video" && (
+          <video className="generated-media-row__player" controls preload="metadata" poster={thumbnail} src={`/media/${item.id}`}>
+            {captions && <track kind="captions" srcLang="en" label="English" default src={captions} />}
+          </video>
+        )}
+        {reviewed && present && item.type === "audio" && (
+          <audio className="generated-media-row__player" controls preload="metadata" src={`/media/${item.id}`} />
+        )}
+        {transcript && (
+          <details className="generated-media-row__transcript">
+            <summary>Read the transcript</summary>
+            {transcript.split(/\n{2,}/).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+          </details>
+        )}
+      </div>
+    </article>
+  );
+}
+
 function VideoRow({ video }: { video: CourseVideo }) {
   const lessons = video.lessonIds.map((id) => unitById(id).title).join(" · ");
   const clipLength = video.clip ? video.clip.endSec - video.clip.startSec : 0;
@@ -93,6 +150,15 @@ export function LibraryPage() {
   const [phase, setPhase] = useState("all");
   const [videoFilter, setVideoFilter] = useState<VideoFilter>("all");
   const [expandedUnitIds, setExpandedUnitIds] = useState<string[]>([currentUnit.id]);
+  const [mediaStatus, setMediaStatus] = useState<Record<string, GeneratedMediaStatusEntry>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    fetchGeneratedMediaStatus()
+      .then((status) => { if (!cancelled) setMediaStatus(status); })
+      .catch(() => { /* Missing status just means no media is installed; the page stays useful. */ });
+    return () => { cancelled = true; };
+  }, []);
 
   const phases = useMemo(() => Array.from(new Set(manifest.units.map((unit) => unit.level))), []);
   const normalizedQuery = query.trim().toLowerCase();
@@ -117,7 +183,13 @@ export function LibraryPage() {
       .includes(normalizedQuery);
   }), [normalizedQuery, videoFilter]);
 
-  const resultCount = view === "lessons" ? visibleUnits.length : visibleVideos.length;
+  const visibleGenerated = useMemo(() => generatedMedia.items.filter((item) => {
+    if (!normalizedQuery) return true;
+    return [item.title, item.focus, item.type].join(" ").toLowerCase().includes(normalizedQuery);
+  }), [normalizedQuery]);
+
+  const resultCount = view === "lessons" ? visibleUnits.length : view === "videos" ? visibleVideos.length : visibleGenerated.length;
+  const resultNoun = view === "lessons" ? "lesson folders" : view === "videos" ? "videos" : "study aids";
 
   return (
     <section className="secondary-view library-page" aria-labelledby="library-title">
@@ -131,6 +203,7 @@ export function LibraryPage() {
         <div><dt>Lesson folders</dt><dd>{manifest.units.length}</dd></div>
         <div><dt>Learning sources</dt><dd>{lessonSourceCount}</dd></div>
         <div><dt>Reviewed videos</dt><dd>{manifest.media.videos.length}</dd></div>
+        <div><dt>AI study aids</dt><dd>{generatedMedia.items.length}</dd></div>
       </dl>
 
       <section className="library-current" aria-labelledby="current-library-title">
@@ -164,19 +237,28 @@ export function LibraryPage() {
             <span>Search library</span>
             <span className="library-search__field"><Search size={19} aria-hidden="true" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Try MCP, prompting, or reliability" /></span>
           </label>
-          <div className="library-tabs" role="tablist" aria-label="Library view">
+          <div className="library-tabs library-tabs--three" role="tablist" aria-label="Library view">
             <button type="button" role="tab" aria-selected={view === "lessons"} aria-controls="library-lessons" onClick={() => setView("lessons")}>Lessons <span>{manifest.units.length}</span></button>
             <button type="button" role="tab" aria-selected={view === "videos"} aria-controls="library-videos" onClick={() => setView("videos")}>Videos <span>{manifest.media.videos.length}</span></button>
+            <button type="button" role="tab" aria-selected={view === "generated"} aria-controls="library-generated" onClick={() => setView("generated")}>AI aids <span>{generatedMedia.items.length}</span></button>
           </div>
-          {view === "lessons" ? (
+          {view === "lessons" && (
             <label className="library-select"><span>Phase</span><select value={phase} onChange={(event) => setPhase(event.target.value)}><option value="all">All phases</option>{phases.map((item) => <option value={item} key={item}>{item}</option>)}</select></label>
-          ) : (
+          )}
+          {view === "videos" && (
             <label className="library-select"><span>Video type</span><select value={videoFilter} onChange={(event) => setVideoFilter(event.target.value as VideoFilter)}><option value="all">All reviewed videos</option><option value="lesson">Lesson clips</option><option value="extra">Extra review</option></select></label>
           )}
         </div>
 
-        <p className="library-results" aria-live="polite">Showing {resultCount} {view === "lessons" ? "lesson folders" : "videos"}.</p>
+        <p className="library-results" aria-live="polite">Showing {resultCount} {resultNoun}.</p>
 
+        {view === "generated" && (
+          <div id="library-generated" role="tabpanel">
+            <div className="library-community-note"><Video size={20} aria-hidden="true" /><p><strong>AI-generated study aids.</strong> {generatedMedia.notice}</p></div>
+            <div className="video-list">{visibleGenerated.map((item) => <GeneratedMediaRow item={item} status={mediaStatus[item.id]} key={item.id} />)}</div>
+            {!visibleGenerated.length && <div className="empty-state"><h3>No study aids found</h3><p>Try a broader word.</p></div>}
+          </div>
+        )}
         {view === "lessons" ? (
           <div id="library-lessons" role="tabpanel" className="library-unit-list">
             {visibleUnits.map((unit, index) => (
@@ -205,13 +287,13 @@ export function LibraryPage() {
             ))}
             {!visibleUnits.length && <div className="empty-state"><h3>No lesson folders found</h3><p>Try a broader word, or choose All phases.</p></div>}
           </div>
-        ) : (
+        ) : view === "videos" ? (
           <div id="library-videos" role="tabpanel">
             <div className="library-community-note"><Video size={20} aria-hidden="true" /><p><strong>Community video collection.</strong> {manifest.media.communityNotice} Clips were reviewed on {manifest.media.reviewedAt}.</p></div>
             <div className="video-list">{visibleVideos.map((video) => <VideoRow video={video} key={video.id} />)}</div>
             {!visibleVideos.length && <div className="empty-state"><h3>No videos found</h3><p>Try a broader word, or choose All reviewed videos.</p></div>}
           </div>
-        )}
+        ) : null}
       </section>
     </section>
   );
