@@ -352,6 +352,13 @@ code { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; back
 .generated-media-row__transcript summary { display: inline-block; padding: 6px 2px; color: var(--accent); font-size: 0.82rem; font-weight: 700; cursor: pointer; }
 .generated-media-row__transcript summary:focus-visible { outline: 4px solid var(--focus); outline-offset: 3px; }
 .generated-media-row__transcript p { max-width: 65ch; margin: 10px 0; font-size: 0.88rem; }
+.stage-marker__button { display: flex; align-items: center; gap: 6px; padding: 2px 4px; border: 0; border-radius: 5px; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.stage-marker__button:hover { background: var(--surface-soft); text-decoration: underline; }
+.stage-marker__button:focus-visible { outline: 4px solid var(--focus); outline-offset: 2px; }
+.stage-marker--viewing .stage-marker__button { background: var(--accent-soft); color: var(--accent); }
+.lookback-banner { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin: 0 0 18px; padding: 14px 16px; border-left: 4px solid var(--yellow); background: #fff8e6; }
+.lookback-banner p { max-width: 65ch; margin: 0; color: #5f4a16; font-size: 0.88rem; }
+.stage-lookback { min-width: 0; margin: 0; padding: 0; border: 0; }
 .settings-list { border-top: 1px solid var(--line); }
 .setting-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; align-items: center; gap: 14px; min-height: 76px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
 .setting-row > svg { color: var(--accent); }
