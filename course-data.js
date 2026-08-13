@@ -11,7 +11,7 @@
       ask:"Teach me files, folders, paths, extensions, and plain text as a complete beginner. Use one Finder example, one boxes-and-arrows sketch, then make me point to each part of a path.",
       watch:[
         ["foundation-lab.html?unit=w1","Foundation Workbench | Files and folders","Focus: Finder, file endings, and why TextEdit must use plain text."],
-        ["https://edu.gcfglobal.org/en/basic-computer-skills/understanding-file-extensions/1/","GCFGlobal | Understanding File Extensions","Focus: the ending tells you the file type; .json is not .txt."]
+        ["https://support.apple.com/guide/mac-help/show-or-hide-filename-extensions-on-mac-mchlp2304/mac","Apple Support | Filename extensions on Mac","Focus: the ending tells you the file type; .json is not .txt."]
       ]
     },
     {
