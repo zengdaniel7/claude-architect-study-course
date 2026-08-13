@@ -150,4 +150,8 @@ export async function fetchFrontierInboxDetail(_id: string): Promise<FrontierInb
 export async function decideProposal(_id: string, _decision: "accepted" | "rejected"): Promise<never> { return localOnly(); }
 export async function recordContentGap(_unitId: string, _activityId: string, _note: string): Promise<void> {}
 export async function prepareFrontierReview() { return { prepared: false, demo: true }; }
+export async function fetchGeneratedMediaStatus(): Promise<Record<string, import("./types").GeneratedMediaStatusEntry>> {
+  // The public preview never has local media installed.
+  return {};
+}
 export function isDemoMode() { return true; }

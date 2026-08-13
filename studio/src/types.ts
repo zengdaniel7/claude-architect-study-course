@@ -178,3 +178,32 @@ export interface FrontierInboxDetail extends FrontierInboxItem {
   payload: Record<string, unknown>;
   decision?: { id: string; decision: "accepted" | "rejected"; note?: string | null; decided_at: string } | null;
 }
+
+export interface GeneratedMediaItem {
+  id: string;
+  type: "video" | "audio" | "image";
+  title: string;
+  focus: string;
+  durationSec: number;
+  file: string;
+  mime: string;
+  sha256: string;
+  generatedOn: string;
+  reviewState: "pending" | "reviewed";
+  thumbnail?: string;
+  captions?: string;
+  transcript?: string;
+}
+
+export interface GeneratedMediaManifest {
+  notice: string;
+  sourceCommit: string;
+  items: GeneratedMediaItem[];
+}
+
+export interface GeneratedMediaStatusEntry {
+  id: string;
+  present: boolean;
+  state: "ok" | "missing" | "corrupt";
+  reviewState: "pending" | "reviewed";
+}

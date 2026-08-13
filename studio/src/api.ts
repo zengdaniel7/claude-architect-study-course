@@ -1,6 +1,6 @@
 import { buildStages, demoSession } from "./content";
 import { PUBLIC_PREVIEW } from "./preview";
-import type { AttemptResponse, BackupInspection, FrontierInboxDetail, FrontierInboxItem, MigrationReport, ReviewCard, ReviewRating, ReviewRatingResponse, SessionState, StageId, TutorResult } from "./types";
+import type { AttemptResponse, BackupInspection, FrontierInboxDetail, FrontierInboxItem, GeneratedMediaStatusEntry, MigrationReport, ReviewCard, ReviewRating, ReviewRatingResponse, SessionState, StageId, TutorResult } from "./types";
 
 let instanceToken = "";
 let demoMode = false;
@@ -301,6 +301,12 @@ export async function prepareFrontierReview() {
   // ownership, timestamps, and read-state semantics rather than only packet preparation.
   if (demoMode) return { prepared: false, demo: true };
   return request<{ prepared: boolean; reviewId: string }>("/api/reviews/prepare", { method: "POST" });
+}
+
+export async function fetchGeneratedMediaStatus(): Promise<Record<string, GeneratedMediaStatusEntry>> {
+  if (demoMode) return {};
+  const response = await request<{ items: GeneratedMediaStatusEntry[] }>("/api/media/status");
+  return Object.fromEntries(response.items.map((item) => [item.id, item]));
 }
 
 export function isDemoMode() {
