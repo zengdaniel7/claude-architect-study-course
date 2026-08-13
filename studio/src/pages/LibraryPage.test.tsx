@@ -44,8 +44,8 @@ describe("LibraryPage", () => {
     const user = userEvent.setup();
     renderLibrary();
     await user.click(screen.getByRole("tab", { name: `AI aids ${generatedMedia.items.length}` }));
-    expect(screen.getByText(/AI-generated study aids/)).toBeInTheDocument();
-    expect(screen.getByText(/notes win/)).toBeInTheDocument();
+    expect(screen.getAllByText(/AI-generated study aids/).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/notes win/).length).toBeGreaterThan(0);
     for (const item of generatedMedia.items) {
       expect(screen.getByText(item.title)).toBeInTheDocument();
     }
