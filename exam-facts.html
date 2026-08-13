@@ -55,7 +55,7 @@
   <div class="card">
     <ul>
       <li><b>"isRetryable" error field</b> (seen in prep quizzes): there is <b>no</b> official <code>isRetryable</code> field. The real mechanism is <code>is_error: true</code> (Anthropic) / <code>isError: true</code> (MCP) plus a clear, instructive error message. Learn the real one; recognise the prep wording.</li>
-      <li><b>Structured output</b> is stronger than older guides say: official <b>Structured Outputs</b> use constrained decoding to <b>guarantee</b> schema-valid JSON.</li>
+      <li><b>Structured output</b> is stronger than older guides say: official <b>Structured Outputs</b> use constrained decoding to constrain a <b>normally completed</b> response to the schema — the <b>shape</b> is guaranteed, not the truth of the values, and a refusal (<code>stop_reason: refusal</code>) or a token cut-off (<code>max_tokens</code>) still needs its own branch before you parse.</li>
     </ul>
   </div>
 
