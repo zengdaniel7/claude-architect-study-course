@@ -164,11 +164,14 @@ def _load_generated_media(root: Path) -> dict[str, dict[str, Any]]:
             continue
         media_id = item.get("id")
         file_name = item.get("file")
+        sha256 = item.get("sha256")
         if (
             isinstance(media_id, str) and media_id
             and isinstance(file_name, str) and file_name
             and Path(file_name).name == file_name
             and not file_name.startswith(".")
+            # Fail closed: an item without a full checksum is never servable.
+            and isinstance(sha256, str) and re.fullmatch(r"[0-9a-fA-F]{64}", sha256)
         ):
             catalog[media_id] = item
     return catalog
@@ -442,27 +445,36 @@ def create_app(root: Path | None = None, data_dir: Path | None = None, dist_dir:
     release = _release_identity(root, dist, store)
 
     def media_file_state(item: dict[str, Any]) -> tuple[Path | None, str]:
-        """Locate a generated-media binary and verify its recorded checksum (cached by mtime+size)."""
+        """Locate a generated-media binary and verify its recorded checksum (cached by mtime+size).
+
+        The checksum re-verifies whenever mtime or size changes; a same-size, same-mtime-tick
+        swap by a same-user local writer is an accepted limitation of this trust model.
+        """
         file = media_root / str(item["file"])
         try:
-            stat = file.stat()
+            resolved = file.resolve(strict=True)
         except OSError:
             return None, "missing"
-        if not file.is_file():
+        # Symlink confinement: the real file must live inside the media directory.
+        try:
+            resolved.relative_to(media_root)
+        except ValueError:
             return None, "missing"
-        expected = item.get("sha256")
-        if isinstance(expected, str) and expected:
-            cached = media_digest_cache.get(str(item["id"]))
-            if cached is None or cached[0] != stat.st_mtime or cached[1] != stat.st_size:
-                digest = hashlib.sha256()
-                with file.open("rb") as handle:
-                    for chunk in iter(lambda: handle.read(1 << 20), b""):
-                        digest.update(chunk)
-                cached = (stat.st_mtime, stat.st_size, digest.hexdigest())
-                media_digest_cache[str(item["id"])] = cached
-            if cached[2] != expected.lower():
-                return file, "corrupt"
-        return file, "ok"
+        if not resolved.is_file():
+            return None, "missing"
+        stat = resolved.stat()
+        expected = str(item["sha256"])
+        cached = media_digest_cache.get(str(item["id"]))
+        if cached is None or cached[0] != stat.st_mtime or cached[1] != stat.st_size:
+            digest = hashlib.sha256()
+            with resolved.open("rb") as handle:
+                for chunk in iter(lambda: handle.read(1 << 20), b""):
+                    digest.update(chunk)
+            cached = (stat.st_mtime, stat.st_size, digest.hexdigest())
+            media_digest_cache[str(item["id"])] = cached
+        if cached[2] != expected.lower():
+            return resolved, "corrupt"
+        return resolved, "ok"
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):

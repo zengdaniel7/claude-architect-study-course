@@ -346,6 +346,7 @@ code { padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; back
 .video-row__actions .text-link { justify-content: center; font-size: 0.74rem; }
 .library-tabs--three { grid-template-columns: 1fr 1fr 1fr; }
 .generated-media-row { grid-template-columns: 180px minmax(0, 1fr); align-items: start; }
+.generated-media-row .video-row__body > p { max-width: 65ch; }
 .generated-media-row__player { display: block; width: 100%; max-width: 640px; margin-top: 14px; border: 1px solid var(--line); border-radius: 7px; background: black; }
 .generated-media-row__transcript { margin-top: 12px; }
 .generated-media-row__transcript summary { display: inline-block; padding: 6px 2px; color: var(--accent); font-size: 0.82rem; font-weight: 700; cursor: pointer; }

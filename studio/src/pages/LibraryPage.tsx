@@ -94,7 +94,7 @@ function GeneratedMediaRow({ item, status }: { item: GeneratedMediaItem; status?
           If it conflicts with the lesson notes, the notes win.
         </p>
         {!reviewed && (
-          <p className="source-note"><strong>Review pending</strong> — not installed as course content until its transcript check is complete.</p>
+          <p className="source-note"><strong>Review pending</strong> — the player stays off until a human checks the recording against the transcript below. The transcript is shown so that review can happen.</p>
         )}
         {reviewed && !present && (
           <p className="source-note"><strong>Media not installed on this computer.</strong> The transcript below still works, and the rest of the course is unaffected.</p>

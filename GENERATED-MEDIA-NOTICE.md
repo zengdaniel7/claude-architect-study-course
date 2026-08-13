@@ -10,13 +10,15 @@ material was used as input.
 - **These are AI-generated study aids, not course canon.** If anything in a
   generated video, audio track, transcript, or image conflicts with the lesson
   notes in this repository, **the lesson notes win**.
-- Every generated item is listed in `media/manifest.json` with its type,
-  duration, SHA-256 checksum, source commit, generation date, and review state.
-  Items marked `reviewState: "pending"` have **not** passed human transcript
-  review and are not installed as course content.
+- Every generated item is listed in `studio/src/content/generated-media.json`
+  with its type, duration, SHA-256 checksum, source commit, generation date,
+  and review state. Items marked `reviewState: "pending"` have **not** passed
+  human review: the app refuses to play them, and only their transcript is
+  shown — published precisely so the human review can happen against it.
 - Exam specifics mentioned anywhere in generated media are **community-reported
   targets, never Anthropic-confirmed facts** — the same standard
-  `scripts/lint-exam-facts.sh` enforces for the rest of the course.
+  `scripts/lint-exam-facts.sh` enforces across the course, including these
+  transcript, caption, and manifest files.
 
 ## Files and distribution
 

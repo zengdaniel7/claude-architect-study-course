@@ -16,7 +16,7 @@ cd "$ROOT"
 if [ "$#" -gt 0 ]; then
   FILES="$@"
 else
-  FILES="$(find . -type f \( -name '*.html' -o -name '*.md' -o -name '*.js' \) \
+  FILES="$(find . -type f \( -name '*.html' -o -name '*.md' -o -name '*.js' -o -name '*.vtt' -o -name 'generated-media.json' \) \
     -not -path './.git/*' -not -path './studio/dist/*' -not -path './tests/*' \
     -not -path './node_modules/*' -not -name 'lint-exam-facts' | sort)"
 fi
